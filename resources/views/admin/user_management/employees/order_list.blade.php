@@ -120,7 +120,7 @@
                 searching: true,
                 rowId: 'id',
                 ajax: {
-                    url: "{{ route('admin.hr_employees.order_list') }}", // route name
+                    url: "{{ route('admin.employees.order_list') }}", // route name
                     data: function (d) {
                         d.employee_ids = $('#employee_ids').val();
                         d.from_date = $('#from_date').val();

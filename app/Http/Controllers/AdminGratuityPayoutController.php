@@ -63,7 +63,7 @@ class AdminGratuityPayoutController extends Controller
         }
 
         $employees = Employee::where('employee_status_id',[3,4])->get();
-        return view('admin.gratuity_payouts.index')->with(['hr_employees'=>$employees]);
+        return view('admin.gratuity_payouts.index')->with(['employees' => $employees]);
     }
 
     public function paid_list(Request $request)

@@ -38,14 +38,18 @@ class AdminPayslipController extends Controller
             ];
         });
         $employees = Employee::where('employee_status_id',1)->select('id','full_name')->get();
-        return view('admin.user_management.hr_employees.payslip_employee_list',compact('hr_employees','months','search_true'));
+        return view('admin.user_management.employees.payslip_employee_list', 
+        param($m) $m.Value -replace "'hr_employees'", "'employees'"
+    );
     }
 
     public function show($payroll_id)
     {
         $search_true=false;
         $employees = Employee::where('employee_status_id',1)->select('id','full_name')->get();
-        return view('admin.user_management.hr_employees.payslip_employee_list',compact('hr_employees','search_true','payroll_id'));
+        return view('admin.user_management.employees.payslip_employee_list', 
+        param($m) $m.Value -replace "'hr_employees'", "'employees'"
+    );
     }
 
     public function list(Request $request)
@@ -120,7 +124,7 @@ class AdminPayslipController extends Controller
 
         $payrollDetail = PayrollDetail::with(['employee', 'payroll', 'payslipItems','adjustments'])->where('id', $id)->first();
         if($payrollDetail) {
-            return view('admin.user_management.hr_employees.payslip', compact('payrollDetail'));
+            return view('admin.user_management.employees.payslip', compact('payrollDetail'));
         }
         return redirect()->route('admin.not_found');
     }
@@ -129,7 +133,7 @@ class AdminPayslipController extends Controller
     {
         $payrollDetail = PayrollDetail::with(['employee', 'payroll', 'payslipItems'])->findOrFail($id);
 
-        $pdf = Pdf::loadView('admin.user_management.hr_employees.payslip_download', compact('payrollDetail'));
+        $pdf = Pdf::loadView('admin.user_management.employees.payslip_download', compact('payrollDetail'));
         return $pdf->download("Payslip_{$payrollDetail->employee->name}_{$payrollDetail->payroll->payroll_month}.pdf");
     }
 

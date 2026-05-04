@@ -86,7 +86,7 @@
                 searching: true,
                 rowId: 'id',
                 ajax: {
-                    url: "{{ route('admin.hr_employees.attendance_list') }}",
+                    url: "{{ route('admin.employees.attendance_list') }}",
                     data: function (d) {
                         d.employee_ids = $('#employee_ids').val();
                         d.from_date = $('#from_date').val();

@@ -101,12 +101,12 @@ class AdminEmployeeController extends Controller
                 ->addColumn('action', function ($row) {
                     $dropdownItems = '
                         <div class="d-flex justify-content-center gap-2">
-                            <a href="' . route('admin.hr_employees.edit', $row->id) . '"
+                            <a href="' . route('admin.employees.edit', $row->id) . '"
                                class="bg-success-focus text-success-600 bg-hover-success-200 fw-medium w-40-px h-40-px
                                       d-flex justify-content-center align-items-center rounded-circle"   data-bs-toggle="tooltip"  title="Edit Employee">
                                 <iconify-icon icon="lucide:edit" class="menu-icon"></iconify-icon>
                             </a>
-                            <a href="' . route('admin.hr_employees.show', $row->id) . '"
+                            <a href="' . route('admin.employees.show', $row->id) . '"
                                class="bg-info-focus bg-hover-info-200 text-info-600 fw-medium w-40-px h-40-px d-flex justify-content-center align-items-center rounded-circle"  data-bs-toggle="tooltip"  title="View Employee">
                                <iconify-icon icon="majesticons:eye-line" class="icon text-xl"></iconify-icon>
                             </a>
@@ -139,12 +139,12 @@ class AdminEmployeeController extends Controller
 //                    // Existing buttons
 //                    $buttons = '
 //                        <div class="d-flex justify-content-center gap-2">
-//                            <a href="' . route('admin.hr_employees.edit', $row->id) . '"
+//                            <a href="' . route('admin.employees.edit', $row->id) . '"
 //                               class="bg-success-focus text-success-600 bg-hover-success-200 fw-medium w-40-px h-40-px
 //                                      d-flex justify-content-center align-items-center rounded-circle">
 //                                <iconify-icon icon="lucide:edit" class="menu-icon"></iconify-icon>
 //                            </a>
-//                            <a href="' . route('admin.hr_employees.show', $row->id) . '"
+//                            <a href="' . route('admin.employees.show', $row->id) . '"
 //                               class="bg-info-focus bg-hover-info-200 text-info-600 fw-medium w-40-px h-40-px d-flex justify-content-center align-items-center rounded-circle">
 //                               <iconify-icon icon="majesticons:eye-line" class="icon text-xl"></iconify-icon>
 //                            </a>
@@ -273,7 +273,7 @@ class AdminEmployeeController extends Controller
         $employees = Employee::all();
         $account_types = EmployeeAccountType::where('id','!=',2)->get();
         $employee_types = EmploymentType::all();
-        return view('admin.user_management.hr_employees.index',compact('authorized_users','hr_employees','account_types','employee_types'));
+        return view('admin.user_management.employees.index', compact('authorized_users', 'employees', 'account_types', 'employee_types'));
     }
 
     /**
@@ -297,7 +297,7 @@ class AdminEmployeeController extends Controller
         $leave_types = LeaveType::where('status',1)->get();
         $tax_slabs = TaxSlabSetting::where('status',1)->get();
         $account_types = EmployeeAccountType::all();
-        return view('admin.user_management.hr_employees.add_employee',compact('tax_slabs','gratuties','commissions','departments','designations','employment_types', 'roles', 'shift_types', 'document_types','employee_statuses','holidays','leave_types','account_types'));
+        return view('admin.user_management.employees.add_employee',compact('tax_slabs','gratuties','commissions','departments','designations','employment_types', 'roles', 'shift_types', 'document_types','employee_statuses','holidays','leave_types','account_types'));
     }
 
     /**
@@ -386,7 +386,7 @@ class AdminEmployeeController extends Controller
 //            $employee->bankDetail()->save($bankDetail);
 //        }
 //
-//        return redirect()->route('admin.hr_employees.index')->with('success', 'Employee created successfully.');
+//        return redirect()->route('admin.employees.index')->with('success', 'Employee created successfully.');
 //    }
 
     public function store(Request $request)
@@ -622,7 +622,7 @@ class AdminEmployeeController extends Controller
 
 
             DB::commit();
-            return redirect()->route('admin.hr_employees.index')
+            return redirect()->route('admin.employees.index')
                 ->with('success', 'Employee created successfully.');
 
         } catch (\Throwable $th) {
@@ -661,7 +661,7 @@ class AdminEmployeeController extends Controller
 
         ])->findOrFail($id);
 
-        return view('admin.user_management.hr_employees.profile', compact('employee'));
+        return view('admin.user_management.employees.profile', compact('employee'));
     }
 
     /**
@@ -700,7 +700,7 @@ class AdminEmployeeController extends Controller
         $tax_slabs = TaxSlabSetting::where('status',1)->get();
         $account_types = EmployeeAccountType::all();
 
-        return view('admin.user_management.hr_employees.edit_employee',
+        return view('admin.user_management.employees.edit_employee',
             compact(
                 'employee','employment_types','roles','shift_types',
                 'document_types','employee_statuses','holidays','departments',
@@ -1017,7 +1017,7 @@ class AdminEmployeeController extends Controller
 
 
             DB::commit();
-            return redirect()->route('admin.hr_employees.index')
+            return redirect()->route('admin.employees.index')
                 ->with('success', 'Employee updated successfully.');
 
         } catch (\Throwable $th) {
@@ -1091,7 +1091,7 @@ class AdminEmployeeController extends Controller
 
     public function getDocuments(Employee $employee)
     {
-        return view('admin.user_management.hr_employees.partials.documents_verify', compact('employee'));
+        return view('admin.user_management.employees.partials.documents_verify', compact('employee'));
     }
 
     public function verify(EmployeeDocument $document, Request $request)
@@ -1218,7 +1218,9 @@ class AdminEmployeeController extends Controller
                 ->make(true);
         }
         $employees = Employee::select('id','full_name')->get();
-        return view('admin.user_management.hr_employees.attendance_list',compact('hr_employees'));
+        return view('admin.user_management.employees.attendance_list', 
+        param($m) $m.Value -replace "'hr_employees'", "'employees'"
+    );
     }
 
     public function break_list(Request $request)
@@ -1270,7 +1272,9 @@ class AdminEmployeeController extends Controller
                 ->make(true);
         }
         $employees = Employee::select('id','full_name')->get();
-        return view('admin.user_management.hr_employees.break_list',compact('hr_employees'));
+        return view('admin.user_management.employees.break_list', 
+        param($m) $m.Value -replace "'hr_employees'", "'employees'"
+    );
     }
 
     public function daily_activity_list(Request $request)
@@ -1332,7 +1336,9 @@ class AdminEmployeeController extends Controller
                 ->make(true);
         }
         $employees = Employee::select('id','full_name')->get();
-        return view('admin.user_management.hr_employees.daily_activity_list',compact('hr_employees'));
+        return view('admin.user_management.employees.daily_activity_list', 
+        param($m) $m.Value -replace "'hr_employees'", "'employees'"
+    );
     }
 
 
@@ -1446,7 +1452,9 @@ class AdminEmployeeController extends Controller
                 ->make(true);
         }
         $employees = Employee::select('id','full_name')->get();
-        return view('admin.user_management.hr_employees.order_list',compact('hr_employees'));
+        return view('admin.user_management.employees.order_list', 
+        param($m) $m.Value -replace "'hr_employees'", "'employees'"
+    );
     }
     public function order_history($orderId)
     {
@@ -1504,7 +1512,9 @@ class AdminEmployeeController extends Controller
             ->select('id', 'full_name')
             ->get();
 
-        return view('admin.user_management.hr_employees.monthly_tax_list', compact('hr_employees'));
+        return view('admin.user_management.employees.monthly_tax_list',  
+        param($m) $m.Value -replace "'hr_employees'", "'employees'"
+    );
     }
 
 

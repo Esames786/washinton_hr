@@ -22,7 +22,7 @@
     <div class="card h-100">
         <div class="card-body">
             <div class="form-wizard">
-                <form action="{{ route('admin.hr_employees.store') }}" method="POST" enctype="multipart/form-data" class="form-select-2">
+                <form action="{{ route('admin.employees.store') }}" method="POST" enctype="multipart/form-data" class="form-select-2">
                     @csrf
 
                     <div class="form-wizard-header overflow-x-auto scroll-sm pb-8 my-32">

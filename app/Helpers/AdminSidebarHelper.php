@@ -41,7 +41,7 @@ class AdminSidebarHelper
                 'items' => [
                     ['title' => 'Roles', 'route' => 'admin.roles.index', 'iconClass' => 'text-primary-600'],
                     ['title' => 'Users', 'route' => 'admin.users.index', 'iconClass' => 'text-warning-main'],
-                    ['title' => 'hr_employees', 'route' => 'admin.hr_employees.index', 'iconClass' => 'text-info-main'],
+                    ['title' => 'hr_employees', 'route' => 'admin.employees.index', 'iconClass' => 'text-info-main'],
                 ]
             ],
             [
@@ -78,16 +78,16 @@ class AdminSidebarHelper
                 'title' => 'Employee Management',
                 'icon'  => 'bi bi-person-badge',
                 'items' => [
-                    ['title' => 'Attendance List', 'route' => 'admin.hr_employees.attendance_list', 'iconClass' => 'text-primary-600'],
-                    ['title' => 'Break List', 'route' => 'admin.hr_employees.break_list', 'iconClass' => 'text-warning-600'],
+                    ['title' => 'Attendance List', 'route' => 'admin.employees.attendance_list', 'iconClass' => 'text-primary-600'],
+                    ['title' => 'Break List', 'route' => 'admin.employees.break_list', 'iconClass' => 'text-warning-600'],
                     [
                         'title' => 'Tickets',
                         'route' => 'admin.tickets.index',
                         'iconClass' => 'text-success-600'
                     ],
-                    ['title' => 'Daily Activities', 'route' => 'admin.hr_employees.daily_activity_list', 'iconClass' => 'text-primary-600'],
-                    ['title' => 'Order List', 'route' => 'admin.hr_employees.order_list', 'iconClass' => 'text-warning-600'],
-                    ['title' => 'Monthly Tax', 'route' => 'admin.hr_employees.monthly_tax_list', 'iconClass' => 'text-warning-600'],
+                    ['title' => 'Daily Activities', 'route' => 'admin.employees.daily_activity_list', 'iconClass' => 'text-primary-600'],
+                    ['title' => 'Order List', 'route' => 'admin.employees.order_list', 'iconClass' => 'text-warning-600'],
+                    ['title' => 'Monthly Tax', 'route' => 'admin.employees.monthly_tax_list', 'iconClass' => 'text-warning-600'],
                 ]
             ],
 

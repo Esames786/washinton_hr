@@ -63,7 +63,7 @@ class AdminGratuitySettingController extends Controller
      */
     public function create()
     {
-        return view('hr_gratuity_settings.create');
+        return view('admin.employee_settings.gratuity_settings.create');
     }
 
     /**
