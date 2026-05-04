@@ -9,22 +9,17 @@ class DatabaseSeeder extends Seeder
     public function run()
     {
         $this->call([
-            // 1. Core lookup tables — no dependencies
-            HrSettingSeeder::class,          // employment_types, employee_statuses, commission_types,
-                                             // payroll_statuses, leave_types, attendance_statuses,
-                                             // ticket_types, ticket_statuses, employee_account_types,
-                                             // petty_cash_heads, payslip_item_types, gratuity_payout_statuses
+            // 1. All core lookup/status tables (no foreign key dependencies)
+            HrSettingSeeder::class,
 
-            // 2. Holidays — no dependencies
+            // 2. Holidays (standalone)
             HolidaySeeder::class,
 
-            // 3. Ticket request types — no dependencies
-            TicketRequestTypesSeeder::class,
-
-            // 4. Shift settings — depends on hr_attendance_statuses (seeded in step 1)
+            // 3. Shift types + attendance rules
+            //    (depends on hr_attendance_statuses seeded in step 1)
             ShiftSettingsSeeder::class,
 
-            // 5. Super admin — depends on hr_roles table
+            // 4. Super admin user + role
             SuperAdminSeeder::class,
         ]);
     }

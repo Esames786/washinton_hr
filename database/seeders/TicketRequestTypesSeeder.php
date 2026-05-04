@@ -7,12 +7,13 @@ use Illuminate\Support\Facades\DB;
 
 class TicketRequestTypesSeeder extends Seeder
 {
+    /**
+     * This seeder is handled by HrSettingSeeder (hr_ticket_types table).
+     * Kept for reference only — not called from DatabaseSeeder.
+     */
     public function run()
     {
-        DB::table('hr_ticket_request_types')->insert([
-            ['id' => 1, 'name' => 'Attendance', 'created_at' => now(), 'updated_at' => now()],
-            ['id' => 2, 'name' => 'Leave',      'created_at' => now(), 'updated_at' => now()],
-            ['id' => 3, 'name' => 'Complaint',  'created_at' => now(), 'updated_at' => now()],
-        ]);
+        // hr_ticket_types is already seeded in HrSettingSeeder
+        // No action needed here
     }
 }
