@@ -85,7 +85,7 @@
                 serverSide: true,
                 order: [[0, 'asc']],
                 ajax: {
-                    url: "{{ route('admin.employees.daily_activity_list') }}",
+                    url: "{{ route('admin.hr_employees.daily_activity_list') }}",
                     data: function (d) {
                         d.employee_ids = $('#employee_ids').val();
                         d.from_date = $('#from_date').val();

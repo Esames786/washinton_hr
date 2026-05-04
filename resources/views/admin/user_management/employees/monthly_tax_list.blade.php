@@ -100,7 +100,7 @@
                 order: [[1, 'asc']],
                 searching: true,
                 ajax: {
-                    url: "{{ route('admin.employees.monthly_tax_list') }}", // backend route
+                    url: "{{ route('admin.hr_employees.monthly_tax_list') }}", // backend route
                     data: function (d) {
                         d.employee_ids = $('#employee_ids').val();
                         d.month = $('#month').val();

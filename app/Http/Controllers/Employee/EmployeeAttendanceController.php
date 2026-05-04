@@ -34,8 +34,8 @@ class EmployeeAttendanceController extends Controller
     {
         if ($request->ajax()) {
             $data = EmployeeAttendance::with('attendance_status')
-                ->select('employee_attendances.id', 'employee_attendances.attendance_date','employee_attendances.check_in','employee_attendances.check_out','employee_attendances.working_hours','employee_attendances.attendance_status_id')
-                ->where('employee_attendances.employee_id',auth('employee')->id());
+                ->select('hr_employee_attendances.id', 'hr_employee_attendances.attendance_date','hr_employee_attendances.check_in','hr_employee_attendances.check_out','hr_employee_attendances.working_hours','hr_employee_attendances.attendance_status_id')
+                ->where('hr_employee_attendances.employee_id',auth('employee')->id());
 
             if ($request->from_date && $request->to_date) {
                 $data->whereBetween('attendance_date', [$request->from_date, $request->to_date]);

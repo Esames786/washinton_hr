@@ -32,31 +32,31 @@ class EmployeePayslipController extends Controller
 
             $current_month = Carbon::now()->format('Y-m');
             // Eager load relations and select necessary columns
-            $payslip_employee = PayrollDetail::join('payrolls', 'payrolls.id', '=', 'payroll_details.payroll_id')
-                ->join('employees', 'employees.id', '=', 'payroll_details.employee_id')
-                ->join('designations', 'designations.id', '=', 'employees.designation_id')
-                ->join('departments', 'departments.id', '=', 'employees.department_id')
-                ->where('payroll_details.employee_id', auth('employee')->id())
+            $payslip_employee = PayrollDetail::join('hr_payrolls', 'hr_payrolls.id', '=', 'hr_payroll_details.payroll_id')
+                ->join('hr_employees', 'hr_employees.id', '=', 'hr_payroll_details.employee_id')
+                ->join('hr_designations', 'hr_designations.id', '=', 'hr_employees.designation_id')
+                ->join('hr_departments', 'hr_departments.id', '=', 'hr_employees.department_id')
+                ->where('hr_payroll_details.employee_id', auth('employee')->id())
                 ->select(
-                    'payroll_details.id as payroll_detail_id',
-                    'payroll_details.payroll_id',
-                    'employees.id',
-                    'employees.full_name',
-                    'employees.email',
-                    'employees.employee_code',
-                    'employees.cnic',
-                    'employees.department_id',
-                    'departments.name as department_name',
-                    'designations.name as designation_name',
-                    'employees.designation_id',
-                    'payroll_details.basic_salary',
-                    'payroll_details.net_salary',
-                    'payroll_details.status_id'
+                    'hr_payroll_details.id as payroll_detail_id',
+                    'hr_payroll_details.payroll_id',
+                    'hr_employees.id',
+                    'hr_employees.full_name',
+                    'hr_employees.email',
+                    'hr_employees.employee_code',
+                    'hr_employees.cnic',
+                    'hr_employees.department_id',
+                    'hr_departments.name as department_name',
+                    'hr_designations.name as designation_name',
+                    'hr_employees.designation_id',
+                    'hr_payroll_details.basic_salary',
+                    'hr_payroll_details.net_salary',
+                    'hr_payroll_details.status_id'
                 );
                 if($request->payroll_month) {
-                    $payslip_employee->where('payrolls.payroll_month',$request->payroll_month);
+                    $payslip_employee->where('hr_payrolls.payroll_month',$request->payroll_month);
                 }else {
-                    $payslip_employee->where('payrolls.payroll_month',$current_month);
+                    $payslip_employee->where('hr_payrolls.payroll_month',$current_month);
                 }
 
             return DataTables::of($payslip_employee)
@@ -81,8 +81,8 @@ class EmployeePayslipController extends Controller
                 ->filter(function ($query) {
                     if ($search = request('search')['value'] ?? false) {
                         $query->where(function ($q) use ($search) {
-                            $q->where('employees.full_name', 'like', "%{$search}%")
-                                ->orWhere('employees.employee_code', 'like', "%{$search}%")
+                            $q->where('hr_employees.full_name', 'like', "%{$search}%")
+                                ->orWhere('hr_employees.employee_code', 'like', "%{$search}%")
                                 ->orWhere('cnic', 'like', "%{$search}%");
                         });
                     }

@@ -29,7 +29,7 @@
 {{--        <div class="card-header border-bottom bg-base py-16 px-24 d-flex align-items-center justify-content-between">--}}
 {{--            <h5 class="mb-0">Tickets</h5>--}}
 {{--            <div class="d-flex gap-2">--}}
-{{--                <a href="{{route('admin.employees.create')}}" class="btn btn-primary btn-sm">Add Employee</a>--}}
+{{--                <a href="{{route('admin.hr_employees.create')}}" class="btn btn-primary btn-sm">Add Employee</a>--}}
 {{--            </div>--}}
 
 {{--        </div>--}}

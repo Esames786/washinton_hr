@@ -65,24 +65,24 @@ class AdminEmployeeController extends Controller
 
             // Eager load relations and select necessary columns
             $employees = Employee::select(
-                'employees.id',
-                'employees.full_name',
-                'employees.email',
-                'employees.employee_code',
-                'employees.cnic',
-                'employees.department_id',
-                'employees.designation_id',
-                'employees.joining_date',
-                'employees.shift_id',
-                'employees.role_id',
-                'employees.country',
-                'employees.city',
-                'employees.state',
-                'employees.employee_status_id',
-                'employees.agent_id',
+                'hr_employees.id',
+                'hr_employees.full_name',
+                'hr_employees.email',
+                'hr_employees.employee_code',
+                'hr_employees.cnic',
+                'hr_employees.department_id',
+                'hr_employees.designation_id',
+                'hr_employees.joining_date',
+                'hr_employees.shift_id',
+                'hr_employees.role_id',
+                'hr_employees.country',
+                'hr_employees.city',
+                'hr_employees.state',
+                'hr_employees.employee_status_id',
+                'hr_employees.agent_id',
                 'user.name as agent_name',
-                'employees.account_type_id',
-                'employees.employment_type_id',
+                'hr_employees.account_type_id',
+                'hr_employees.employment_type_id',
             )
                 ->with([
                     'shift:id,name',
@@ -92,7 +92,7 @@ class AdminEmployeeController extends Controller
                     'account_type:id,name',
                     'employment_type:id,name'
                 ])
-                ->leftJoin('user', 'employees.agent_id', '=', 'user.id');
+                ->leftJoin('user', 'hr_employees.agent_id', '=', 'user.id');
 
             // Fetch all statuses once
             $allStatuses = EmployeeStatus::all()->keyBy('id');
@@ -101,12 +101,12 @@ class AdminEmployeeController extends Controller
                 ->addColumn('action', function ($row) {
                     $dropdownItems = '
                         <div class="d-flex justify-content-center gap-2">
-                            <a href="' . route('admin.employees.edit', $row->id) . '"
+                            <a href="' . route('admin.hr_employees.edit', $row->id) . '"
                                class="bg-success-focus text-success-600 bg-hover-success-200 fw-medium w-40-px h-40-px
                                       d-flex justify-content-center align-items-center rounded-circle"   data-bs-toggle="tooltip"  title="Edit Employee">
                                 <iconify-icon icon="lucide:edit" class="menu-icon"></iconify-icon>
                             </a>
-                            <a href="' . route('admin.employees.show', $row->id) . '"
+                            <a href="' . route('admin.hr_employees.show', $row->id) . '"
                                class="bg-info-focus bg-hover-info-200 text-info-600 fw-medium w-40-px h-40-px d-flex justify-content-center align-items-center rounded-circle"  data-bs-toggle="tooltip"  title="View Employee">
                                <iconify-icon icon="majesticons:eye-line" class="icon text-xl"></iconify-icon>
                             </a>
@@ -139,12 +139,12 @@ class AdminEmployeeController extends Controller
 //                    // Existing buttons
 //                    $buttons = '
 //                        <div class="d-flex justify-content-center gap-2">
-//                            <a href="' . route('admin.employees.edit', $row->id) . '"
+//                            <a href="' . route('admin.hr_employees.edit', $row->id) . '"
 //                               class="bg-success-focus text-success-600 bg-hover-success-200 fw-medium w-40-px h-40-px
 //                                      d-flex justify-content-center align-items-center rounded-circle">
 //                                <iconify-icon icon="lucide:edit" class="menu-icon"></iconify-icon>
 //                            </a>
-//                            <a href="' . route('admin.employees.show', $row->id) . '"
+//                            <a href="' . route('admin.hr_employees.show', $row->id) . '"
 //                               class="bg-info-focus bg-hover-info-200 text-info-600 fw-medium w-40-px h-40-px d-flex justify-content-center align-items-center rounded-circle">
 //                               <iconify-icon icon="majesticons:eye-line" class="icon text-xl"></iconify-icon>
 //                            </a>
@@ -239,25 +239,25 @@ class AdminEmployeeController extends Controller
                 ->filter(function ($query) use ($request) {
                     if ($search = request('search')['value'] ?? false) {
                         $query->where(function ($q) use ($search) {
-                            $q->where('employees.full_name', 'like', "%{$search}%")
-                                ->orWhere('employees.email', 'like', "%{$search}%")
-                                ->orWhere('employees.employee_code', 'like', "%{$search}%");
+                            $q->where('hr_employees.full_name', 'like', "%{$search}%")
+                                ->orWhere('hr_employees.email', 'like', "%{$search}%")
+                                ->orWhere('hr_employees.employee_code', 'like', "%{$search}%");
                         });
                     }
 
                     // Employee IDs filter
                     if ($request->filled('employee_ids')) {
-                        $query->whereIn('employees.id', $request->employee_ids);
+                        $query->whereIn('hr_employees.id', $request->employee_ids);
                     }
 
                     // Account type filter
                     if ($request->filled('account_type_id')) {
-                        $query->where('employees.account_type_id', $request->account_type_id);
+                        $query->where('hr_employees.account_type_id', $request->account_type_id);
                     }
 
                     // Employment type filter
                     if ($request->filled('employment_type_id')) {
-                        $query->where('employees.employment_type_id', $request->employment_type_id);
+                        $query->where('hr_employees.employment_type_id', $request->employment_type_id);
                     }
                 })
 
@@ -273,7 +273,7 @@ class AdminEmployeeController extends Controller
         $employees = Employee::all();
         $account_types = EmployeeAccountType::where('id','!=',2)->get();
         $employee_types = EmploymentType::all();
-        return view('admin.user_management.employees.index',compact('authorized_users','employees','account_types','employee_types'));
+        return view('admin.user_management.hr_employees.index',compact('authorized_users','hr_employees','account_types','employee_types'));
     }
 
     /**
@@ -297,7 +297,7 @@ class AdminEmployeeController extends Controller
         $leave_types = LeaveType::where('status',1)->get();
         $tax_slabs = TaxSlabSetting::where('status',1)->get();
         $account_types = EmployeeAccountType::all();
-        return view('admin.user_management.employees.add_employee',compact('tax_slabs','gratuties','commissions','departments','designations','employment_types', 'roles', 'shift_types', 'document_types','employee_statuses','holidays','leave_types','account_types'));
+        return view('admin.user_management.hr_employees.add_employee',compact('tax_slabs','gratuties','commissions','departments','designations','employment_types', 'roles', 'shift_types', 'document_types','employee_statuses','holidays','leave_types','account_types'));
     }
 
     /**
@@ -386,7 +386,7 @@ class AdminEmployeeController extends Controller
 //            $employee->bankDetail()->save($bankDetail);
 //        }
 //
-//        return redirect()->route('admin.employees.index')->with('success', 'Employee created successfully.');
+//        return redirect()->route('admin.hr_employees.index')->with('success', 'Employee created successfully.');
 //    }
 
     public function store(Request $request)
@@ -622,7 +622,7 @@ class AdminEmployeeController extends Controller
 
 
             DB::commit();
-            return redirect()->route('admin.employees.index')
+            return redirect()->route('admin.hr_employees.index')
                 ->with('success', 'Employee created successfully.');
 
         } catch (\Throwable $th) {
@@ -661,7 +661,7 @@ class AdminEmployeeController extends Controller
 
         ])->findOrFail($id);
 
-        return view('admin.user_management.employees.profile', compact('employee'));
+        return view('admin.user_management.hr_employees.profile', compact('employee'));
     }
 
     /**
@@ -700,7 +700,7 @@ class AdminEmployeeController extends Controller
         $tax_slabs = TaxSlabSetting::where('status',1)->get();
         $account_types = EmployeeAccountType::all();
 
-        return view('admin.user_management.employees.edit_employee',
+        return view('admin.user_management.hr_employees.edit_employee',
             compact(
                 'employee','employment_types','roles','shift_types',
                 'document_types','employee_statuses','holidays','departments',
@@ -1017,7 +1017,7 @@ class AdminEmployeeController extends Controller
 
 
             DB::commit();
-            return redirect()->route('admin.employees.index')
+            return redirect()->route('admin.hr_employees.index')
                 ->with('success', 'Employee updated successfully.');
 
         } catch (\Throwable $th) {
@@ -1091,7 +1091,7 @@ class AdminEmployeeController extends Controller
 
     public function getDocuments(Employee $employee)
     {
-        return view('admin.user_management.employees.partials.documents_verify', compact('employee'));
+        return view('admin.user_management.hr_employees.partials.documents_verify', compact('employee'));
     }
 
     public function verify(EmployeeDocument $document, Request $request)
@@ -1111,7 +1111,7 @@ class AdminEmployeeController extends Controller
     {
         if($request->ajax()){
             $data = EmployeeAttendance::with('attendance_status','employee')
-                ->select('employee_attendances.id','employee_attendances.employee_id', 'employee_attendances.attendance_date','employee_attendances.check_in','employee_attendances.check_out','employee_attendances.working_hours','employee_attendances.attendance_status_id');
+                ->select('hr_employee_attendances.id','hr_employee_attendances.employee_id', 'hr_employee_attendances.attendance_date','hr_employee_attendances.check_in','hr_employee_attendances.check_out','hr_employee_attendances.working_hours','hr_employee_attendances.attendance_status_id');
 
             if($request->employee_ids) {
                 $data->whereIn('employee_id',$request->employee_ids);
@@ -1218,28 +1218,28 @@ class AdminEmployeeController extends Controller
                 ->make(true);
         }
         $employees = Employee::select('id','full_name')->get();
-        return view('admin.user_management.employees.attendance_list',compact('employees'));
+        return view('admin.user_management.hr_employees.attendance_list',compact('hr_employees'));
     }
 
     public function break_list(Request $request)
     {
         if ($request->ajax()) {
             $data = EmployeeBreak::with('employee')
-                ->select('employee_breaks.id', 'employee_breaks.employee_id', 'employee_breaks.break_start', 'employee_breaks.break_end', 'employee_breaks.break_duration');
+                ->select('hr_employee_breaks.id', 'hr_employee_breaks.employee_id', 'hr_employee_breaks.break_start', 'hr_employee_breaks.break_end', 'hr_employee_breaks.break_duration');
 
             if($request->employee_ids) {
-                $data->whereIn('employee_breaks.employee_id',$request->employee_ids);
+                $data->whereIn('hr_employee_breaks.employee_id',$request->employee_ids);
             }
             if ($request->from_date && $request->to_date) {
                 $from = Carbon::parse($request->from_date)->startOfDay();
                 $to   = Carbon::parse($request->to_date)->endOfDay();
-                $data->whereBetween('employee_breaks.created_at', [$from, $to]);
+                $data->whereBetween('hr_employee_breaks.created_at', [$from, $to]);
             } elseif ($request->from_date) {
-                $data->where('employee_breaks.created_at', '>=', Carbon::parse($request->from_date)->startOfDay());
+                $data->where('hr_employee_breaks.created_at', '>=', Carbon::parse($request->from_date)->startOfDay());
             } elseif ($request->to_date) {
-                $data->where('employee_breaks.created_at', '<=', Carbon::parse($request->to_date)->endOfDay());
+                $data->where('hr_employee_breaks.created_at', '<=', Carbon::parse($request->to_date)->endOfDay());
             } else {
-                $data->whereDate('employee_breaks.created_at', Carbon::today());
+                $data->whereDate('hr_employee_breaks.created_at', Carbon::today());
             }
 
             return DataTables::of($data)
@@ -1270,7 +1270,7 @@ class AdminEmployeeController extends Controller
                 ->make(true);
         }
         $employees = Employee::select('id','full_name')->get();
-        return view('admin.user_management.employees.break_list',compact('employees'));
+        return view('admin.user_management.hr_employees.break_list',compact('hr_employees'));
     }
 
     public function daily_activity_list(Request $request)
@@ -1332,7 +1332,7 @@ class AdminEmployeeController extends Controller
                 ->make(true);
         }
         $employees = Employee::select('id','full_name')->get();
-        return view('admin.user_management.employees.daily_activity_list',compact('employees'));
+        return view('admin.user_management.hr_employees.daily_activity_list',compact('hr_employees'));
     }
 
 
@@ -1376,9 +1376,9 @@ class AdminEmployeeController extends Controller
 
             // Orders ko DB query se fetch karte hain
             $orders = DB::table('orders')
-                ->Join('employees','employees.agent_id','orders.user_id')
+                ->Join('hr_employees','hr_employees.agent_id','orders.user_id')
                 ->select(
-                    'employees.full_name',
+                    'hr_employees.full_name',
                     'orders.id',
                     'orders.Listing_Status',
                     'orders.created_at',
@@ -1446,7 +1446,7 @@ class AdminEmployeeController extends Controller
                 ->make(true);
         }
         $employees = Employee::select('id','full_name')->get();
-        return view('admin.user_management.employees.order_list',compact('employees'));
+        return view('admin.user_management.hr_employees.order_list',compact('hr_employees'));
     }
     public function order_history($orderId)
     {
@@ -1462,7 +1462,7 @@ class AdminEmployeeController extends Controller
     {
         if ($request->ajax()) {
             $query = PayrollDetail::query()
-                ->join('employees as e', 'e.id', '=', 'payroll_details.employee_id')
+                ->join('employees as e', 'e.id', '=', 'hr_payroll_details.employee_id')
                 ->select(
                     'e.full_name as employee',
                     DB::raw('MONTH(payroll_details.created_at) as month'),
@@ -1470,20 +1470,20 @@ class AdminEmployeeController extends Controller
                     DB::raw('SUM(payroll_details.tax_amount) as tax_amount')
                 )
                 ->groupBy(
-                    'payroll_details.employee_id',
+                    'hr_payroll_details.employee_id',
                     DB::raw('MONTH(payroll_details.created_at)'),
                     DB::raw('YEAR(payroll_details.created_at)')
                 );
 
             // ✅ Filters
             if ($request->filled('employee_ids')) {
-                $query->whereIn('payroll_details.employee_id', $request->employee_ids);
+                $query->whereIn('hr_payroll_details.employee_id', $request->employee_ids);
             }
 
             // ✅ Filter by month & current year
             if ($request->filled('month')) {
-                $query->whereMonth('payroll_details.created_at', $request->month)
-                    ->whereYear('payroll_details.created_at', now()->year);
+                $query->whereMonth('hr_payroll_details.created_at', $request->month)
+                    ->whereYear('hr_payroll_details.created_at', now()->year);
             }
 
 
@@ -1504,7 +1504,7 @@ class AdminEmployeeController extends Controller
             ->select('id', 'full_name')
             ->get();
 
-        return view('admin.user_management.employees.monthly_tax_list', compact('employees'));
+        return view('admin.user_management.hr_employees.monthly_tax_list', compact('hr_employees'));
     }
 
 

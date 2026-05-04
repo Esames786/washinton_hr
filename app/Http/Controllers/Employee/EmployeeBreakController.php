@@ -19,8 +19,8 @@ class EmployeeBreakController extends Controller
     {
         if ($request->ajax()) {
             $data = EmployeeBreak::with('employee')
-                ->select('employee_breaks.id', 'employee_breaks.employee_id', 'employee_breaks.break_start', 'employee_breaks.break_end', 'employee_breaks.break_duration')
-                ->where('employee_breaks.employee_id',auth('employee')->id());
+                ->select('hr_employee_breaks.id', 'hr_employee_breaks.employee_id', 'hr_employee_breaks.break_start', 'hr_employee_breaks.break_end', 'hr_employee_breaks.break_duration')
+                ->where('hr_employee_breaks.employee_id',auth('employee')->id());
 
             return DataTables::of($data)
                 ->addColumn('employee_name', function ($row) {

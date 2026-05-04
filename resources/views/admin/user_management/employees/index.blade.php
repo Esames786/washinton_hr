@@ -1,6 +1,6 @@
 @extends('layout.master')
 
-@section('pageName','Employees')
+@section('pageName','hr_employees')
 @push('cssLinks')
     <style>
         .doc-card {
@@ -68,7 +68,7 @@
         <div class="card-header border-bottom bg-base py-16 px-24 d-flex flex-wrap align-items-end gap-3">
                     <div class="col-md-12 col-12">
                         <div class="d-flex gap-2 justify-content-end">
-                            <a href="{{route('admin.employees.create')}}" class="btn btn-primary btn-sm">Add Employee</a>
+                            <a href="{{route('admin.hr_employees.create')}}" class="btn btn-primary btn-sm">Add Employee</a>
                         </div>
                     </div>
                      <div class="col-md-1" style="width: 4.333333%!important"></div>
@@ -263,7 +263,7 @@
                 searching: true,
                 rowId: 'id',
                 ajax: {
-                    url: "{{ route('admin.employees.index') }}",
+                    url: "{{ route('admin.hr_employees.index') }}",
                     data: function (d) {
                         d.employee_ids = $('#employee_ids').val();          // multi-select
                         d.account_type_id = $('#account_type_id').val();    // single select
@@ -340,7 +340,7 @@
                 if(statusId == 3){ // Terminated
                     $('#terminationModal').data('employee-id', employeeId).modal('show');
                 } else {
-                    $.post("{{ route('admin.employees.change-status') }}", {
+                    $.post("{{ route('admin.hr_employees.change-status') }}", {
                         _token: '{{ csrf_token() }}',
                         employee_id: employeeId,
                         status: statusId
@@ -364,7 +364,7 @@
                 let disableEmail = $('#disableEmail').is(':checked') ? 1 : 0;
                 let disablePhone = $('#disablePhone').is(':checked') ? 1 : 0;
 
-                $.post("{{ route('admin.employees.change-status') }}", {
+                $.post("{{ route('admin.hr_employees.change-status') }}", {
                     _token: '{{ csrf_token() }}',
                     employee_id: employeeId,
                     status: 3,
@@ -388,7 +388,7 @@
             {{--    let docId = $(this).data('id');--}}
             {{--    let status = $(this).is(':checked') ? 1 : 0;--}}
 
-            {{--    $.post("{{ route('admin.employees.documents.verify', ':id') }}".replace(':id', docId), {--}}
+            {{--    $.post("{{ route('admin.hr_employees.documents.verify', ':id') }}".replace(':id', docId), {--}}
             {{--        _token: '{{ csrf_token() }}',--}}
             {{--        status: status--}}
             {{--    }, function(res){--}}
@@ -411,7 +411,7 @@
                 let docId = $(this).data('id');
                 let status = $(this).is(':checked') ? 1 : 0;
 
-                let url = "{{ route('admin.employees.documents.verify', ':id') }}";
+                let url = "{{ route('admin.hr_employees.documents.verify', ':id') }}";
                 url = url.replace(':id', docId); // replace placeholder with actual ID
 
                 $.ajax({
@@ -444,7 +444,7 @@
             $(document).on('click', '.document-verification-btn', function() {
                 let employeeId = $(this).data('id');
 
-                $.get("{{ route('admin.employees.documents', ':id') }}".replace(':id', employeeId), function(res) {
+                $.get("{{ route('admin.hr_employees.documents', ':id') }}".replace(':id', employeeId), function(res) {
                     $('#documentModalBody').html(res);
                     $('#documentModal').modal('show');
                 }).fail(function(xhr) {
@@ -459,7 +459,7 @@
             $(document).on('click', '.document-verification-btn', function() {
                 let employeeId = $(this).data('id');
 
-                $.get("{{ route('admin.employees.documents', ':id') }}".replace(':id', employeeId), function(res) {
+                $.get("{{ route('admin.hr_employees.documents', ':id') }}".replace(':id', employeeId), function(res) {
                     $('#documentModalBody').html(res);
                     $('#documentModal').modal('show');
                 }).fail(function(xhr) {
@@ -482,7 +482,7 @@
 
             $("#saveAttachAgent").on("click", function () {
                 $.ajax({
-                    url: "{{ route('admin.employees.attach_agent') }}",
+                    url: "{{ route('admin.hr_employees.attach_agent') }}",
                     method: "POST",
                     data: $("#attachAgentForm").serialize(),
                     success: function(res) {

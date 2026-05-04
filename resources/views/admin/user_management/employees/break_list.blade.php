@@ -80,7 +80,7 @@
                 searching: true,
                 rowId: 'id',
                 ajax: {
-                    url: "{{ route('admin.employees.break_list') }}",
+                    url: "{{ route('admin.hr_employees.break_list') }}",
                     data: function (d) {
                         d.employee_ids = $('#employee_ids').val();
                         d.from_date = $('#from_date').val();

@@ -60,7 +60,7 @@ class AdminTicketController extends Controller
         $ticketTypes = TicketType::where('status', 1)->get();
         $employees   = Employee::where('employee_status_id', 1)->get();
 
-        return view('admin.tickets.index', compact('ticketTypes', 'employees'));
+        return view('admin.tickets.index', compact('ticketTypes', 'hr_employees'));
     }
 
 
@@ -69,7 +69,7 @@ class AdminTicketController extends Controller
         $ticketTypes = TicketType::where('status', 1)->get();
         $employees   = Employee::where('employee_status_id', 1)->get();
 
-        return view('admin.tickets.create', compact('ticketTypes', 'employees'));
+        return view('admin.tickets.create', compact('ticketTypes', 'hr_employees'));
     }
 
     public function store(Request $request)

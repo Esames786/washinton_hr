@@ -14,7 +14,7 @@ class PettyCashLedgerTrait
         $master_id = $master ? $master->id : null;
 
         // 1) Fetch master's opening balance
-        $master = DB::table('petty_cash_masters')->where('id', $master_id )->first();
+        $master = DB::table('hr_petty_cash_masters')->where('id', $master_id )->first();
         if (!$master) {
             return [];  // Or throw error
         }

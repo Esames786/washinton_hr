@@ -20,7 +20,7 @@ class AdminGratuityPayoutController extends Controller
         if ($request->ajax()) {
 
             $gratuity_payouts = GratuityPayout::with(['employee','payout_status'])
-                ->select('gratuity_payouts.id','gratuity_payouts.payout_date','gratuity_payouts.total_balance','gratuity_payouts.paid_amount','gratuity_payouts.remarks','gratuity_payouts.status_id','gratuity_payouts.employee_id')
+                ->select('hr_gratuity_payouts.id','hr_gratuity_payouts.payout_date','hr_gratuity_payouts.total_balance','hr_gratuity_payouts.paid_amount','hr_gratuity_payouts.remarks','hr_gratuity_payouts.status_id','hr_gratuity_payouts.employee_id')
                 ->whereIn('status_id',[1,2]);
             return DataTables::of($gratuity_payouts)
                 ->addColumn('action', function ($row) {
@@ -63,7 +63,7 @@ class AdminGratuityPayoutController extends Controller
         }
 
         $employees = Employee::where('employee_status_id',[3,4])->get();
-        return view('admin.gratuity_payouts.index')->with(['employees'=>$employees]);
+        return view('admin.gratuity_payouts.index')->with(['hr_employees'=>$employees]);
     }
 
     public function paid_list(Request $request)
@@ -71,7 +71,7 @@ class AdminGratuityPayoutController extends Controller
         if ($request->ajax()) {
 
             $gratuity_payouts = GratuityPayout::with(['employee','payout_status'])
-                ->select('gratuity_payouts.id','gratuity_payouts.payout_date','gratuity_payouts.total_balance','gratuity_payouts.paid_amount','gratuity_payouts.remarks','gratuity_payouts.status_id','gratuity_payouts.employee_id')
+                ->select('hr_gratuity_payouts.id','hr_gratuity_payouts.payout_date','hr_gratuity_payouts.total_balance','hr_gratuity_payouts.paid_amount','hr_gratuity_payouts.remarks','hr_gratuity_payouts.status_id','hr_gratuity_payouts.employee_id')
                 ->where('status_id',3);
             return DataTables::of($gratuity_payouts)
                 ->addColumn('employee', fn($row) => $row->employee?->full_name ?? '')

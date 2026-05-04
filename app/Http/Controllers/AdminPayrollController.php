@@ -221,7 +221,7 @@ class AdminPayrollController extends Controller
 //       $processStatusId =  1;
 //
 //       // 2) range resolve: from last PAID payroll to today
-////       $lastPaid = DB::table('payrolls')->where('status_id', $paidStatusId)->orderByDesc('to_date')->first();
+////       $lastPaid = DB::table('hr_payrolls')->where('status_id', $paidStatusId)->orderByDesc('to_date')->first();
 //       $lastPaid = Payroll::where('status_id',$paidStatusId)->latest()->first();
 //
 //       $fromDate = $lastPaid ? Carbon::parse($lastPaid->to_date)->addDay() : Carbon::now()->startOfMonth();

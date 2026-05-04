@@ -38,14 +38,14 @@ class AdminPayslipController extends Controller
             ];
         });
         $employees = Employee::where('employee_status_id',1)->select('id','full_name')->get();
-        return view('admin.user_management.employees.payslip_employee_list',compact('employees','months','search_true'));
+        return view('admin.user_management.hr_employees.payslip_employee_list',compact('hr_employees','months','search_true'));
     }
 
     public function show($payroll_id)
     {
         $search_true=false;
         $employees = Employee::where('employee_status_id',1)->select('id','full_name')->get();
-        return view('admin.user_management.employees.payslip_employee_list',compact('employees','search_true','payroll_id'));
+        return view('admin.user_management.hr_employees.payslip_employee_list',compact('hr_employees','search_true','payroll_id'));
     }
 
     public function list(Request $request)
@@ -53,33 +53,33 @@ class AdminPayslipController extends Controller
         if ($request->ajax()) {
 
             // Eager load relations and select necessary columns
-            $payslip_employee = PayrollDetail::join('payrolls', 'payrolls.id', '=', 'payroll_details.payroll_id')
-                ->join('employees', 'employees.id', '=', 'payroll_details.employee_id')
-                ->join('designations', 'designations.id', '=', 'employees.designation_id')
-                ->join('departments', 'departments.id', '=', 'employees.department_id')
+            $payslip_employee = PayrollDetail::join('hr_payrolls', 'hr_payrolls.id', '=', 'hr_payroll_details.payroll_id')
+                ->join('hr_employees', 'hr_employees.id', '=', 'hr_payroll_details.employee_id')
+                ->join('hr_designations', 'hr_designations.id', '=', 'hr_employees.designation_id')
+                ->join('hr_departments', 'hr_departments.id', '=', 'hr_employees.department_id')
                 ->select(
-                    'payroll_details.id as payroll_detail_id',
-                    'payroll_details.payroll_id',
-                    'employees.id',
-                    'employees.full_name',
-                    'employees.email',
-                    'employees.employee_code',
-                    'employees.cnic',
-                    'employees.department_id',
-                    'departments.name as department_name',
-                    'designations.name as designation_name',
-                    'employees.designation_id',
-                    'payroll_details.basic_salary',
-                    'payroll_details.net_salary',
-                    'payroll_details.status_id'
+                    'hr_payroll_details.id as payroll_detail_id',
+                    'hr_payroll_details.payroll_id',
+                    'hr_employees.id',
+                    'hr_employees.full_name',
+                    'hr_employees.email',
+                    'hr_employees.employee_code',
+                    'hr_employees.cnic',
+                    'hr_employees.department_id',
+                    'hr_departments.name as department_name',
+                    'hr_designations.name as designation_name',
+                    'hr_employees.designation_id',
+                    'hr_payroll_details.basic_salary',
+                    'hr_payroll_details.net_salary',
+                    'hr_payroll_details.status_id'
                 );
             if($request->payroll_id){
-                $payslip_employee->where('payrolls.id', $request->payroll_id);
+                $payslip_employee->where('hr_payrolls.id', $request->payroll_id);
             } elseif (!empty($request->employee_ids)) {
-                $payslip_employee->whereIn('payroll_details.employee_id', $request->employee_ids);
+                $payslip_employee->whereIn('hr_payroll_details.employee_id', $request->employee_ids);
             }
             else {
-                $payslip_employee ->where('payrolls.payroll_month',$request->payroll_month);
+                $payslip_employee ->where('hr_payrolls.payroll_month',$request->payroll_month);
             }
 
             return DataTables::of($payslip_employee)
@@ -104,8 +104,8 @@ class AdminPayslipController extends Controller
                 ->filter(function ($query) {
                     if ($search = request('search')['value'] ?? false) {
                         $query->where(function ($q) use ($search) {
-                            $q->where('employees.full_name', 'like', "%{$search}%")
-                                ->orWhere('employees.employee_code', 'like', "%{$search}%")
+                            $q->where('hr_employees.full_name', 'like', "%{$search}%")
+                                ->orWhere('hr_employees.employee_code', 'like', "%{$search}%")
                                 ->orWhere('cnic', 'like', "%{$search}%");
                         });
                     }
@@ -120,7 +120,7 @@ class AdminPayslipController extends Controller
 
         $payrollDetail = PayrollDetail::with(['employee', 'payroll', 'payslipItems','adjustments'])->where('id', $id)->first();
         if($payrollDetail) {
-            return view('admin.user_management.employees.payslip', compact('payrollDetail'));
+            return view('admin.user_management.hr_employees.payslip', compact('payrollDetail'));
         }
         return redirect()->route('admin.not_found');
     }
@@ -129,7 +129,7 @@ class AdminPayslipController extends Controller
     {
         $payrollDetail = PayrollDetail::with(['employee', 'payroll', 'payslipItems'])->findOrFail($id);
 
-        $pdf = Pdf::loadView('admin.user_management.employees.payslip_download', compact('payrollDetail'));
+        $pdf = Pdf::loadView('admin.user_management.hr_employees.payslip_download', compact('payrollDetail'));
         return $pdf->download("Payslip_{$payrollDetail->employee->name}_{$payrollDetail->payroll->payroll_month}.pdf");
     }
 
