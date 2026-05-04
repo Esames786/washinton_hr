@@ -80,7 +80,7 @@ class AdminEmployeeController extends Controller
                 'employees.state',
                 'employees.employee_status_id',
                 'employees.agent_id',
-                'authorized_users.name as agent_name',
+                'user.name as agent_name',
                 'employees.account_type_id',
                 'employees.employment_type_id',
             )
@@ -92,7 +92,7 @@ class AdminEmployeeController extends Controller
                     'account_type:id,name',
                     'employment_type:id,name'
                 ])
-                ->leftJoin('authorized_users', 'employees.agent_id', '=', 'authorized_users.id');
+                ->leftJoin('user', 'employees.agent_id', '=', 'user.id');
 
             // Fetch all statuses once
             $allStatuses = EmployeeStatus::all()->keyBy('id');
@@ -265,8 +265,10 @@ class AdminEmployeeController extends Controller
                 ->make(true);
         }
 
-        $authorized_users = DB::table('authorized_users')->select('id','name','email')
-            ->where('usr_type','Broker')->where('is_email_verified',1)
+        $authorized_users = DB::table('user')->select('id','name','email')
+            ->where('status', 1)
+            ->where('deleted', 0)
+            ->orderBy('name')
             ->get();
         $employees = Employee::all();
         $account_types = EmployeeAccountType::where('id','!=',2)->get();
