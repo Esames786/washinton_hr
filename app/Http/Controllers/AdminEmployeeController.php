@@ -1376,85 +1376,99 @@ class AdminEmployeeController extends Controller
         if ($request->ajax()) {
             $today = Carbon::today()->format('Y-m-d');
             $agent_ids = $request->employee_ids
-                ? Employee::whereIn('id', $request->employee_ids)->pluck('agent_id')
+                ? Employee::whereIn('id', $request->employee_ids)->pluck('agent_id')->filter()->values()
                 : null;
 
-            // Orders live in the same database â€” direct query
+            // order table: agent linked via order_taker_id -> user.id
             $orders = DB::table('order')
-                ->join('hr_employees', 'hr_employees.agent_id', '=', 'order.user_id')
+                ->join('hr_employees', 'hr_employees.agent_id', '=', 'order.order_taker_id')
                 ->select(
                     'hr_employees.full_name',
                     'order.id',
-                    'order.Listing_Status',
+                    'order.pstatus',
                     'order.created_at',
-                    'order.Customer_Name',
-                    'order.Customer_Email',
-                    'order.Customer_Phone',
-                    'order.Address',
-                    'order.Book_Price',
-                    'order.Deposit_Amount',
-                    'order.Paid_Amount',
-                    'order.Paid_Method',
-                    'order.Received_Date',
+                    'order.oname',
+                    'order.oemail',
+                    'order.ophone',
+                    'order.origincity',
+                    'order.originstate',
+                    'order.destinationcity',
+                    'order.destinationstate',
+                    'order.ymk',
+                    'order.paid_amount',
+                    'order.deposit_amount',
                     'order.payment_status',
-                    'order.Ref_ID'
+                    'order.payment_method',
+                    'order.order_taker_id'
                 );
 
-                // Filter by employee_ids if given
-                if ($agent_ids) {
-                    $orders->whereIn('order.user_id', $agent_ids);
-                }
+            // Filter by employee agent_ids
+            if ($agent_ids && $agent_ids->isNotEmpty()) {
+                $orders->whereIn('order.order_taker_id', $agent_ids);
+            }
 
-                // Date filtering logic
-                if ($request->from_date && $request->to_date) {
-                    // Both dates given â†’ filter between them
-                    $orders->whereBetween('order.created_at', [
-                        $request->from_date . ' 00:00:00',
-                        $request->to_date . ' 23:59:59'
-                    ]);
-                } else {
-                    // Otherwise default â†’ todayâ€™s orders
-                    $orders->whereBetween('order.created_at', [
-                        $today . ' 00:00:00',
-                        $today . ' 23:59:59'
-                    ]);
-                }
+            // Date filtering
+            if ($request->from_date && $request->to_date) {
+                $orders->whereBetween('order.created_at', [
+                    $request->from_date . ' 00:00:00',
+                    $request->to_date . ' 23:59:59'
+                ]);
+            } else {
+                $orders->whereBetween('order.created_at', [
+                    $today . ' 00:00:00',
+                    $today . ' 23:59:59'
+                ]);
+            }
 
             return DataTables::of($orders)
-                ->editColumn('Ref_ID', function ($row) {
-                    $helloTransportUrl = env('HELLOTRANSPORT_URL');
-                    $url = $helloTransportUrl . '/Authorized/quote-global-search?search_criteria=1&search_query=' . $row->Ref_ID;
-
-                    return '<a href="' . $url . '" target="_blank" class="text-primary fw-bold">
-                        ' . $row->Ref_ID . '
-                    </a>';
-                })
                 ->addColumn('action', function ($row) {
-                    return  '
-                                 <div class="d-flex justify-content-center gap-2">
-                                     <button class="btn btn-outline-info ms-2 order-history-btn" data-id="' . $row->id . '" style="width: 130px;">Order History</button>
-                                 </div>
-                            ';
+                    return '<div class="d-flex justify-content-center gap-2">
+                        <button class="btn btn-outline-info ms-2 order-history-btn" data-id="' . $row->id . '" style="width:130px;">Order History</button>
+                    </div>';
                 })
                 ->editColumn('created_at', function ($row) {
                     return $row->created_at ? Carbon::parse($row->created_at)->format('d-M-Y') : '-';
                 })
-                ->editColumn('Received_Date', function ($row) {
-                    return $row->Received_Date ? Carbon::parse($row->Received_Date)->format('d-M-Y') : '-';
+                ->editColumn('pstatus', function ($row) {
+                    $statuses = [
+                        0  => ['label' => 'New',             'class' => 'bg-secondary'],
+                        1  => ['label' => 'Interested',      'class' => 'bg-info'],
+                        2  => ['label' => 'Follow More',     'class' => 'bg-primary'],
+                        3  => ['label' => 'Asking Low',      'class' => 'bg-warning text-dark'],
+                        4  => ['label' => 'Not Interested',  'class' => 'bg-danger'],
+                        5  => ['label' => 'No Response',     'class' => 'bg-secondary'],
+                        6  => ['label' => 'Time Quote',      'class' => 'bg-info'],
+                        7  => ['label' => 'Payment Missing', 'class' => 'bg-warning text-dark'],
+                        8  => ['label' => 'Booked',          'class' => 'bg-success'],
+                        9  => ['label' => 'Listed',          'class' => 'bg-primary'],
+                        10 => ['label' => 'Scheduled',       'class' => 'bg-info'],
+                        11 => ['label' => 'Picked Up',       'class' => 'bg-primary'],
+                        12 => ['label' => 'Delivered',       'class' => 'bg-success'],
+                        13 => ['label' => 'Completed',       'class' => 'bg-success'],
+                        14 => ['label' => 'Cancelled',       'class' => 'bg-danger'],
+                        15 => ['label' => 'Deleted',         'class' => 'bg-dark'],
+                    ];
+                    $s = $statuses[$row->pstatus] ?? ['label' => $row->pstatus, 'class' => 'bg-secondary'];
+                    return '<span class="badge ' . $s['class'] . ' px-2 py-1">' . $s['label'] . '</span>';
                 })
                 ->editColumn('payment_status', function ($row) {
-                    $status = $row->payment_status ?? 'Unknown';
-                    $class = 'badge rounded-pill bg-info text-white px-3 py-3';
-                    return '<span class="'.$class.'">'.$status.'</span>';
+                    $status = $row->payment_status ?? 'Unpaid';
+                    $class  = $status === 'Paid' ? 'bg-success' : ($status === 'Unpaid' ? 'bg-danger' : 'bg-warning text-dark');
+                    return '<span class="badge ' . $class . ' px-2 py-1">' . $status . '</span>';
                 })
-                ->rawColumns(['payment_status','action','Ref_ID'])
+                ->addColumn('route', function ($row) {
+                    $from = $row->origincity ? $row->origincity . ', ' . $row->originstate : '-';
+                    $to   = $row->destinationcity ? $row->destinationcity . ', ' . $row->destinationstate : '-';
+                    return $from . ' &rarr; ' . $to;
+                })
+                ->rawColumns(['action', 'pstatus', 'payment_status', 'route'])
                 ->make(true);
         }
-        $employees = Employee::select('id','full_name')->get();
-        return view('admin.user_management.employees.order_list',
-            compact('employees')
-        );
+
+        $employees = Employee::select('id', 'full_name')->get();
+        return view('admin.user_management.employees.order_list', compact('employees'));
     }
+
     public function order_history($orderId)
     {
         $history = DB::table('order_quote_status')
@@ -1464,7 +1478,6 @@ class AdminEmployeeController extends Controller
 
         return response()->json($history);
     }
-
     public function monthly_tax_list(Request $request)
     {
         if ($request->ajax()) {
