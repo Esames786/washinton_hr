@@ -38,18 +38,14 @@ class AdminPayslipController extends Controller
             ];
         });
         $employees = Employee::where('employee_status_id',1)->select('id','full_name')->get();
-        return view('admin.user_management.employees.payslip_employee_list', 
-        param($m) $m.Value -replace "'hr_employees'", "'employees'"
-    );
+        return view('admin.user_management.employees.payslip_employee_list', compact('months', 'employees', 'search_true'));
     }
 
     public function show($payroll_id)
     {
         $search_true=false;
         $employees = Employee::where('employee_status_id',1)->select('id','full_name')->get();
-        return view('admin.user_management.employees.payslip_employee_list', 
-        param($m) $m.Value -replace "'hr_employees'", "'employees'"
-    );
+        return view('admin.user_management.employees.payslip_employee_list', compact('employees', 'search_true'));
     }
 
     public function list(Request $request)

@@ -1218,9 +1218,9 @@ class AdminEmployeeController extends Controller
                 ->make(true);
         }
         $employees = Employee::select('id','full_name')->get();
-        return view('admin.user_management.employees.attendance_list', 
-        param($m) $m.Value -replace "'hr_employees'", "'employees'"
-    );
+        return view('admin.user_management.employees.attendance_list',
+            compact('employees')
+        );
     }
 
     public function break_list(Request $request)
@@ -1272,9 +1272,9 @@ class AdminEmployeeController extends Controller
                 ->make(true);
         }
         $employees = Employee::select('id','full_name')->get();
-        return view('admin.user_management.employees.break_list', 
-        param($m) $m.Value -replace "'hr_employees'", "'employees'"
-    );
+        return view('admin.user_management.employees.break_list',
+            compact('employees')
+        );
     }
 
     public function daily_activity_list(Request $request)
@@ -1336,9 +1336,9 @@ class AdminEmployeeController extends Controller
                 ->make(true);
         }
         $employees = Employee::select('id','full_name')->get();
-        return view('admin.user_management.employees.daily_activity_list', 
-        param($m) $m.Value -replace "'hr_employees'", "'employees'"
-    );
+        return view('admin.user_management.employees.daily_activity_list',
+            compact('employees')
+        );
     }
 
 
@@ -1452,9 +1452,9 @@ class AdminEmployeeController extends Controller
                 ->make(true);
         }
         $employees = Employee::select('id','full_name')->get();
-        return view('admin.user_management.employees.order_list', 
-        param($m) $m.Value -replace "'hr_employees'", "'employees'"
-    );
+        return view('admin.user_management.employees.order_list',
+            compact('employees')
+        );
     }
     public function order_history($orderId)
     {
@@ -1512,9 +1512,9 @@ class AdminEmployeeController extends Controller
             ->select('id', 'full_name')
             ->get();
 
-        return view('admin.user_management.employees.monthly_tax_list',  
-        param($m) $m.Value -replace "'hr_employees'", "'employees'"
-    );
+        return view('admin.user_management.employees.monthly_tax_list',
+            compact('employees')
+        );
     }
 
 

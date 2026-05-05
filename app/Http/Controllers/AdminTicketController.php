@@ -60,9 +60,7 @@ class AdminTicketController extends Controller
         $ticketTypes = TicketType::where('status', 1)->get();
         $employees   = Employee::where('employee_status_id', 1)->get();
 
-        return view('admin.tickets.index',  
-        param($m) $m.Value -replace "'hr_employees'", "'employees'"
-    );
+        return view('admin.tickets.index', compact('ticketTypes', 'employees'));
     }
 
 
@@ -71,9 +69,7 @@ class AdminTicketController extends Controller
         $ticketTypes = TicketType::where('status', 1)->get();
         $employees   = Employee::where('employee_status_id', 1)->get();
 
-        return view('admin.tickets.create',  
-        param($m) $m.Value -replace "'hr_employees'", "'employees'"
-    );
+        return view('admin.tickets.create', compact('ticketTypes', 'employees'));
     }
 
     public function store(Request $request)
