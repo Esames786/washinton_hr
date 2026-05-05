@@ -553,7 +553,7 @@ class AdminEmployeeController extends Controller
 
                     $path = 'Uploads/employees/' . $employee->id . '/';
 
-                    // ✅ Make directory if not exists
+                    // âœ… Make directory if not exists
                     if (!file_exists(public_path($path))) {
                         mkdir(public_path($path), 0777, true);
                     }
@@ -830,7 +830,7 @@ class AdminEmployeeController extends Controller
             }
             $employee->save();
 
-            // 🔹 Profile Image
+            // ðŸ”¹ Profile Image
             if ($request->hasFile('profile_path')) {
                 $file = $request->file('profile_path');
                 $filename = 'profile_' . $employee->id . '.' . $file->extension();
@@ -851,7 +851,7 @@ class AdminEmployeeController extends Controller
 
 
 
-            // 🔹 Bank Detail update
+            // ðŸ”¹ Bank Detail update
             if ($request->bank_name || $request->account_title || $request->account_number || $request->iban) {
                 $bankDetail = $employee->bankDetail ?? new EmployeeBankDetail();
                 $bankDetail->bank_name     = $request->bank_name;
@@ -862,7 +862,7 @@ class AdminEmployeeController extends Controller
                 $employee->bankDetail()->save($bankDetail);
             }
 
-//            // 🔹 Working Days (purane delete karke new insert)
+//            // ðŸ”¹ Working Days (purane delete karke new insert)
 //            EmployeeWorkingDay::where('employee_id', $employee->id)->delete();
 //            foreach ($request->working_days as $day => $isWorking) {
 //                $workingDay = new EmployeeWorkingDay();
@@ -895,7 +895,7 @@ class AdminEmployeeController extends Controller
                 }
             }
 
-            // 🔹 Leaves assignment (update/insert)
+            // ðŸ”¹ Leaves assignment (update/insert)
             if ($request->has('leaves')) {
                 foreach ($request->leaves as $leave) {
                     $assignLeave = EmployeeAssignLeave::updateOrCreate(
@@ -921,7 +921,7 @@ class AdminEmployeeController extends Controller
                 }
             }
 
-            // 🔹 Holidays exception (safe update/insert)
+            // ðŸ”¹ Holidays exception (safe update/insert)
             if ($request->filled('excluded_holiday_ids')) {
                 foreach ($request->excluded_holiday_ids as $holidayId) {
                     $record = EmployeeHolidayException::updateOrCreate(
@@ -943,7 +943,7 @@ class AdminEmployeeController extends Controller
                 }
             }
 
-//            // 🔹 Leaves (purane delete karke new insert)
+//            // ðŸ”¹ Leaves (purane delete karke new insert)
 //            EmployeeAssignLeave::where('employee_id', $employee->id)->delete();
 //            if ($request->has('leaves')) {
 //                foreach ($request->leaves as $leave) {
@@ -959,7 +959,7 @@ class AdminEmployeeController extends Controller
 //                }
 //            }
 
-//            // 🔹 Holidays exception
+//            // ðŸ”¹ Holidays exception
 //            EmployeeHolidayException::where('employee_id', $employee->id)->delete();
 //            if ($request->filled('excluded_holiday_ids')) {
 //                foreach ($request->excluded_holiday_ids as $holidayId) {
@@ -973,7 +973,7 @@ class AdminEmployeeController extends Controller
 //                }
 //            }
 
-                 // 🔹 Documents
+                 // ðŸ”¹ Documents
                 if ($request->hasFile('documents')) {
 
                     $documentSettings = DocumentSetting::whereIn('id', array_keys($request->file('documents', [])))
@@ -1379,43 +1379,42 @@ class AdminEmployeeController extends Controller
                 ? Employee::whereIn('id', $request->employee_ids)->pluck('agent_id')
                 : null;
 
-
-            // Orders ko DB query se fetch karte hain
-            $orders = DB::table('orders')
-                ->Join('hr_employees','hr_employees.agent_id','orders.user_id')
+            // Orders live in the same database â€” direct query
+            $orders = DB::table('order')
+                ->join('hr_employees', 'hr_employees.agent_id', '=', 'order.user_id')
                 ->select(
                     'hr_employees.full_name',
-                    'orders.id',
-                    'orders.Listing_Status',
-                    'orders.created_at',
-                    'orders.Customer_Name',
-                    'orders.Customer_Email',
-                    'orders.Customer_Phone',
-                    'orders.Address',
-                    'orders.Book_Price',
-                    'orders.Deposit_Amount',
-                    'orders.Paid_Amount',
-                    'orders.Paid_Method',
-                    'orders.Received_Date',
-                    'orders.payment_status',
-                    'orders.Ref_ID'
+                    'order.id',
+                    'order.Listing_Status',
+                    'order.created_at',
+                    'order.Customer_Name',
+                    'order.Customer_Email',
+                    'order.Customer_Phone',
+                    'order.Address',
+                    'order.Book_Price',
+                    'order.Deposit_Amount',
+                    'order.Paid_Amount',
+                    'order.Paid_Method',
+                    'order.Received_Date',
+                    'order.payment_status',
+                    'order.Ref_ID'
                 );
 
                 // Filter by employee_ids if given
                 if ($agent_ids) {
-                    $orders->whereIn('orders.user_id', $agent_ids);
+                    $orders->whereIn('order.user_id', $agent_ids);
                 }
 
                 // Date filtering logic
                 if ($request->from_date && $request->to_date) {
-                    // Both dates given → filter between them
-                    $orders->whereBetween('orders.created_at', [
+                    // Both dates given â†’ filter between them
+                    $orders->whereBetween('order.created_at', [
                         $request->from_date . ' 00:00:00',
                         $request->to_date . ' 23:59:59'
                     ]);
                 } else {
-                    // Otherwise default → today’s orders
-                    $orders->whereBetween('orders.created_at', [
+                    // Otherwise default â†’ todayâ€™s orders
+                    $orders->whereBetween('order.created_at', [
                         $today . ' 00:00:00',
                         $today . ' 23:59:59'
                     ]);
@@ -1483,19 +1482,19 @@ class AdminEmployeeController extends Controller
                     DB::raw('YEAR(payroll_details.created_at)')
                 );
 
-            // ✅ Filters
+            // âœ… Filters
             if ($request->filled('employee_ids')) {
                 $query->whereIn('hr_payroll_details.employee_id', $request->employee_ids);
             }
 
-            // ✅ Filter by month & current year
+            // âœ… Filter by month & current year
             if ($request->filled('month')) {
                 $query->whereMonth('hr_payroll_details.created_at', $request->month)
                     ->whereYear('hr_payroll_details.created_at', now()->year);
             }
 
 
-            // ✅ Safe Total Tax Calculation
+            // âœ… Safe Total Tax Calculation
             $totalTax = (clone $query)->get()->sum('tax_amount');
 
             return DataTables::of($query)
