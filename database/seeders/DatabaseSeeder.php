@@ -21,6 +21,11 @@ class DatabaseSeeder extends Seeder
 
             // 4. Super admin user + role
             SuperAdminSeeder::class,
+
+            // 5. Pakistan-ready data: departments, designations, employee roles,
+            //    shifts (4 shifts), tax slabs (FBR), gratuity, commission,
+            //    documents, currency rates, activity fields, sample employees
+            PakistanReadySeeder::class,
         ]);
     }
 }
