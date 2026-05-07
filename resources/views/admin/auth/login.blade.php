@@ -118,8 +118,8 @@
                 <h4 class="mb-12 text-center">Admin Sign In</h4>
                 <p class="mb-32 text-secondary-light text-lg text-center">Welcome back! please enter your detail</p>
             </div>
-            <form id="loginform" action="javascript:void(0);">
-                <!-- Email -->
+            <form id="loginform" method="POST" action="{{ route('admin.admin_login') }}">
+                @csrf
                 <div class="position-relative mb-20">
                     <div class="icon-field ">
                         <span class="icon top-50 translate-middle-y">
@@ -189,104 +189,41 @@
 
 <script>
     $(document).ready(function () {
-        $("#loginform").validate({
-            rules: {
-                email: { required: true, email: true },
-                password: { required: true, minlength: 8 }
-            },
-            messages: {
-                email: {
-                    required: "Please enter your email",
-                    email: "Please enter a valid email address"
-                },
-                password: {
-                    required: "Please enter your password",
-                    minlength: "Password must be at least 8 characters"
-                }
-            },
-            errorPlacement: function(error, element) {
-                // Find the .validation-error div in the same parent container and replace its content
-                element.closest('.position-relative')
-                    .find('.validation-error')
-                    .html(error);
-            },
-            success: function(label, element) {
-                // Clear the error when valid
-                $(element).closest('.position-relative')
-                    .find('.validation-error')
-                    .empty();
-            },
-            submitHandler: function (form, event) {
-                event.preventDefault();
-
-                Swal.fire({
-                    title: 'Logging in...',
-                    customClass: { popup: 'swal-responsive' },
-                    timerProgressBar: true,
-                    didOpen: () => Swal.showLoading()
-                });
-
-                var data = $(form).serialize();
-                $.ajax({
-                    url: '{{ route("admin.admin_login") }}',
-                    method: 'POST',
-                    data: data,
-                    dataType: 'json',
-                    headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
-                    success: function (response) {
-                        if (response.status === 1) {
-                            Swal.fire({
-                                title: 'Success!',
-                                text: 'Login successful. Redirecting...',
-                                icon: 'success',
-                                customClass: { popup: 'swal-responsive' },
-                                showConfirmButton: false,
-                                timer: 1500,
-                                willClose: () => {
-                                    window.location.replace(response.redirect_url || '{{ url("admin/dashboard") }}');
-                                }
-                            });
-                        } else {
-                            Swal.fire({
-                                title: 'Error!',
-                                html: '<ul>' +
-                                    (response.errors ? Object.values(response.errors).flat().map(m => `<li>${m}</li>`).join('') : 'User Not Found') +
-                                    '</ul>',
-                                icon: 'error',
-                            });
-                        }
-                    },
-                    error: function (xhr) {
-                        Swal.fire({
-                            title: 'Error!',
-                            text: 'An unexpected error occurred.',
-                            icon: 'error',
-                            customClass: { popup: 'swal-responsive' }
-                        });
-                    }
-                });
-            }
+        $("#loginform").on('submit', function (e) {
+            Swal.fire({
+                title: 'Logging in...',
+                customClass: { popup: 'swal-responsive' },
+                timerProgressBar: true,
+                allowOutsideClick: false,
+                didOpen: () => Swal.showLoading()
+            });
+            return true;
         });
 
+        // Show server-side errors if any
+        @if($errors->any())
+        Swal.fire({
+            title: 'Login Failed',
+            html: '<ul style="text-align:left;padding-left:1rem;">' +
+                @foreach($errors->all() as $error)
+                '<li>{{ $error }}</li>' +
+                @endforeach
+                '</ul>',
+            icon: 'error',
+            customClass: { popup: 'swal-responsive' }
+        });
+        @endif
     });
 
-    // ================== Password Show Hide Js Start ==========
+    // Password Show Hide
     function initializePasswordToggle(toggleSelector) {
         $(toggleSelector).on('click', function() {
             $(this).toggleClass("ri-eye-off-line");
             var input = $($(this).attr("data-toggle"));
-            if (input.attr("type") === "password") {
-                input.attr("type", "text");
-            } else {
-                input.attr("type", "password");
-            }
+            input.attr("type", input.attr("type") === "password" ? "text" : "password");
         });
     }
-    // Call the function
     initializePasswordToggle('.toggle-password');
-    // ========================= Password Show Hide Js End ===========================
-
-
 </script>
 
 </body>

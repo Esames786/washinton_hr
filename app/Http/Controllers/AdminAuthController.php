@@ -26,65 +26,56 @@ class AdminAuthController extends Controller
         // If not authenticated, return the login view
         return view('admin.auth.login');
     }
-    public function admin_login(Request $request){
-
-
+    public function admin_login(Request $request)
+    {
         $validator = Validator::make($request->all(), [
-            'email' => 'required|email',
+            'email'    => 'required|email',
             'password' => 'required|min:8',
         ]);
 
         if ($validator->fails()) {
-            return response()->json([
-                'status' => 0,
-                'errors' => $validator->errors()
-            ]);
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json(['status' => 0, 'errors' => $validator->errors()]);
+            }
+            return back()->withErrors($validator)->withInput();
         }
 
-//
-//        if (Auth::guard('employee')->check()) {
-//            Auth::guard('employee')->logout();
-//        }
-//
-
         $credentials = [
-            'email' => $request->input('email'),
+            'email'    => $request->input('email'),
             'password' => $request->input('password'),
         ];
 
-        $admin = Admin::where('email',$request->input('email'))->first();
+        $admin = Admin::where('email', $request->input('email'))->first();
 
-        if(!empty($admin)){
-            if($admin->status == 1) {
-                if (Auth::guard('admin')->attempt($credentials)) {
-                    // Authentication passed
-                    // Regenerate session to bind new session ID to response cookie
-                    $request->session()->regenerate();
-                    return response()->json([
-                        'status'       => 1,
-                        'message'      => 'Login successful',
-                        'redirect_url' => route('admin.dashboard'),
-                    ]);
-                } else {
-                    // Authentication failed
-                    return response()->json([
-                        'status' => 0,
-                        'errors' => ['password' => ['Invalid email or password']],
-                    ]);
-                }
-            }else{
-                return response()->json([
-                    'status' => 0,
-                    'errors' => ['password' => ['User Not Active']],
-                ]);
+        if (!$admin) {
+            $error = ['password' => ['User Not Found']];
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json(['status' => 0, 'errors' => $error]);
             }
-        }else{
-            return response()->json([
-                'status' => 0,
-                'errors' => ['password' => ['User Not Found']],
-            ]);
+            return back()->withErrors($error)->withInput();
         }
 
+        if ($admin->status != 1) {
+            $error = ['password' => ['User Not Active']];
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json(['status' => 0, 'errors' => $error]);
+            }
+            return back()->withErrors($error)->withInput();
+        }
+
+        if (Auth::guard('admin')->attempt($credentials)) {
+            // Regenerate session — critical for Chrome cookie handling
+            $request->session()->regenerate();
+
+            // Always server-side redirect — avoids Chrome AJAX cookie issues
+            return redirect()->route('admin.dashboard');
+        }
+
+        $error = ['password' => ['Invalid email or password']];
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json(['status' => 0, 'errors' => $error]);
+        }
+        return back()->withErrors($error)->withInput();
     }
 
     public function logout(Request $request)

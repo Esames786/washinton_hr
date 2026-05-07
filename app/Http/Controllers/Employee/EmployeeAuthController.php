@@ -15,39 +15,41 @@ class EmployeeAuthController extends Controller
     {
         return view('employee.auth.login');
     }
-    public function employee_login(Request $request){
-
+    public function employee_login(Request $request)
+    {
         $validator = Validator::make($request->all(), [
-            'email' => 'required|email',
+            'email'    => 'required|email',
             'password' => 'required|min:8',
         ]);
 
         if ($validator->fails()) {
-            return response()->json([
-                'status' => 0,
-                'errors' => $validator->errors()
-            ]);
+            // AJAX request
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json(['status' => 0, 'errors' => $validator->errors()]);
+            }
+            return back()->withErrors($validator)->withInput();
         }
 
         $credentials = [
-            'email' => $request->input('email'),
+            'email'    => $request->input('email'),
             'password' => $request->input('password'),
         ];
 
         $employee = Employee::where('email', $request->input('email'))->first();
 
         \Illuminate\Support\Facades\Log::info('[EmployeeLogin] Attempt', [
-            'email'  => $request->input('email'),
-            'found'  => $employee ? 'yes' : 'no',
-            'status' => $employee?->employee_status_id,
+            'email'        => $request->input('email'),
+            'found'        => $employee ? 'yes' : 'no',
+            'status'       => $employee?->employee_status_id,
             'is_logged_in' => $employee?->is_logged_in,
         ]);
 
         if (!$employee) {
-            return response()->json([
-                'status' => 0,
-                'errors' => ['password' => ['Employee Not Found']],
-            ]);
+            $error = ['password' => ['Employee Not Found']];
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json(['status' => 0, 'errors' => $error]);
+            }
+            return back()->withErrors($error)->withInput();
         }
 
         $statusMessages = [
@@ -69,24 +71,24 @@ class EmployeeAuthController extends Controller
             \Illuminate\Support\Facades\Log::warning('[EmployeeLogin] Blocked by status', [
                 'email'  => $request->input('email'),
                 'status' => $employee->employee_status_id,
-                'message' => $message,
             ]);
 
-            return response()->json([
-                'status'     => 0,
-                'error_type' => 'account_status',
-                'errors'     => ['account' => [$message]],
-            ]);
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json([
+                    'status'     => 0,
+                    'error_type' => 'account_status',
+                    'errors'     => ['account' => [$message]],
+                ]);
+            }
+            return back()->withErrors(['account' => $message])->withInput();
         }
 
         if ($employee->is_logged_in == 1) {
-            \Illuminate\Support\Facades\Log::warning('[EmployeeLogin] Already logged in', [
-                'email' => $request->input('email'),
-            ]);
-            return response()->json([
-                'status' => 0,
-                'errors' => ['account' => ['You are already logged in from another device/browser']],
-            ]);
+            $error = ['account' => ['You are already logged in from another device/browser']];
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json(['status' => 0, 'errors' => $error]);
+            }
+            return back()->withErrors($error)->withInput();
         }
 
         if (Auth::guard('employee')->attempt($credentials)) {
@@ -96,30 +98,24 @@ class EmployeeAuthController extends Controller
             $employee->login_at     = $now->toDateString();
             $employee->save();
 
-            // Regenerate session to ensure the new session ID is sent in the response cookie
+            // Regenerate session — critical for Chrome cookie handling
             $request->session()->regenerate();
 
             \Illuminate\Support\Facades\Log::info('[EmployeeLogin] Success', [
-                'email'           => $request->input('email'),
-                'employee_id'     => $employee->id,
-                'new_session_id'  => session()->getId(),
+                'email'          => $request->input('email'),
+                'employee_id'    => $employee->id,
+                'new_session_id' => session()->getId(),
             ]);
 
-            return response()->json([
-                'status'       => 1,
-                'message'      => 'Login successful',
-                'redirect_url' => route('employee.dashboard'),
-            ]);
+            // Always do a proper server-side redirect — avoids Chrome AJAX cookie issues
+            return redirect()->route('employee.dashboard');
         }
 
-        \Illuminate\Support\Facades\Log::warning('[EmployeeLogin] Wrong password', [
-            'email' => $request->input('email'),
-        ]);
-
-        return response()->json([
-            'status' => 0,
-            'errors' => ['password' => ['Invalid email or password']],
-        ]);
+        $error = ['password' => ['Invalid email or password']];
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json(['status' => 0, 'errors' => $error]);
+        }
+        return back()->withErrors($error)->withInput();
     }
 
     public function logout(Request $request)
