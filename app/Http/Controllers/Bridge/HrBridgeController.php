@@ -148,6 +148,12 @@ class HrBridgeController extends Controller
             'session_id'  => $request->session()->getId(),
         ]);
 
+        // Redirect to requested destination
+        $to = $request->query('to', 'dashboard');
+        if ($to === 'profile') {
+            return redirect()->route('employee.profile');
+        }
+
         return redirect()->route('employee.dashboard');
     }
 
@@ -389,7 +395,8 @@ class HrBridgeController extends Controller
             'updated_at'  => now(),
         ]);
 
-        $redirectUrl = rtrim(config('app.url'), '/') . '/employee/sso/' . $token;
+        $redirectTo  = $request->input('redirect_to', 'dashboard'); // 'dashboard' or 'profile'
+        $redirectUrl = rtrim(config('app.url'), '/') . '/employee/sso/' . $token . '?to=' . $redirectTo;
 
         return response()->json([
             'message'      => 'Redirect ready.',
