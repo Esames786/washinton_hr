@@ -130,6 +130,9 @@ class HrFreshMigrate extends Command
 
         // Admins
         'hr_admins',
+
+        // SSO tokens
+        'hr_sso_tokens',
     ];
 
     public function handle(): int
@@ -162,7 +165,8 @@ class HrFreshMigrate extends Command
             }
         }
 
-        // Also catch any hr_ tables we may have missed
+        // Also catch any hr_ tables we may have missed — this is the safety net
+        // that handles tables not in the explicit list above
         $allTables = DB::select("SHOW TABLES");
         $dbName    = DB::getDatabaseName();
         $colKey    = "Tables_in_{$dbName}";
@@ -271,7 +275,8 @@ class HrFreshMigrate extends Command
             'tax_slab', 'tax_columns', 'petty_cash', 'agent_id_employee',
             'employee_account_type', 'account_type_id', 'overtime_to_employee',
             'user_screenshots', 'image_to_petty', 'total_amount_payroll',
-            'employee_taxes', 'currency_rates',
+            'employee_taxes', 'currency_rates', 'employee_daily_activities',
+            'sso_token', 'hr_sso',
         ];
 
         $lower = strtolower($migrationName);
