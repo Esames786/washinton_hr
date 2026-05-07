@@ -29,26 +29,26 @@ class EmployeeAuthController extends Controller
             ]);
         }
 
-
-//        if (Auth::guard('admin')->check()) {
-//            Auth::guard('admin')->logout();
-//        }
-
-
         $credentials = [
             'email' => $request->input('email'),
             'password' => $request->input('password'),
         ];
 
-        $employee = Employee::where('email',$request->input('email'))->first();
+        $employee = Employee::where('email', $request->input('email'))->first();
 
-        if(!$employee){
+        \Illuminate\Support\Facades\Log::info('[EmployeeLogin] Attempt', [
+            'email'  => $request->input('email'),
+            'found'  => $employee ? 'yes' : 'no',
+            'status' => $employee?->employee_status_id,
+            'is_logged_in' => $employee?->is_logged_in,
+        ]);
+
+        if (!$employee) {
             return response()->json([
                 'status' => 0,
                 'errors' => ['password' => ['Employee Not Found']],
             ]);
         }
-
 
         $statusMessages = [
             2  => 'Your account has been marked inactive. Please contact HR.',
@@ -62,10 +62,15 @@ class EmployeeAuthController extends Controller
         ];
 
         // Status 7 (Document Verification) — allow login so employee can upload documents
-        // All other non-active statuses are blocked
         if ($employee->employee_status_id != 1 && $employee->employee_status_id != 7) {
             $message = $statusMessages[$employee->employee_status_id]
                 ?? 'Your account is not active. Please contact HR.';
+
+            \Illuminate\Support\Facades\Log::warning('[EmployeeLogin] Blocked by status', [
+                'email'  => $request->input('email'),
+                'status' => $employee->employee_status_id,
+                'message' => $message,
+            ]);
 
             return response()->json([
                 'status'     => 0,
@@ -75,6 +80,9 @@ class EmployeeAuthController extends Controller
         }
 
         if ($employee->is_logged_in == 1) {
+            \Illuminate\Support\Facades\Log::warning('[EmployeeLogin] Already logged in', [
+                'email' => $request->input('email'),
+            ]);
             return response()->json([
                 'status' => 0,
                 'errors' => ['account' => ['You are already logged in from another device/browser']],
@@ -82,19 +90,27 @@ class EmployeeAuthController extends Controller
         }
 
         if (Auth::guard('employee')->attempt($credentials)) {
-
             $now = Carbon::now();
             $employee->is_logged_in = 1;
             $employee->last_seen_at = $now;
-            $employee->login_at =$now->toDateString();
+            $employee->login_at     = $now->toDateString();
             $employee->save();
 
-            // Authentication passed
+            \Illuminate\Support\Facades\Log::info('[EmployeeLogin] Success', [
+                'email'      => $request->input('email'),
+                'employee_id'=> $employee->id,
+                'session_id' => session()->getId(),
+            ]);
+
             return response()->json([
-                'status' => 1,
+                'status'  => 1,
                 'message' => 'Login successful',
             ]);
         }
+
+        \Illuminate\Support\Facades\Log::warning('[EmployeeLogin] Wrong password', [
+            'email' => $request->input('email'),
+        ]);
 
         return response()->json([
             'status' => 0,
