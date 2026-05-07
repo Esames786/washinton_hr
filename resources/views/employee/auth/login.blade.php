@@ -185,8 +185,11 @@
                                 icon: 'success',
                                 customClass: { popup: 'swal-responsive' },
                                 showConfirmButton: false,
-                                timer: 2000,
-                                willClose: () => window.location.href = '{{ url("employee/dashboard") }}'
+                                timer: 1500,
+                                willClose: () => {
+                                    // Use redirect_url from server response — ensures correct session cookie is used
+                                    window.location.replace(response.redirect_url || '{{ url("employee/dashboard") }}');
+                                }
                             });
                         } else if (response.error_type === 'account_status') {
                             // Account exists but not yet active — show informational alert

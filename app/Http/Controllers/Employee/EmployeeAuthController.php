@@ -96,15 +96,19 @@ class EmployeeAuthController extends Controller
             $employee->login_at     = $now->toDateString();
             $employee->save();
 
+            // Regenerate session to ensure the new session ID is sent in the response cookie
+            $request->session()->regenerate();
+
             \Illuminate\Support\Facades\Log::info('[EmployeeLogin] Success', [
-                'email'      => $request->input('email'),
-                'employee_id'=> $employee->id,
-                'session_id' => session()->getId(),
+                'email'           => $request->input('email'),
+                'employee_id'     => $employee->id,
+                'new_session_id'  => session()->getId(),
             ]);
 
             return response()->json([
-                'status'  => 1,
-                'message' => 'Login successful',
+                'status'       => 1,
+                'message'      => 'Login successful',
+                'redirect_url' => route('employee.dashboard'),
             ]);
         }
 

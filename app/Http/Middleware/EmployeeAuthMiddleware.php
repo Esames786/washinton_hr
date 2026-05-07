@@ -13,9 +13,12 @@ class EmployeeAuthMiddleware
     {
         if (!Auth::guard('employee')->check()) {
             Log::warning('[EmployeeMiddleware] Not authenticated — redirecting to login', [
-                'url'        => $request->fullUrl(),
-                'session_id' => session()->getId(),
-                'has_session'=> $request->hasSession(),
+                'url'           => $request->fullUrl(),
+                'session_id'    => session()->getId(),
+                'has_session'   => $request->hasSession(),
+                'cookie_name'   => config('session.cookie'),
+                'session_domain'=> config('session.domain'),
+                'cookies_sent'  => array_keys($request->cookies->all()),
             ]);
             return redirect()->route('employee.login');
         }

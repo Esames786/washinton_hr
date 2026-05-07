@@ -58,9 +58,12 @@ class AdminAuthController extends Controller
             if($admin->status == 1) {
                 if (Auth::guard('admin')->attempt($credentials)) {
                     // Authentication passed
+                    // Regenerate session to bind new session ID to response cookie
+                    $request->session()->regenerate();
                     return response()->json([
-                        'status' => 1,
-                        'message' => 'Login successful',
+                        'status'       => 1,
+                        'message'      => 'Login successful',
+                        'redirect_url' => route('admin.dashboard'),
                     ]);
                 } else {
                     // Authentication failed

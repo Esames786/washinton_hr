@@ -241,8 +241,10 @@
                                 icon: 'success',
                                 customClass: { popup: 'swal-responsive' },
                                 showConfirmButton: false,
-                                timer: 2000,
-                                willClose: () => window.location.href = '{{ url("admin/dashboard") }}'
+                                timer: 1500,
+                                willClose: () => {
+                                    window.location.replace(response.redirect_url || '{{ url("admin/dashboard") }}');
+                                }
                             });
                         } else {
                             Swal.fire({
