@@ -21,27 +21,27 @@ class EmployeeDashboardController extends Controller
        $breakStatus = EmployeeBreakController::getBreakStatus();
 
        // Orders table se aaj ke orders ka count
-       $todayOrdersCount = DB::table('orders')
+       $todayOrdersCount = DB::table('order')
            ->where('user_id',$employee->agent_id)
            ->where('Listing_Status','Book Order')
            ->whereDate('created_at', $today)
            ->count();
 
-       $yesterdayOrdersCount = DB::table('orders')
+       $yesterdayOrdersCount = DB::table('order')
            ->where('user_id',$employee->agent_id)
            ->where('Listing_Status','Book Order')
            ->whereDate('created_at', now()->subDay()->toDateString())
            ->count();
        $difference = $todayOrdersCount - $yesterdayOrdersCount;
 
-       $todayCancelOrdersCount = DB::table('orders')
+       $todayCancelOrdersCount = DB::table('order')
            ->where('user_id', $employee->agent_id)
            ->where('Listing_Status', 'Cancelled')
            ->whereDate('created_at', $today)
            ->count();
 
 
-       $yesterdayCancelOrdersCount = DB::table('orders')
+       $yesterdayCancelOrdersCount = DB::table('order')
            ->where('user_id', $employee->agent_id)
            ->where('Listing_Status', 'Cancelled')
            ->whereDate('created_at', now()->subDay()->toDateString())
@@ -92,7 +92,7 @@ class EmployeeDashboardController extends Controller
             $today = Carbon::today()->format('Y-m-d');
             $employee= auth('employee')->user();
             // Orders ko DB query se fetch karte hain
-            $orders = DB::table('orders')
+            $orders = DB::table('order')
                 ->select(
                     'id',
                     'Listing_Status',
@@ -142,7 +142,7 @@ class EmployeeDashboardController extends Controller
             $today = Carbon::today()->format('Y-m-d');
             $employee= auth('employee')->user();
             // Orders ko DB query se fetch karte hain
-            $orders = DB::table('orders')
+            $orders = DB::table('order')
                 ->select(
                     'id',
                     'Listing_Status',
