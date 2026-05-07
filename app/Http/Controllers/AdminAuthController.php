@@ -64,13 +64,10 @@ class AdminAuthController extends Controller
         }
 
         if (Auth::guard('admin')->attempt($credentials)) {
-            // DO NOT regenerate — Chrome ignores the new session cookie
-            // Write auth into the existing session instead
             \Illuminate\Support\Facades\Log::info('[AdminLogin] Success', [
                 'email'      => $request->input('email'),
                 'session_id' => session()->getId(),
             ]);
-
             return redirect()->route('admin.dashboard');
         }
 
