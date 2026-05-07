@@ -191,33 +191,48 @@ class PakistanReadySeeder extends Seeder
         $this->command->info('✓ Currency Rates seeded');
 
         // ─────────────────────────────────────────────────────────────────
-        // 10. DAILY ACTIVITY FIELDS (per role)
-        // Columns: id, field_name, field_type, is_required, role_id, status, timestamps
+        // 10. DAILY ACTIVITY FIELDS + ROLE ASSIGNMENTS
+        // hr_daily_activity_fields: id, name, field_type, options,
+        //   is_required, status, created_by, updated_by, timestamps
+        // hr_role_activity_fields: id, role_id, activity_field_id, timestamps
         // ─────────────────────────────────────────────────────────────────
+        DB::table('hr_role_activity_fields')->truncate();
         DB::table('hr_daily_activity_fields')->truncate();
-        $activityFields = [];
+
         $fieldDefs = [
-            ['field_name'=>'Calls Made','field_type'=>'number','is_required'=>1],
-            ['field_name'=>'Orders Booked','field_type'=>'number','is_required'=>1],
-            ['field_name'=>'Follow Ups','field_type'=>'number','is_required'=>0],
-            ['field_name'=>'Dispatches Done','field_type'=>'number','is_required'=>1],
-            ['field_name'=>'Issues Resolved','field_type'=>'number','is_required'=>0],
-            ['field_name'=>'Daily Report','field_type'=>'text','is_required'=>0],
+            ['id'=>1,'name'=>'Calls Made','field_type'=>'number','is_required'=>1],
+            ['id'=>2,'name'=>'Orders Booked','field_type'=>'number','is_required'=>1],
+            ['id'=>3,'name'=>'Follow Ups','field_type'=>'number','is_required'=>0],
+            ['id'=>4,'name'=>'Dispatches Done','field_type'=>'number','is_required'=>1],
+            ['id'=>5,'name'=>'Issues Resolved','field_type'=>'number','is_required'=>0],
+            ['id'=>6,'name'=>'Daily Report','field_type'=>'textarea','is_required'=>0],
         ];
-        $id = 1;
+
+        foreach ($fieldDefs as $field) {
+            DB::table('hr_daily_activity_fields')->insert(array_merge($field, [
+                'options'    => null,
+                'status'     => 1,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ]));
+        }
+
+        // Assign all fields to all employee roles (role ids 2–8)
+        $roleFieldPivots = [];
+        $pivotId = 1;
         foreach ([2,3,4,5,6,7,8] as $roleId) {
             foreach ($fieldDefs as $field) {
-                $activityFields[] = array_merge($field, [
-                    'id'         => $id++,
-                    'role_id'    => $roleId,
-                    'status'     => 1,
-                    'created_at' => $now,
-                    'updated_at' => $now,
-                ]);
+                $roleFieldPivots[] = [
+                    'id'               => $pivotId++,
+                    'role_id'          => $roleId,
+                    'activity_field_id'=> $field['id'],
+                    'created_at'       => $now,
+                    'updated_at'       => $now,
+                ];
             }
         }
-        DB::table('hr_daily_activity_fields')->insert($activityFields);
-        $this->command->info('✓ Daily Activity Fields seeded');
+        DB::table('hr_role_activity_fields')->insert($roleFieldPivots);
+        $this->command->info('✓ Daily Activity Fields + Role Assignments seeded');
 
         // ─────────────────────────────────────────────────────────────────
         // 11. SAMPLE EMPLOYEES (5 employees)
