@@ -16,7 +16,7 @@ class Role extends SpatieRole
 
     public function activityFields()
     {
-        return $this->belongsToMany(DailyActivityField::class, 'role_activity_fields', 'role_id', 'activity_field_id');
+        return $this->belongsToMany(DailyActivityField::class, 'hr_role_activity_fields', 'role_id', 'activity_field_id');
     }
 
 }

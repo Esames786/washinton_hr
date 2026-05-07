@@ -23,7 +23,7 @@ class CommissionSetting extends Model
     }
     public function role()
     {
-        return $this->belongsToMany(Role::class, 'role_commission_settings', 'commission_setting_id', 'role_id');
+        return $this->belongsToMany(Role::class, 'hr_role_commission_settings', 'commission_setting_id', 'role_id');
     }
 
 }

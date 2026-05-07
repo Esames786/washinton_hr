@@ -14,6 +14,6 @@ class DailyActivityField extends Model
 
     public function roles()
     {
-        return $this->belongsToMany(Role::class, 'role_activity_fields', 'activity_field_id', 'role_id');
+        return $this->belongsToMany(Role::class, 'hr_role_activity_fields', 'activity_field_id', 'role_id');
     }
 }

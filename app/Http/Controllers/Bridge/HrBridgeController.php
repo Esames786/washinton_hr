@@ -100,15 +100,17 @@ class HrBridgeController extends Controller
         );
 
         $validator = Validator::make($request->all(), [
-            'name'      => ['required', 'string', 'max:255'],
-            'email'     => ['required', 'email', 'max:75'],
-            'password'  => ['required', 'string', 'min:8'],
-            'phone'     => ['nullable', 'string', 'max:50'],
-            'address'   => ['nullable', 'string', 'max:255'],
-            'country'   => ['nullable', 'string', 'max:100'],
-            'state_id'  => ['nullable', 'string', 'max:100'],
-            'user_type' => ['nullable', 'string', 'max:50'],
-            'agent_id'  => ['nullable', 'integer'],
+            'name'           => ['required', 'string', 'max:255'],
+            'email'          => ['required', 'email', 'max:75'],
+            'password'       => ['required', 'string', 'min:8'],
+            'phone'          => ['nullable', 'string', 'max:50'],
+            'address'        => ['nullable', 'string', 'max:255'],
+            'country'        => ['nullable', 'string', 'max:100'],
+            'state_id'       => ['nullable', 'string', 'max:100'],
+            'user_type'      => ['nullable', 'string', 'max:50'],
+            'agent_id'       => ['nullable', 'integer'],
+            'shift_type_id'  => ['nullable', 'integer'],   // from signup form
+            'account_type_id'=> ['nullable', 'integer'],   // 1=Salary, 2=Commission, 3=Salary+Commission
         ]);
 
         if ($validator->fails()) {
@@ -125,7 +127,6 @@ class HrBridgeController extends Controller
                 $existing->agent_id = (int) $request->input('agent_id');
                 $existing->save();
             }
-
             return response()->json([
                 'message'     => 'Employee already exists.',
                 'employee_id' => $existing->id,
@@ -133,28 +134,108 @@ class HrBridgeController extends Controller
             ], 200);
         }
 
-        $employee = new Employee();
-        $employee->full_name          = $request->string('name')->toString();
-        $employee->email              = $request->string('email')->toString();
-        $employee->password           = Hash::make($request->string('password')->toString());
-        $employee->employee_code      = $this->generateEmployeeCode();
-        $employee->joining_date       = now()->toDateString();
-        $employee->employment_type_id = (int) config('bridge.defaults.employment_type_id', 3);
-        $employee->employee_status_id = (int) config('bridge.defaults.employee_status_id', 7);
-        $employee->phone              = $request->input('phone');
-        $employee->address            = $request->input('address');
-        $employee->country            = $request->input('country');
-        $employee->cnic               = $request->input('state_id');
-        $employee->agent_id           = $request->input('agent_id');
-        $employee->created_by         = null;
-        $employee->updated_by         = null;
-        $employee->save();
+        // ── Resolve role, department, designation based on user_type ──────────
+        // agent/broker/shipper → Order Taker (role_id=2, dept=1, desig=1)
+        // carrier/dispatcher   → Dispatcher  (role_id=3, dept=2, desig=5)
+        $userType = strtolower((string) $request->input('user_type', 'agent'));
+        $isDispatcher = in_array($userType, ['carrier', 'dispatcher', 'broker_dispatcher'], true);
 
-        return response()->json([
-            'message'     => 'Employee created successfully.',
-            'employee_id' => $employee->id,
-            'status'      => 'created',
-        ], 201);
+        $roleId        = $isDispatcher ? 3 : 2;   // 2=Order Taker, 3=Dispatcher (from PakistanReadySeeder)
+        $departmentId  = $isDispatcher ? 2 : 1;   // 1=OT dept, 2=Dispatch dept
+        $designationId = $isDispatcher ? 5 : 1;   // 1=Order Taker, 5=Dispatcher
+
+        // Shift: use what user selected, default to Morning (1)
+        $shiftId = (int) $request->input('shift_type_id', 1);
+
+        // Account type: use what user selected, default to Salary+Commission (3)
+        $accountTypeId = (int) $request->input('account_type_id', 3);
+
+        // Commission: default to Standard 5% (id=1) for commission-based accounts
+        $commissionId = in_array($accountTypeId, [2, 3]) ? 1 : null;
+
+        // Gratuity: default to Standard (id=1) for salary accounts, No Gratuity (id=3) for commission-only
+        $gratuityId = ($accountTypeId === 2) ? 3 : 1;
+
+        // Tax slab: 0% exempt (id=1) for all new signups
+        $taxSlabId = 1;
+        $isTaxable = 0;
+
+        // Basic salary: 0 for commission-only, 1 placeholder for others (admin sets real value)
+        $basicSalary = ($accountTypeId === 2) ? 1 : 0;
+
+        \Illuminate\Support\Facades\DB::beginTransaction();
+        try {
+            $employee = new Employee();
+            $employee->full_name          = $request->string('name')->toString();
+            $employee->email              = $request->string('email')->toString();
+            $employee->password           = Hash::make($request->string('password')->toString());
+            $employee->employee_code      = $this->generateEmployeeCode();
+            $employee->joining_date       = now()->toDateString();
+            $employee->employment_type_id = 3;  // Probation for new signups
+            $employee->employee_status_id = 7;  // Document Verification — pending docs
+            $employee->phone              = $request->input('phone');
+            $employee->address            = $request->input('address');
+            $employee->country            = $request->input('country');
+            $employee->cnic               = $request->input('state_id');
+            $employee->agent_id           = $request->input('agent_id');
+            $employee->role_id            = $roleId;
+            $employee->department_id      = $departmentId;
+            $employee->designation_id     = $designationId;
+            $employee->shift_id           = $shiftId;
+            $employee->account_type_id    = $accountTypeId;
+            $employee->commission_id      = $commissionId;
+            $employee->gratuity_id        = $gratuityId;
+            $employee->valid_gratuity_date= now()->addYear()->toDateString();
+            $employee->basic_salary       = $basicSalary;
+            $employee->is_taxable         = $isTaxable;
+            $employee->tax_slab_setting_id= $taxSlabId;
+            $employee->created_by         = null;
+            $employee->updated_by         = null;
+            $employee->save();
+
+            // ── Working days: Mon–Fri working, Sat–Sun off ────────────────────
+            for ($day = 0; $day <= 6; $day++) {
+                \Illuminate\Support\Facades\DB::table('hr_employee_working_days')->insert([
+                    'employee_id' => $employee->id,
+                    'day_of_week' => $day,
+                    'is_working'  => in_array($day, [1,2,3,4,5]) ? 1 : 0,
+                    'created_by'  => null,
+                    'created_at'  => now(),
+                    'updated_at'  => now(),
+                ]);
+            }
+
+            // ── Assign default leaves ─────────────────────────────────────────
+            $leaveYear = now()->year;
+            foreach ([
+                ['leave_type_id' => 1, 'assigned_quota' => 12],  // Casual
+                ['leave_type_id' => 2, 'assigned_quota' => 10],  // Sick
+                ['leave_type_id' => 3, 'assigned_quota' => 14],  // Annual
+            ] as $leave) {
+                \Illuminate\Support\Facades\DB::table('hr_employee_assign_leaves')->insert(array_merge($leave, [
+                    'employee_id' => $employee->id,
+                    'valid_from'  => "{$leaveYear}-01-01",
+                    'valid_to'    => "{$leaveYear}-12-31",
+                    'status'      => 1,
+                    'created_by'  => null,
+                    'created_at'  => now(),
+                    'updated_at'  => now(),
+                ]));
+            }
+
+            \Illuminate\Support\Facades\DB::commit();
+
+            return response()->json([
+                'message'     => 'Employee created successfully.',
+                'employee_id' => $employee->id,
+                'status'      => 'created',
+            ], 201);
+
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\DB::rollBack();
+            \Illuminate\Support\Facades\Log::error('HrBridgeController createEmployee failed: ' . $e->getMessage());
+            return response()->json(['message' => 'Employee creation failed.', 'error' => $e->getMessage()], 500);
+        }
     }
 
     public function agentStatus(Request $request): JsonResponse
