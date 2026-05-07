@@ -254,6 +254,8 @@ use App\Http\Controllers\Employee\EmployeeTicketMessageController;
             Route::get('/logout', [EmployeeAuthController::class, 'logout'])->name('logout');
             Route::get('dashboard', [EmployeeDashboardController::class, 'index'])->name('dashboard');
             Route::get('profile',[EmployeeDashboardController::class,'employee_profile'])->name('profile');
+            Route::post('profile/upload-document', [EmployeeDashboardController::class, 'uploadDocument'])->name('profile.upload_document');
+            Route::delete('profile/document/{id}', [EmployeeDashboardController::class, 'deleteDocument'])->name('profile.delete_document');
             Route::prefix('attendance')->name('attendance.')->group(function () {
                 Route::get('', [EmployeeAttendanceController::class, 'index'])->name('index');
                 Route::post('mark', [EmployeeAttendanceController::class, 'markAttendance'])->name('mark');

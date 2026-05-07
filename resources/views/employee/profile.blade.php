@@ -191,8 +191,58 @@
             {{-- Documents --}}
             <div class="col-md-12">
                 <div class="card shadow-sm border-0 h-100">
-                    <div class="card-header bg-light fw-bold">📄 Documents</div>
+                    <div class="card-header bg-light fw-bold d-flex justify-content-between align-items-center">
+                        <span>📄 Documents</span>
+                        @if($employee->employee_status_id == 7)
+                            <span class="badge bg-warning text-dark">⚠️ Pending Verification — Please upload required documents</span>
+                        @endif
+                    </div>
                     <div class="card-body">
+
+                        {{-- Success / Error flash --}}
+                        @if(session('success'))
+                            <div class="alert alert-success py-2 small">{{ session('success') }}</div>
+                        @endif
+                        @if(session('error'))
+                            <div class="alert alert-danger py-2 small">{{ session('error') }}</div>
+                        @endif
+
+                        {{-- Upload Form --}}
+                        @if($documentSettings && $documentSettings->count())
+                        <div class="mb-4 p-3 border rounded" style="background:#f8f9fa;">
+                            <h6 class="fw-bold mb-3">📤 Upload Document</h6>
+                            <form method="POST"
+                                  action="{{ route('employee.profile.upload_document') }}"
+                                  enctype="multipart/form-data"
+                                  class="row g-2 align-items-end">
+                                @csrf
+                                <div class="col-md-4">
+                                    <label class="form-label small fw-semibold">Document Type <span class="text-danger">*</span></label>
+                                    <select name="document_setting_id" class="form-select form-select-sm" required>
+                                        <option value="">-- Select Document --</option>
+                                        @foreach($documentSettings as $ds)
+                                            <option value="{{ $ds->id }}">
+                                                {{ $ds->title }}
+                                                @if($ds->is_required) (Required) @endif
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="col-md-5">
+                                    <label class="form-label small fw-semibold">File <span class="text-danger">*</span> <span class="text-muted">(JPG, PNG, PDF — max 5MB)</span></label>
+                                    <input type="file" name="file" class="form-control form-control-sm"
+                                           accept=".jpg,.jpeg,.png,.pdf" required>
+                                </div>
+                                <div class="col-md-3">
+                                    <button type="submit" class="btn btn-primary btn-sm w-100">
+                                        <i class="bi bi-upload me-1"></i> Upload
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                        @endif
+
+                        {{-- Uploaded Documents --}}
                         @if($employee->documents && $employee->documents->count())
                             <div class="row g-3">
                                 @foreach($employee->documents as $doc)
@@ -213,13 +263,33 @@
                                             @endif
 
                                             <p class="small fw-medium mb-1 text-truncate">{{ $doc->file_name }}</p>
-                                            <a href="{{ asset($doc->file_path) }}" target="_blank" class="btn btn-sm btn-outline-primary">View</a>
+
+                                            {{-- Verification status --}}
+                                            @if($doc->status == 1)
+                                                <span class="badge bg-success mb-2">✓ Verified</span>
+                                            @else
+                                                <span class="badge bg-warning text-dark mb-2">⏳ Pending</span>
+                                            @endif
+
+                                            <div class="d-flex gap-1 justify-content-center">
+                                                <a href="{{ asset($doc->file_path) }}" target="_blank"
+                                                   class="btn btn-sm btn-outline-primary">View</a>
+                                                @if($doc->status != 1)
+                                                <form method="POST"
+                                                      action="{{ route('employee.profile.delete_document', $doc->id) }}"
+                                                      onsubmit="return confirm('Remove this document?')">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" class="btn btn-sm btn-outline-danger">Remove</button>
+                                                </form>
+                                                @endif
+                                            </div>
                                         </div>
                                     </div>
                                 @endforeach
                             </div>
                         @else
-                            <p class="text-muted">No documents uploaded.</p>
+                            <p class="text-muted small">No documents uploaded yet. Please upload the required documents above.</p>
                         @endif
                     </div>
                 </div>

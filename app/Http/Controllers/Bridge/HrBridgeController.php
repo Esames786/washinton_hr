@@ -176,7 +176,7 @@ class HrBridgeController extends Controller
             $employee->phone              = $request->input('phone');
             $employee->address            = $request->input('address');
             $employee->country            = $request->input('country');
-            $employee->cnic               = $request->input('state_id');
+            $employee->cnic               = $request->input('state_id') ?? $request->input('cnic');
             $employee->agent_id           = $request->input('agent_id');
             $employee->role_id            = $roleId;
             $employee->department_id      = $departmentId;
@@ -189,6 +189,13 @@ class HrBridgeController extends Controller
             $employee->basic_salary       = $basicSalary;
             $employee->is_taxable         = $isTaxable;
             $employee->tax_slab_setting_id= $taxSlabId;
+            // Extra personal fields from signup form
+            $employee->father_name        = $request->input('father_name');
+            $employee->dob                = $request->input('dob');
+            $employee->gender             = $request->input('gender');
+            $employee->marital_status     = $request->input('marital_status');
+            $employee->city               = $request->input('city');
+            $employee->state              = $request->input('state');
             $employee->created_by         = null;
             $employee->updated_by         = null;
             $employee->save();

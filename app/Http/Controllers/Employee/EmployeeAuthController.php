@@ -56,13 +56,14 @@ class EmployeeAuthController extends Controller
             4  => 'Your resignation has been processed. Access is no longer available.',
             5  => 'Your account is in training status. Please contact HR to activate.',
             6  => 'Your account is on trial. Please contact HR to activate.',
-            7  => 'Your documents are under verification. You will be notified once your account is activated.',
             8  => 'Your contract is pending. Please contact HR to complete the process.',
             9  => 'Your account is awaiting management approval. Please check back later.',
             10 => 'Your account is in deployed status. Please contact HR.',
         ];
 
-        if ($employee->employee_status_id != 1) {
+        // Status 7 (Document Verification) — allow login so employee can upload documents
+        // All other non-active statuses are blocked
+        if ($employee->employee_status_id != 1 && $employee->employee_status_id != 7) {
             $message = $statusMessages[$employee->employee_status_id]
                 ?? 'Your account is not active. Please contact HR.';
 

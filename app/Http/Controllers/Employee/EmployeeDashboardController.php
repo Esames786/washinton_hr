@@ -170,7 +170,70 @@ class EmployeeDashboardController extends Controller
             return redirect()->route('employee.dashboard');
         }
 
-        return view('employee.profile', compact('employee'));
+        // Load document settings so employee knows what to upload
+        $documentSettings = \App\Models\DocumentSetting::where('status', 1)->get();
+
+        return view('employee.profile', compact('employee', 'documentSettings'));
+    }
+
+    // ─────────────────────────────────────────────────────────────────────
+    // UPLOAD DOCUMENT
+    // ─────────────────────────────────────────────────────────────────────
+    public function uploadDocument(\Illuminate\Http\Request $request)
+    {
+        $request->validate([
+            'document_setting_id' => 'required|integer|exists:hr_document_settings,id',
+            'file'                => 'required|file|mimes:jpg,jpeg,png,pdf|max:5120',
+        ]);
+
+        $employee = auth('employee')->user();
+
+        $docSetting = \App\Models\DocumentSetting::findOrFail($request->document_setting_id);
+
+        $path = 'Uploads/employees/' . $employee->id . '/';
+        if (!file_exists(public_path($path))) {
+            mkdir(public_path($path), 0777, true);
+        }
+
+        $file     = $request->file('file');
+        $filename = 'doc_' . $employee->id . '_' . $request->document_setting_id . '_' . time() . '.' . $file->getClientOriginalExtension();
+        $file->move(public_path($path), $filename);
+
+        \App\Models\EmployeeDocument::updateOrCreate(
+            [
+                'employee_id'         => $employee->id,
+                'document_setting_id' => $request->document_setting_id,
+            ],
+            [
+                'file_name' => $docSetting->title,
+                'mime_type' => $file->getClientMimeType(),
+                'file_path' => $path . $filename,
+                'status'    => 0, // pending verification
+            ]
+        );
+
+        return back()->with('success', 'Document "' . $docSetting->title . '" uploaded successfully. Awaiting verification.');
+    }
+
+    // ─────────────────────────────────────────────────────────────────────
+    // DELETE DOCUMENT
+    // ─────────────────────────────────────────────────────────────────────
+    public function deleteDocument($id)
+    {
+        $employee = auth('employee')->user();
+
+        $doc = \App\Models\EmployeeDocument::where('employee_id', $employee->id)
+            ->where('id', $id)
+            ->firstOrFail();
+
+        // Delete file from disk
+        if ($doc->file_path && file_exists(public_path($doc->file_path))) {
+            unlink(public_path($doc->file_path));
+        }
+
+        $doc->delete();
+
+        return back()->with('success', 'Document removed.');
     }
 
     // ─────────────────────────────────────────────────────────────────────
