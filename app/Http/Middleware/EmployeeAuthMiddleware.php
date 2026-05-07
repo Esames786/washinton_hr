@@ -28,11 +28,13 @@ class EmployeeAuthMiddleware
 
         $user = Auth::guard('employee')->user();
 
-        // Check Employee Active or not
-        if ($user->employee_status_id != 1) {
+        // Status 7 = Document Verification — allow access so employee can upload documents
+        // All other non-active statuses are blocked
+        $allowedStatuses = [1, 7];
+        if (!in_array($user->employee_status_id, $allowedStatuses)) {
             Auth::guard('employee')->logout();
             return redirect()->route('employee.login')
-                ->withErrors(['Your account is inactive']);
+                ->withErrors(['Your account is inactive. Please contact HR.']);
         }
 
         //Single login check
