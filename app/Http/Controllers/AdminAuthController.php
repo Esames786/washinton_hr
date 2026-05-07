@@ -67,6 +67,11 @@ class AdminAuthController extends Controller
             // Regenerate session — critical for Chrome cookie handling
             $request->session()->regenerate();
 
+            \Illuminate\Support\Facades\Log::info('[AdminLogin] Success + session regenerated', [
+                'email'      => $request->input('email'),
+                'session_id' => session()->getId(),
+            ]);
+
             // Always server-side redirect — avoids Chrome AJAX cookie issues
             return redirect()->route('admin.dashboard');
         }
