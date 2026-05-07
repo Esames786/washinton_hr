@@ -102,6 +102,55 @@ class HrBridgeController extends Controller
         return redirect()->route('employee.dashboard');
     }
 
+    /**
+     * DB-token based SSO consume — no signed URL, no session regeneration.
+     * Token is stored in hr_sso_tokens, single-use, expires in 3 minutes.
+     */
+    public function consumeToken(Request $request, string $token): RedirectResponse
+    {
+        $record = \Illuminate\Support\Facades\DB::table('hr_sso_tokens')
+            ->where('token', $token)
+            ->first();
+
+        if (!$record) {
+            \Illuminate\Support\Facades\Log::warning('[SSO] Token not found', ['token' => substr($token, 0, 8)]);
+            return redirect()->route('employee.login')->withErrors(['SSO link is invalid or already used.']);
+        }
+
+        if (now()->isAfter($record->expires_at)) {
+            \Illuminate\Support\Facades\DB::table('hr_sso_tokens')->where('token', $token)->delete();
+            \Illuminate\Support\Facades\Log::warning('[SSO] Token expired', ['employee_id' => $record->employee_id]);
+            return redirect()->route('employee.login')->withErrors(['SSO link has expired. Please try again.']);
+        }
+
+        // Delete token immediately — single use
+        \Illuminate\Support\Facades\DB::table('hr_sso_tokens')->where('token', $token)->delete();
+
+        $employee = Employee::find($record->employee_id);
+
+        if (!$employee) {
+            return redirect()->route('employee.login')->withErrors(['Employee not found.']);
+        }
+
+        // Log in — writes to existing session, no regeneration
+        Auth::guard('employee')->login($employee);
+
+        $employee->is_logged_in = 1;
+        $employee->last_seen_at = now();
+        $employee->login_at     = now()->toDateString();
+        $employee->save();
+
+        // Force session write before redirect
+        $request->session()->save();
+
+        \Illuminate\Support\Facades\Log::info('[SSO] Token login success', [
+            'employee_id' => $employee->id,
+            'session_id'  => $request->session()->getId(),
+        ]);
+
+        return redirect()->route('employee.dashboard');
+    }
+
     public function createEmployee(Request $request): JsonResponse
     {
         abort_unless(
@@ -324,18 +373,27 @@ class HrBridgeController extends Controller
             return response()->json(['message' => 'Employee account is not active.'], 403);
         }
 
-        $payload = Crypt::encryptString(json_encode([
+        // Generate a one-time DB token — avoids all session/cookie/signed-URL issues
+        $token = \Illuminate\Support\Str::random(48);
+
+        // Clean up old tokens for this employee
+        \Illuminate\Support\Facades\DB::table('hr_sso_tokens')
+            ->where('employee_id', $employee->id)
+            ->delete();
+
+        \Illuminate\Support\Facades\DB::table('hr_sso_tokens')->insert([
+            'token'       => $token,
             'employee_id' => $employee->id,
-            'issued_at'   => now()->timestamp,
-        ]));
+            'expires_at'  => now()->addMinutes(3),
+            'created_at'  => now(),
+            'updated_at'  => now(),
+        ]);
+
+        $redirectUrl = rtrim(config('app.url'), '/') . '/employee/sso/' . $token;
 
         return response()->json([
             'message'      => 'Redirect ready.',
-            'redirect_url' => URL::temporarySignedRoute(
-                'bridge.hr.consume',
-                now()->addMinutes(2),
-                ['payload' => $payload]
-            ),
+            'redirect_url' => $redirectUrl,
         ], 200);
     }
 

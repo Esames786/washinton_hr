@@ -305,3 +305,7 @@ use App\Http\Controllers\Employee\EmployeeTicketMessageController;
         Route::get('/sso/consume', [\App\Http\Controllers\Bridge\HrBridgeController::class, 'consume'])->name('bridge.hr.consume');
     });
 
+    // DB-token SSO — no signed URL, no session issues
+    Route::get('/employee/sso/{token}', [\App\Http\Controllers\Bridge\HrBridgeController::class, 'consumeToken'])
+        ->name('employee.sso.consume');
+
