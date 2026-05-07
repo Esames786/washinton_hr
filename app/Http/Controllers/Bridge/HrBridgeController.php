@@ -77,8 +77,9 @@ class HrBridgeController extends Controller
 
         $employee = Employee::findOrFail($payload['employee_id']);
 
+        // DO NOT regenerate session — Chrome ignores the new cookie
+        // Auth::login() writes auth data into the existing session
         Auth::guard('employee')->login($employee);
-        $request->session()->regenerate();
 
         $employee->is_logged_in = 1;
         $employee->last_seen_at = now();
@@ -309,8 +310,9 @@ class HrBridgeController extends Controller
             return response()->json(['message' => 'Employee not linked.'], 404);
         }
 
-        if ((int) $employee->employee_status_id !== 1) {
-            return response()->json(['message' => 'Employee not active.'], 403);
+        // Allow status 1 (Active) and status 7 (Document Verification — can access to upload docs)
+        if (!in_array((int) $employee->employee_status_id, [1, 7])) {
+            return response()->json(['message' => 'Employee account is not active.'], 403);
         }
 
         $payload = Crypt::encryptString(json_encode([
