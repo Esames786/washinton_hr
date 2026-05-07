@@ -117,8 +117,8 @@ class PettyCashTransactionController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'master_id' => 'required|exists:petty_cash_masters,id',
-            'head_id' => 'required|exists:petty_cash_heads,id',
+            'master_id' => 'required|exists:hr_petty_cash_masters,id',
+            'head_id' => 'required|exists:hr_petty_cash_heads,id',
             'date' => 'required|date',
             'entry_type' => 'required|in:debit,credit',
             'amount' => 'required|numeric|min:0.01',

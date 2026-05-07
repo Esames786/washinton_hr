@@ -75,8 +75,8 @@ class AdminTicketController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'ticket_type_id' => 'required|exists:ticket_types,id',
-            'employee_id'    => 'required|exists:employees,id',
+            'ticket_type_id' => 'required|exists:hr_ticket_types,id',
+            'employee_id'    => 'required|exists:hr_employees,id',
         ]);
 
         $ticket = new EmployeeTicket();

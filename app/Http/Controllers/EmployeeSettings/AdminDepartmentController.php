@@ -37,7 +37,7 @@ class AdminDepartmentController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'name' => 'required|unique:departments,name',
+            'name' => 'required|unique:hr_departments,name',
         ]);
 
         $department = new Department();
@@ -56,7 +56,7 @@ class AdminDepartmentController extends Controller
     public function update(Request $request, Department $department)
     {
         $request->validate([
-            'name'   => 'required|unique:departments,name,' . $department->id,
+            'name'   => 'required|unique:hr_departments,name,' . $department->id,
             'status' => 'required|integer|in:1,0',
         ]);
 

@@ -399,10 +399,10 @@ class AdminEmployeeController extends Controller
             'last_name'             => 'required|string|max:255',
             'profile_path'          => 'required|image|mimes:jpg,jpeg,png,webp|max:2048',
             'basic_salary'          => 'nullable|required_if:account_type_id,1,3|numeric',
-            'email'                 => 'required|email|unique:employees,email',
+            'email'                 => 'required|email|unique:hr_employees,email',
             'password'              => 'required|string|min:8|confirmed',
             'employee_code'         => 'required|string',
-//            'employee_code'         => 'required|string|unique:employees,employee_code',
+//            'employee_code'         => 'required|string|unique:hr_employees,employee_code',
             'employment_type'       => 'required|integer',
             'employee_status_id'    => 'required|integer',
             'role_id'               => 'required|integer',
@@ -418,7 +418,7 @@ class AdminEmployeeController extends Controller
             'designation_id'        => 'nullable|integer|max:255',
             'father_name'           => 'nullable|string|max:255',
             'mother_name'           => 'nullable|string|max:255',
-            'cnic'                  => 'required|string|size:15|unique:employees,cnic',
+            'cnic'                  => 'required|string|size:15|unique:hr_employees,cnic',
             'dob'                   => 'nullable|date|before_or_equal:today',
             'gender'                => 'nullable|in:male,female,other',
             'marital_status'        => 'nullable|in:single,married,divorced,widowed',
@@ -445,7 +445,7 @@ class AdminEmployeeController extends Controller
             'working_days.*'        => 'in:0,1',
 
             'leaves' => 'required|array',
-            'leaves.*.leave_type_id' => 'required|exists:leave_types,id',
+            'leaves.*.leave_type_id' => 'required|exists:hr_leave_types,id',
             'leaves.*.assigned_quota' => 'required|integer|min:0',
             'leaves.*.valid_from' => 'required|date',
             'leaves.*.valid_to' => 'required|date'
@@ -721,10 +721,10 @@ class AdminEmployeeController extends Controller
         // Validation
         $request->validate([
             'full_name'            => 'required|string|max:255',
-            'email' => 'required|email|unique:employees,email,' . $id,
+            'email' => 'required|email|unique:hr_employees,email,' . $id,
             'basic_salary'          => 'nullable|required_if:account_type_id,1,3|numeric',
             'employee_code' => 'required|string',
-//            'employee_code' => 'required|string|unique:employees,employee_code,' . $id,
+//            'employee_code' => 'required|string|unique:hr_employees,employee_code,' . $id,
             'employment_type_id'       => 'required|integer',
             'employee_status_id'    => 'required|integer',
             'role_id'               => 'required|integer',
@@ -740,7 +740,7 @@ class AdminEmployeeController extends Controller
             'designation_id'        => 'nullable|integer|max:255',
             'father_name'           => 'nullable|string|max:255',
             'mother_name'           => 'nullable|string|max:255',
-            'cnic' => 'required|string|size:15|unique:employees,cnic,' . $id,
+            'cnic' => 'required|string|size:15|unique:hr_employees,cnic,' . $id,
             'dob'                   => 'nullable|date|before_or_equal:today',
             'gender'                => 'nullable|in:male,female,other',
             'marital_status'        => 'nullable|in:single,married,divorced,widowed',
@@ -766,7 +766,7 @@ class AdminEmployeeController extends Controller
             'working_days.*'        => 'in:0,1',
 
             'leaves' => 'required|array',
-            'leaves.*.leave_type_id' => 'required|exists:leave_types,id',
+            'leaves.*.leave_type_id' => 'required|exists:hr_leave_types,id',
             'leaves.*.assigned_quota' => 'required|integer|min:0',
             'leaves.*.valid_from' => 'required|date',
             'leaves.*.valid_to' => 'required|date',
@@ -1047,8 +1047,8 @@ class AdminEmployeeController extends Controller
     public function changeStatus(Request $request)
     {
         $request->validate([
-            'employee_id'   => 'required|integer|exists:employees,id',
-            'status'        => 'required|integer|exists:employee_statuses,id', // update as per your statuses
+            'employee_id'   => 'required|integer|exists:hr_employees,id',
+            'status'        => 'required|integer|exists:hr_employee_statuses,id', // update as per your statuses
             'disable_email' => 'sometimes|boolean',
             'disable_phone' => 'sometimes|boolean',
         ]);
@@ -1345,7 +1345,7 @@ class AdminEmployeeController extends Controller
     public function attach_agent(Request $request)
     {
         $request->validate([
-            'employee_id' => 'required|integer|exists:employees,id',
+            'employee_id' => 'required|integer|exists:hr_employees,id',
             'agent_id' => 'required|integer', // agar agents users table me hain
         ]);
 

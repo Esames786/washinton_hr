@@ -109,7 +109,7 @@ class EmployeeTicketController extends Controller
     {
         // Basic validation (always run)
         $validator = Validator::make($request->all(), [
-            'ticket_type_id' => 'required|exists:ticket_types,id',
+            'ticket_type_id' => 'required|exists:hr_ticket_types,id',
             'subject'        => 'required|string|max:255',
         ]);
 
@@ -137,7 +137,7 @@ class EmployeeTicketController extends Controller
             $conditionalRules = [
                 'from_date'   => 'required|date',
                 'to_date'     => 'required|date|after_or_equal:from_date',
-                'leave_type'  => 'required|integer|exists:leave_types,id',
+                'leave_type'  => 'required|integer|exists:hr_leave_types,id',
                 'description' => 'required|string|max:1000',
             ];
         }

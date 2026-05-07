@@ -50,7 +50,7 @@ class AdminAttendanceTypeController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'name' => 'required|string|max:255|unique:attendance_statuses,name',
+            'name' => 'required|string|max:255|unique:hr_attendance_statuses,name',
         ]);
 
         $attendance = new AttendanceStatus();
@@ -78,7 +78,7 @@ class AdminAttendanceTypeController extends Controller
         $attendance = AttendanceStatus::findOrFail($id);
 
         $request->validate([
-            'name' => 'required|string|max:255|unique:attendance_statuses,name,'.$attendance->id,
+            'name' => 'required|string|max:255|unique:hr_attendance_statuses,name,'.$attendance->id,
         ]);
 
         $attendance->name   = $request->name;

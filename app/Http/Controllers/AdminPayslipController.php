@@ -167,7 +167,7 @@ class AdminPayslipController extends Controller
     {
 
         $validator = Validator::make($request->all(), [
-            'adjustment_type' => 'required|integer|exists:payslip_item_types,id',
+            'adjustment_type' => 'required|integer|exists:hr_payslip_item_types,id',
             'amount' => 'required|numeric|min:0',
             'reason' => 'nullable|string',
         ]);

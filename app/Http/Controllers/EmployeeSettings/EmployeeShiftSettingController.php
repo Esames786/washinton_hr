@@ -64,8 +64,8 @@ class EmployeeShiftSettingController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'shift_type_id' => 'required|exists:shift_types,id',
-            'attendance_status_id' => 'required|exists:attendance_statuses,id',
+            'shift_type_id' => 'required|exists:hr_shift_types,id',
+            'attendance_status_id' => 'required|exists:hr_attendance_statuses,id',
             'entry_time' => 'nullable|date_format:H:i',
             'entry_weight' => 'nullable|numeric',
             'status' => 'required|in:0,1'
@@ -93,8 +93,8 @@ class EmployeeShiftSettingController extends Controller
     public function update(Request $request, ShiftAttendanceRule $shift_attendance_rule)
     {
         $request->validate([
-            'shift_type_id' => 'required|exists:shift_types,id',
-            'attendance_status_id' => 'required|exists:attendance_statuses,id',
+            'shift_type_id' => 'required|exists:hr_shift_types,id',
+            'attendance_status_id' => 'required|exists:hr_attendance_statuses,id',
             'entry_time' => 'nullable|date_format:H:i',
             'entry_weight' => 'nullable|numeric',
             'status' => 'required|in:0,1'
