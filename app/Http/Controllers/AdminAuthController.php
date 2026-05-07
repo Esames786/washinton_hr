@@ -64,6 +64,9 @@ class AdminAuthController extends Controller
         }
 
         if (Auth::guard('admin')->attempt($credentials)) {
+            // Explicitly save session before redirect
+            $request->session()->save();
+
             \Illuminate\Support\Facades\Log::info('[AdminLogin] Success', [
                 'email'      => $request->input('email'),
                 'session_id' => session()->getId(),

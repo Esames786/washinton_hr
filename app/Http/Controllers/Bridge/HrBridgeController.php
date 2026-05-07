@@ -81,10 +81,19 @@ class HrBridgeController extends Controller
         // Auth::login() writes auth data into the existing session
         Auth::guard('employee')->login($employee);
 
+        // Explicitly save the session to ensure auth data is persisted
+        $request->session()->save();
+
         $employee->is_logged_in = 1;
         $employee->last_seen_at = now();
         $employee->login_at    = now()->toDateString();
         $employee->save();
+
+        \Illuminate\Support\Facades\Log::info('[BridgeConsume] Employee logged in via SSO', [
+            'employee_id' => $employee->id,
+            'session_id'  => $request->session()->getId(),
+            'auth_check'  => Auth::guard('employee')->check(),
+        ]);
 
         if (!empty($payload['bridge_origin'])) {
             return redirect(rtrim($payload['bridge_origin'], '/') . '/?verified=1');

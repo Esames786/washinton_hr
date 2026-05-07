@@ -98,8 +98,9 @@ class EmployeeAuthController extends Controller
             $employee->login_at     = $now->toDateString();
             $employee->save();
 
-            // DO NOT regenerate — Chrome ignores the new session cookie
-            // Auth data is written into the existing session by attempt()
+            // Explicitly save session — ensures auth data persists before redirect
+            $request->session()->save();
+
             \Illuminate\Support\Facades\Log::info('[EmployeeLogin] Success', [
                 'email'       => $request->input('email'),
                 'employee_id' => $employee->id,
