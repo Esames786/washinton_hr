@@ -48,8 +48,44 @@
                      style="width:120px; height:120px; object-fit:cover;" alt="Profile Image">
 
                 {{-- Details --}}
-                <div class="details">
-                    <h4 class="fw-bold mb-1">{{ $employee->full_name ?? '-' }}</h4>
+                <div class="details flex-grow-1">
+                    <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-1">
+                        <h4 class="fw-bold mb-0">{{ $employee->full_name ?? '-' }}</h4>
+
+                        {{-- Change Status Dropdown --}}
+                        @php
+                            $allStatuses = \App\Models\EmployeeStatus::all();
+                            $statusColors = [1=>'success',2=>'secondary',3=>'danger',4=>'warning',5=>'info',6=>'primary',7=>'warning',8=>'secondary',9=>'info',10=>'primary'];
+                            $currentColor = $statusColors[$employee->employee_status_id] ?? 'secondary';
+                        @endphp
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="badge bg-{{ $currentColor }} fs-6 px-3 py-2" id="currentStatusBadge">
+                                {{ optional($employee->employee_status)->name ?? '-' }}
+                            </span>
+                            <div class="dropdown">
+                                <button class="btn btn-sm btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                    Change Status
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end shadow">
+                                    @foreach($allStatuses as $st)
+                                        @if($st->id !== $employee->employee_status_id)
+                                            <li>
+                                                <a class="dropdown-item change-status-btn" href="#"
+                                                   data-employee-id="{{ $employee->id }}"
+                                                   data-status-id="{{ $st->id }}"
+                                                   data-status-name="{{ $st->name }}">
+                                                    {{ $st->name }}
+                                                </a>
+                                            </li>
+                                        @endif
+                                    @endforeach
+                                </ul>
+                            </div>
+                            <a href="{{ route('admin.employees.edit', $employee->id) }}" class="btn btn-sm btn-outline-secondary">
+                                Edit
+                            </a>
+                        </div>
+                    </div>
                     <p class="text-muted mb-2">{{ $employee->designation->name ?? '-' }} | {{ $employee->department->name ?? '-' }}</p>
 
                     {{-- Contact --}}
@@ -290,5 +326,39 @@
         </div>
     </div>
 
+
+@push('scripts')
+<script>
+document.querySelectorAll('.change-status-btn').forEach(function(btn) {
+    btn.addEventListener('click', function(e) {
+        e.preventDefault();
+        var employeeId = this.dataset.employeeId;
+        var statusId   = this.dataset.statusId;
+        var statusName = this.dataset.statusName;
+        if (!confirm('Change status to "' + statusName + '"?')) return;
+
+        fetch('{{ route('employees.change-status') }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+            },
+            body: JSON.stringify({ employee_id: employeeId, status: statusId })
+        })
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+            if (data.success) {
+                document.getElementById('currentStatusBadge').textContent = statusName;
+                // Remove the clicked status from dropdown, add old one back
+                location.reload();
+            } else {
+                alert(data.message || 'Failed to update status.');
+            }
+        })
+        .catch(function() { alert('Request failed. Please try again.'); });
+    });
+});
+</script>
+@endpush
 
 @endsection

@@ -265,12 +265,12 @@ class HrBridgeController extends Controller
             $employee->updated_by         = null;
             $employee->save();
 
-            // ── Working days: Mon–Fri working, Sat–Sun off ────────────────────
+            // ── Working days: Mon–Sat working, Sun off ───────────────────────
             for ($day = 0; $day <= 6; $day++) {
                 \Illuminate\Support\Facades\DB::table('hr_employee_working_days')->insert([
                     'employee_id' => $employee->id,
                     'day_of_week' => $day,
-                    'is_working'  => in_array($day, [1,2,3,4,5]) ? 1 : 0,
+                    'is_working'  => in_array($day, [1,2,3,4,5,6]) ? 1 : 0,
                     'created_by'  => null,
                     'created_at'  => now(),
                     'updated_at'  => now(),
@@ -402,6 +402,79 @@ class HrBridgeController extends Controller
             'message'      => 'Redirect ready.',
             'redirect_url' => $redirectUrl,
         ], 200);
+    }
+
+    /**
+     * Bridge: washinton_agent admin → HR portal admin view of an employee.
+     * Creates a short-lived single-use token and returns a redirect URL.
+     */
+    public function adminEmployeeView(Request $request): JsonResponse
+    {
+        abort_unless(
+            hash_equals((string) config('bridge.shared_key'), (string) $request->header('X-Bridge-Key')),
+            401
+        );
+
+        $validator = Validator::make($request->all(), [
+            'employee_id' => ['required', 'integer', 'exists:hr_employees,id'],
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => 'Validation failed.',
+                'errors'  => $validator->errors(),
+            ], 422);
+        }
+
+        $token       = \Illuminate\Support\Str::random(48);
+        $redirectUrl = route('admin.employees.show', $request->employee_id);
+
+        \Illuminate\Support\Facades\DB::table('hr_admin_sso_tokens')->insert([
+            'token'        => $token,
+            'redirect_url' => $redirectUrl,
+            'expires_at'   => now()->addMinutes(3),
+            'created_at'   => now(),
+            'updated_at'   => now(),
+        ]);
+
+        return response()->json([
+            'redirect_url' => rtrim(config('app.url'), '/') . '/admin/sso/' . $token,
+        ], 200);
+    }
+
+    /**
+     * Consume admin SSO token: log in as the first super-admin and redirect.
+     */
+    public function adminSsoConsume(\Illuminate\Http\Request $request, string $token): \Illuminate\Http\RedirectResponse
+    {
+        $record = \Illuminate\Support\Facades\DB::table('hr_admin_sso_tokens')
+            ->where('token', $token)
+            ->first();
+
+        if (!$record) {
+            \Illuminate\Support\Facades\Log::warning('[AdminSSO] Token not found', ['token' => substr($token, 0, 8)]);
+            return redirect()->route('admin.login')->withErrors(['SSO link is invalid or already used.']);
+        }
+
+        if (now()->isAfter($record->expires_at)) {
+            \Illuminate\Support\Facades\DB::table('hr_admin_sso_tokens')->where('token', $token)->delete();
+            \Illuminate\Support\Facades\Log::warning('[AdminSSO] Token expired');
+            return redirect()->route('admin.login')->withErrors(['SSO link has expired. Please try again.']);
+        }
+
+        \Illuminate\Support\Facades\DB::table('hr_admin_sso_tokens')->where('token', $token)->delete();
+
+        $admin = \App\Models\Admin::first();
+        if (!$admin) {
+            return redirect()->route('admin.login')->withErrors(['No admin account found.']);
+        }
+
+        \Illuminate\Support\Facades\Auth::guard('admin')->login($admin);
+        $request->session()->save();
+
+        \Illuminate\Support\Facades\Log::info('[AdminSSO] Admin logged in via bridge SSO', ['admin_id' => $admin->id]);
+
+        return redirect($record->redirect_url);
     }
 
     private function generateEmployeeCode(): string

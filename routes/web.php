@@ -309,3 +309,8 @@ use App\Http\Controllers\Employee\EmployeeTicketMessageController;
     Route::get('/employee/sso/{token}', [\App\Http\Controllers\Bridge\HrBridgeController::class, 'consumeToken'])
         ->name('employee.sso.consume');
 
+    // Admin SSO from washinton_agent → HR admin panel
+    Route::post('/bridge/admin/employee-view', [\App\Http\Controllers\Bridge\HrBridgeController::class, 'adminEmployeeView']);
+    Route::get('/admin/sso/{token}', [\App\Http\Controllers\Bridge\HrBridgeController::class, 'adminSsoConsume'])
+        ->name('admin.sso.consume');
+

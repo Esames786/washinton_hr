@@ -683,7 +683,16 @@ class AdminEmployeeController extends Controller
         ])->findOrFail($id);
 
         $employee->excluded_holiday_ids = $employee->holiday_exceptions()->pluck('holiday_id')->toArray();
-        $employee->working_days = $employee->working_days()->pluck('is_working', 'day_of_week')->toArray();
+
+        // Normalize working_days keys: bridge stores integers (0=Sun…6=Sat),
+        // the edit view expects string day names ('Monday', 'Tuesday', …).
+        $intDayNames = [0 => 'Sunday', 1 => 'Monday', 2 => 'Tuesday', 3 => 'Wednesday', 4 => 'Thursday', 5 => 'Friday', 6 => 'Saturday'];
+        $rawDays = $employee->working_days()->pluck('is_working', 'day_of_week')->toArray();
+        $normalisedDays = [];
+        foreach ($rawDays as $key => $isWorking) {
+            $normalisedDays[is_numeric($key) ? ($intDayNames[(int)$key] ?? $key) : $key] = (int) $isWorking;
+        }
+        $employee->working_days = $normalisedDays;
 
         $employment_types = EmploymentType::whereIn('id',[1,3])->get();
         $roles = Role::where('guard_name', 'employee')->where('status',1)->get();
