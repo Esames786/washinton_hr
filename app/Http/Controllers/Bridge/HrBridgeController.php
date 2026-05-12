@@ -426,43 +426,26 @@ class HrBridgeController extends Controller
             ], 422);
         }
 
-        $token       = \Illuminate\Support\Str::random(48);
         $redirectUrl = route('admin.employees.show', $request->employee_id);
 
-        \Illuminate\Support\Facades\DB::table('hr_admin_sso_tokens')->insert([
-            'token'        => $token,
-            'redirect_url' => $redirectUrl,
-            'expires_at'   => now()->addMinutes(3),
-            'created_at'   => now(),
-            'updated_at'   => now(),
-        ]);
+        $ssoUrl = URL::temporarySignedRoute(
+            'admin.sso.consume',
+            now()->addMinutes(3),
+            ['redirect_url' => $redirectUrl]
+        );
 
-        return response()->json([
-            'redirect_url' => rtrim(config('app.url'), '/') . '/admin/sso/' . $token,
-        ], 200);
+        return response()->json(['redirect_url' => $ssoUrl], 200);
     }
 
     /**
-     * Consume admin SSO token: log in as the first super-admin and redirect.
+     * Consume admin SSO signed URL: log in as super-admin and redirect to employee profile.
      */
-    public function adminSsoConsume(\Illuminate\Http\Request $request, string $token): \Illuminate\Http\RedirectResponse
+    public function adminSsoConsume(\Illuminate\Http\Request $request): \Illuminate\Http\RedirectResponse
     {
-        $record = \Illuminate\Support\Facades\DB::table('hr_admin_sso_tokens')
-            ->where('token', $token)
-            ->first();
-
-        if (!$record) {
-            \Illuminate\Support\Facades\Log::warning('[AdminSSO] Token not found', ['token' => substr($token, 0, 8)]);
-            return redirect()->route('admin.login')->withErrors(['SSO link is invalid or already used.']);
+        if (!$request->hasValidSignature()) {
+            \Illuminate\Support\Facades\Log::warning('[AdminSSO] Invalid or expired signature');
+            return redirect()->route('admin.login')->withErrors(['SSO link is invalid or has expired. Please try again.']);
         }
-
-        if (now()->isAfter($record->expires_at)) {
-            \Illuminate\Support\Facades\DB::table('hr_admin_sso_tokens')->where('token', $token)->delete();
-            \Illuminate\Support\Facades\Log::warning('[AdminSSO] Token expired');
-            return redirect()->route('admin.login')->withErrors(['SSO link has expired. Please try again.']);
-        }
-
-        \Illuminate\Support\Facades\DB::table('hr_admin_sso_tokens')->where('token', $token)->delete();
 
         $admin = \App\Models\Admin::first();
         if (!$admin) {
@@ -474,7 +457,7 @@ class HrBridgeController extends Controller
 
         \Illuminate\Support\Facades\Log::info('[AdminSSO] Admin logged in via bridge SSO', ['admin_id' => $admin->id]);
 
-        return redirect($record->redirect_url);
+        return redirect($request->query('redirect_url', route('admin.dashboard')));
     }
 
     private function generateEmployeeCode(): string
