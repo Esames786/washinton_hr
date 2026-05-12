@@ -410,41 +410,35 @@ class HrBridgeController extends Controller
      */
     public function adminEmployeeView(Request $request): JsonResponse
     {
+        // kept for potential future use — main admin SSO now uses adminSsoConsume directly
         abort_unless(
             hash_equals((string) config('bridge.shared_key'), (string) $request->header('X-Bridge-Key')),
             401
         );
-
-        $validator = Validator::make($request->all(), [
-            'employee_id' => ['required', 'integer', 'exists:hr_employees,id'],
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json([
-                'message' => 'Validation failed.',
-                'errors'  => $validator->errors(),
-            ], 422);
-        }
-
-        $redirectUrl = route('admin.employees.show', $request->employee_id);
-
-        $ssoUrl = URL::temporarySignedRoute(
-            'admin.sso.consume',
-            now()->addMinutes(3),
-            ['redirect_url' => $redirectUrl]
-        );
-
-        return response()->json(['redirect_url' => $ssoUrl], 200);
+        return response()->json(['message' => 'Use direct SSO consume endpoint.'], 200);
     }
 
     /**
-     * Consume admin SSO signed URL: log in as super-admin and redirect to employee profile.
+     * Consume admin SSO: HMAC-signed payload from washinton_agent.
+     * No DB table needed — payload is signed with the shared bridge key.
      */
     public function adminSsoConsume(\Illuminate\Http\Request $request): \Illuminate\Http\RedirectResponse
     {
-        if (!$request->hasValidSignature()) {
-            \Illuminate\Support\Facades\Log::warning('[AdminSSO] Invalid or expired signature');
-            return redirect()->route('admin.login')->withErrors(['SSO link is invalid or has expired. Please try again.']);
+        $payload = (string) $request->query('payload', '');
+        $sig     = (string) $request->query('sig', '');
+
+        $expectedSig = hash_hmac('sha256', $payload, (string) config('bridge.shared_key'));
+
+        if (!hash_equals($expectedSig, $sig)) {
+            \Illuminate\Support\Facades\Log::warning('[AdminSSO] Invalid signature');
+            return redirect()->route('admin.login')->withErrors(['SSO link is invalid.']);
+        }
+
+        $data = json_decode(base64_decode($payload), true);
+
+        if (!$data || now()->timestamp > (int) $data['expires_at']) {
+            \Illuminate\Support\Facades\Log::warning('[AdminSSO] Expired payload');
+            return redirect()->route('admin.login')->withErrors(['SSO link has expired. Please try again.']);
         }
 
         $admin = \App\Models\Admin::first();
@@ -455,9 +449,9 @@ class HrBridgeController extends Controller
         \Illuminate\Support\Facades\Auth::guard('admin')->login($admin);
         $request->session()->save();
 
-        \Illuminate\Support\Facades\Log::info('[AdminSSO] Admin logged in via bridge SSO', ['admin_id' => $admin->id]);
+        \Illuminate\Support\Facades\Log::info('[AdminSSO] Admin logged in', ['admin_id' => $admin->id, 'employee_id' => $data['employee_id']]);
 
-        return redirect($request->query('redirect_url', route('admin.dashboard')));
+        return redirect($data['redirect_path']);
     }
 
     private function generateEmployeeCode(): string
