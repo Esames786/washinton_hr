@@ -337,7 +337,7 @@ document.querySelectorAll('.change-status-btn').forEach(function(btn) {
         var statusName = this.dataset.statusName;
         if (!confirm('Change status to "' + statusName + '"?')) return;
 
-        fetch('{{ route('employees.change-status') }}', {
+        fetch('{{ route('admin.employees.change-status') }}', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
