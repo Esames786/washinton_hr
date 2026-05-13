@@ -17,6 +17,7 @@ class Kernel extends ConsoleKernel
     {
         $schedule->command('attendance:daily')->everyTenMinutes();
         $schedule->command('employee:reset-login')->hourly();
+        $schedule->command('leave:renew-quotas')->dailyAt('00:05');
     }
 
     /**
