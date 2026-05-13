@@ -173,10 +173,9 @@
                 <div class="card shadow-sm border-0 h-100">
                     <div class="card-header bg-light fw-bold">📅 Working Days</div>
                     <div class="card-body p-3">
+                        @php $dayNames = [0=>'Sun',1=>'Mon',2=>'Tue',3=>'Wed',4=>'Thu',5=>'Fri',6=>'Sat']; @endphp
                         <div class="d-flex align-items-center flex-wrap gap-4">
                             @foreach($employee->working_days ?? [] as $day)
-{{--                                <div class="{{$day->is_working ? 'form-switch switch-success d-flex align-items-center gap-3' : 'form-switch switch-warning d-flex align-items-center gap-3'}}">--}}
-
                                 <div class="form-switch d-flex align-items-center gap-2">
                                     <input class="form-check-input" type="checkbox"
                                            role="switch"
@@ -184,7 +183,7 @@
                                            {{ $day->is_working ? 'checked' : '' }}
                                            disabled>
                                     <label class="form-check-label fw-medium text-secondary-light" for="day_{{ $day->id }}">
-                                        {{ $day->day_of_week }}
+                                        {{ $dayNames[(int)$day->day_of_week] ?? $day->day_of_week }}
                                     </label>
                                 </div>
                             @endforeach
