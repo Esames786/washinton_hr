@@ -1072,15 +1072,11 @@ class AdminEmployeeController extends Controller
             return response()->json(['success' => false, 'message' => 'Employee not found or status unchanged!'], 404);
         }
 
-        $wasNotActive = (int) $employee->employee_status_id !== 1;
-
         try {
             DB::transaction(function() use ($employee, $request) {
-                // Update employee status
                 $employee->employee_status_id = $request->status;
                 $employee->save();
 
-                // Log status history
                 $history = new EmployeeStatusHistory();
                 $history->employee_id = $employee->id;
                 $history->employee_status_id = $request->status;
@@ -1089,8 +1085,7 @@ class AdminEmployeeController extends Controller
                 $history->save();
             });
 
-            // Send HR activation email when transitioning to Active (status 1)
-            if ($wasNotActive && (int) $request->status === 1) {
+            if ((int) $request->status === 1) {
                 try {
                     Mail::to($employee->email)->send(new HrActivatedEmail($employee->full_name, $employee->email));
                 } catch (\Throwable $e) {

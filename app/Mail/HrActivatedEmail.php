@@ -10,14 +10,19 @@ class HrActivatedEmail extends Mailable
 {
     use Queueable, SerializesModels;
 
-    public function __construct(
-        public string $employeeName,
-        public string $employeeEmail
-    ) {}
+    public $employeeName;
+    public $employeeEmail;
 
-    public function build(): static
+    public function __construct($employeeName, $employeeEmail)
+    {
+        $this->employeeName  = $employeeName;
+        $this->employeeEmail = $employeeEmail;
+    }
+
+    public function build()
     {
         return $this
+            ->from(config('mail.from.address', 'noreply@hellotransport.com'), 'Hello Transport HR')
             ->subject('Your Hello Transport HR Account is Now Active!')
             ->view('emails.hr_activated');
     }
