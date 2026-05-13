@@ -32,9 +32,11 @@ use App\Models\TaxSlabSetting;
 use Carbon\Carbon;
 use Carbon\CarbonInterval;
 use Illuminate\Http\Request;
+use App\Mail\HrActivatedEmail;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator;
 use Yajra\DataTables\DataTables;
 use function Ramsey\Uuid\v1;
@@ -1070,6 +1072,8 @@ class AdminEmployeeController extends Controller
             return response()->json(['success' => false, 'message' => 'Employee not found or status unchanged!'], 404);
         }
 
+        $wasNotActive = (int) $employee->employee_status_id !== 1;
+
         try {
             DB::transaction(function() use ($employee, $request) {
                 // Update employee status
@@ -1084,6 +1088,15 @@ class AdminEmployeeController extends Controller
                 $history->is_phone_disabled = $request->status == 3 ? $request->disable_phone : 0;
                 $history->save();
             });
+
+            // Send HR activation email when transitioning to Active (status 1)
+            if ($wasNotActive && (int) $request->status === 1) {
+                try {
+                    Mail::to($employee->email)->send(new HrActivatedEmail($employee->full_name, $employee->email));
+                } catch (\Throwable $e) {
+                    Log::warning('changeStatus: HR activation email failed', ['employee_id' => $employee->id, 'error' => $e->getMessage()]);
+                }
+            }
 
             return response()->json(['success' => true, 'message' => 'Status updated successfully']);
 
