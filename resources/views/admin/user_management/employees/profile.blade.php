@@ -253,7 +253,7 @@
                                             <div class="form-switch switch-primary mt-1">
                                                 <input class="form-check-input verify-doc-toggle" type="checkbox"
                                                        data-id="{{ $doc->id }}"
-                                                       data-url="{{ route('employees.documents.verify', $doc->id) }}"
+                                                       data-url="{{ route('admin.employees.documents.verify', $doc->id) }}"
                                                        role="switch" id="verifySwitch{{ $doc->id }}"
                                                        {{ $doc->status ? 'checked' : '' }}>
                                                 <label class="form-check-label fw-medium {{ $doc->status ? 'text-success' : 'text-warning' }}"
