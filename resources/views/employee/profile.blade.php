@@ -411,7 +411,7 @@ document.addEventListener('DOMContentLoaded', function () {
     btn.addEventListener('click', function () {
         btn.disabled = true;
         btn.textContent = 'Accepting...';
-        fetch('{{ route("contract.accept") }}', {
+        fetch('{{ route("employee.contract.accept") }}', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
