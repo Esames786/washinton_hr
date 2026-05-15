@@ -86,8 +86,10 @@ use App\Http\Controllers\Employee\EmployeeTicketMessageController;
 
 
                 Route::post('employees/change-status', [AdminEmployeeController::class, 'changeStatus'])->name('employees.change-status');
+                Route::post('employees/{employee}/contract', [AdminEmployeeController::class, 'saveContract'])->name('admin.employees.save-contract');
                 Route::get('employees/{employee}/documents', [AdminEmployeeController::class, 'getDocuments'])->name('employees.documents');
                 Route::post('employees/documents/{document}/verify', [AdminEmployeeController::class, 'verify'])->name('employees.documents.verify');
+                Route::post('employees/documents/bulk-verify', [AdminEmployeeController::class, 'bulkVerify'])->name('employees.documents.bulk-verify');
                 Route::post('employees/attach_agent', [AdminEmployeeController::class, 'attach_agent'])->name('employees.attach_agent');
                 Route::resource('employees', AdminEmployeeController::class);
                 Route::get('employees/show/{id}', [AdminEmployeeController::class, 'show'])->name('employees.show');
@@ -255,6 +257,7 @@ use App\Http\Controllers\Employee\EmployeeTicketMessageController;
             Route::get('dashboard', [EmployeeDashboardController::class, 'index'])->name('dashboard');
             Route::get('profile',[EmployeeDashboardController::class,'employee_profile'])->name('profile');
             Route::post('profile/upload-document', [EmployeeDashboardController::class, 'uploadDocument'])->name('profile.upload_document');
+            Route::post('contract/accept', [EmployeeDashboardController::class, 'acceptContract'])->name('contract.accept');
             Route::delete('profile/document/{id}', [EmployeeDashboardController::class, 'deleteDocument'])->name('profile.delete_document');
             Route::prefix('attendance')->name('attendance.')->group(function () {
                 Route::get('', [EmployeeAttendanceController::class, 'index'])->name('index');

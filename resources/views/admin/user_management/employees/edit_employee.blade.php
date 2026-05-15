@@ -1094,5 +1094,88 @@
             fileInput.value = "";
             imgLabel.classList.remove('d-none')
         });
+
+        // ── Tab Error Highlighting ─────────────────────────────────────────
+        function navigateToFieldsetIndex(idx) {
+            var $fieldsets = $('.wizard-fieldset');
+            var $steps     = $('.form-wizard-list__item');
+            $fieldsets.removeClass('show');
+            $fieldsets.eq(idx).addClass('show');
+            $steps.each(function(i) {
+                $(this).removeClass('active activated');
+                if (i < idx)      $(this).addClass('activated');
+                else if (i === idx) $(this).addClass('active');
+            });
+        }
+
+        function markTabError(idx) {
+            var $count = $('.form-wizard-list__item').eq(idx).find('.count');
+            $count.css({ background: '#dc3545', color: '#fff', 'border-color': '#dc3545' });
+        }
+
+        // On form submit: find invalid required fields across ALL fieldsets,
+        // highlight the tab and navigate to the first one so the browser can focus.
+        $('form.form-select-2').on('submit', function(e) {
+            var $fieldsets     = $(this).find('.wizard-fieldset');
+            var firstInvalidIdx = -1;
+
+            // Reset any previous error coloring
+            $('.form-wizard-list__item .count').css({ background: '', color: '', 'border-color': '' });
+
+            $fieldsets.each(function(idx) {
+                var hasInvalid = false;
+                $(this).find('[required]').each(function() {
+                    if (!this.validity.valid) { hasInvalid = true; return false; }
+                });
+                if (hasInvalid) {
+                    markTabError(idx);
+                    if (firstInvalidIdx === -1) firstInvalidIdx = idx;
+                }
+            });
+
+            // If the first invalid fieldset is NOT the currently visible one, navigate there
+            if (firstInvalidIdx !== -1 && !$fieldsets.eq(firstInvalidIdx).hasClass('show')) {
+                e.preventDefault();
+                navigateToFieldsetIndex(firstInvalidIdx);
+                // Give the DOM a tick to show the fieldset, then let the browser validate
+                var $inv = $fieldsets.eq(firstInvalidIdx).find('[required]').filter(function() {
+                    return !this.validity.valid;
+                }).first()[0];
+                if ($inv) setTimeout(function() { $inv.reportValidity(); }, 60);
+            }
+        });
+
+        // On page load: if Laravel returned validation errors, highlight the
+        // affected tabs and jump to the first one with errors.
+        @if($errors->any())
+        (function() {
+            var errorKeys  = @json($errors->keys()); // e.g. ["leaves.4.assigned_quota", "full_name"]
+            var $fieldsets = $('.wizard-fieldset');
+            var firstErrIdx = -1;
+
+            $fieldsets.each(function(idx) {
+                var hasErr = false;
+                $(this).find('input, select, textarea').each(function() {
+                    var name = $(this).attr('name');
+                    if (!name) return;
+                    // Normalise bracket notation → dot notation for comparison
+                    var normalised = name.replace(/\[(\w+)\]/g, '.$1').replace(/^\.|\.$/g, '');
+                    for (var k = 0; k < errorKeys.length; k++) {
+                        if (normalised === errorKeys[k] || normalised.indexOf(errorKeys[k]) === 0 || errorKeys[k].indexOf(normalised) === 0) {
+                            hasErr = true;
+                            $(this).addClass('is-invalid');
+                            return false;
+                        }
+                    }
+                });
+                if (hasErr) {
+                    markTabError(idx);
+                    if (firstErrIdx === -1) firstErrIdx = idx;
+                }
+            });
+
+            if (firstErrIdx !== -1) navigateToFieldsetIndex(firstErrIdx);
+        })();
+        @endif
     </script>
 @endpush

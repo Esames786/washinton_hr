@@ -1072,6 +1072,18 @@ class AdminEmployeeController extends Controller
             return response()->json(['success' => false, 'message' => 'Employee not found or status unchanged!'], 404);
         }
 
+        // Block activation if any uploaded documents are unverified
+        if ((int) $request->status === 1) {
+            $totalDocs      = \App\Models\EmployeeDocument::where('employee_id', $employee->id)->count();
+            $unverifiedDocs = \App\Models\EmployeeDocument::where('employee_id', $employee->id)->where('status', 0)->count();
+            if ($totalDocs > 0 && $unverifiedDocs > 0) {
+                return response()->json([
+                    'success' => false,
+                    'message' => "Cannot activate: {$unverifiedDocs} document(s) are not verified. Please verify all documents before activating."
+                ], 422);
+            }
+        }
+
         try {
             DB::transaction(function() use ($employee, $request) {
                 $employee->employee_status_id = $request->status;
@@ -1121,6 +1133,38 @@ class AdminEmployeeController extends Controller
             'success' => true,
             'message' => 'Document status updated'
         ]);
+    }
+
+    public function bulkVerify(Request $request)
+    {
+        $request->validate(['employee_id' => 'required|integer|exists:hr_employees,id']);
+
+        \App\Models\EmployeeDocument::where('employee_id', $request->employee_id)
+            ->update(['status' => 1, 'updated_by' => auth('admin')->id()]);
+
+        return response()->json(['success' => true, 'message' => 'All documents verified']);
+    }
+
+    public function saveContract(Employee $employee, Request $request)
+    {
+        $request->validate(['contract' => 'required|string']);
+
+        $employee->contract            = $request->contract;
+        $employee->contract_updated_at = now();
+        $employee->contract_accepted_at = null; // reset acceptance on new contract
+        $employee->save();
+
+        // Notify the linked agent-portal user
+        if ($employee->agent_id) {
+            DB::table('notifications')->insert([
+                'issueId'    => $employee->id,
+                'userId'     => $employee->agent_id,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
+
+        return response()->json(['success' => true, 'message' => 'Contract saved successfully']);
     }
 
 

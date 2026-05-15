@@ -218,6 +218,15 @@ class EmployeeDashboardController extends Controller
     // ─────────────────────────────────────────────────────────────────────
     // DELETE DOCUMENT
     // ─────────────────────────────────────────────────────────────────────
+    public function acceptContract(\Illuminate\Http\Request $request)
+    {
+        $employee = auth('employee')->user();
+        $employee->contract_accepted_at = now();
+        $employee->save();
+
+        return response()->json(['success' => true, 'message' => 'Contract accepted']);
+    }
+
     public function deleteDocument($id)
     {
         $employee = auth('employee')->user();

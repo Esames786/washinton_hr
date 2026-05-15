@@ -23,4 +23,9 @@ class EmployeeDocument extends Model
     {
         return $this->belongsTo(Employee::class, 'employee_id', 'id');
     }
+
+    public function documentSetting()
+    {
+        return $this->belongsTo(DocumentSetting::class, 'document_setting_id', 'id');
+    }
 }

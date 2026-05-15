@@ -224,29 +224,43 @@
             {{-- Documents --}}
             <div class="col-md-12">
                 <div class="card shadow-sm border-0 h-100">
-                    <div class="card-header bg-light fw-bold">📄 Documents</div>
-                    <div class="card-body">
+                    <div class="card-header bg-light fw-bold d-flex align-items-center justify-content-between">
+                        <span>📄 Documents</span>
+                        @if($employee->documents && $employee->documents->count())
+                            <button type="button" class="btn btn-sm btn-success" id="bulkVerifyBtn"
+                                    data-employee-id="{{ $employee->id }}">
+                                ✔ Approve All Documents
+                            </button>
+                        @endif
+                    </div>
+                    <div class="card-body" id="documentsContainer">
                         @if($employee->documents && $employee->documents->count())
                             <div class="row g-3">
                                 @foreach($employee->documents as $doc)
-                                    <div class="col-sm-6 col-md-4 col-lg-3">
-                                        <div class="card doc-card h-100 text-center p-3">
-                                            @php
-                                                $ext = strtolower(pathinfo($doc->file_path, PATHINFO_EXTENSION));
-                                            @endphp
-
+                                    <div class="col-sm-6 col-md-4 col-lg-3" id="doc-card-{{ $doc->id }}">
+                                        <div class="card doc-card h-100 text-center p-3 {{ $doc->status ? 'border-success' : 'border-warning' }}" style="border-width:2px!important;">
+                                            @php $ext = strtolower(pathinfo($doc->file_path, PATHINFO_EXTENSION)); @endphp
                                             @if(in_array($ext, ['jpg','jpeg','png','gif','bmp','webp']))
-                                                <img src="{{ asset($doc->file_path) }}"
-                                                     class="doc-img rounded mb-2"
-                                                     alt="{{ $doc->file_name }}">
+                                                <img src="{{ asset($doc->file_path) }}" class="doc-img rounded mb-2" alt="{{ $doc->file_name }}">
                                             @elseif($ext === 'pdf')
                                                 <i class="bi bi-file-earmark-pdf text-danger doc-icon mb-2 doc-img"></i>
                                             @else
                                                 <i class="bi bi-link-45deg text-primary doc-icon mb-2 doc-img"></i>
                                             @endif
-
-                                            <p class="small fw-medium mb-1 text-truncate">{{ $doc->file_name }}</p>
-                                            <a href="{{ asset($doc->file_path) }}" target="_blank" class="btn btn-sm btn-outline-primary">View</a>
+                                            @php $docTitle = optional($doc->documentSetting)->title ?? $doc->file_name; @endphp
+                                            <p class="small fw-medium mb-1 text-truncate">{{ $docTitle }}</p>
+                                            <a href="{{ asset($doc->file_path) }}" target="_blank" class="btn btn-sm btn-outline-primary mb-2 w-100">View</a>
+                                            <div class="form-switch switch-primary mt-1">
+                                                <input class="form-check-input verify-doc-toggle" type="checkbox"
+                                                       data-id="{{ $doc->id }}"
+                                                       data-url="{{ route('employees.documents.verify', $doc->id) }}"
+                                                       role="switch" id="verifySwitch{{ $doc->id }}"
+                                                       {{ $doc->status ? 'checked' : '' }}>
+                                                <label class="form-check-label fw-medium {{ $doc->status ? 'text-success' : 'text-warning' }}"
+                                                       for="verifySwitch{{ $doc->id }}" id="verifyLabel{{ $doc->id }}">
+                                                    {{ $doc->status ? 'Verified' : 'Pending' }}
+                                                </label>
+                                            </div>
                                         </div>
                                     </div>
                                 @endforeach
@@ -322,6 +336,33 @@
             </div>
 
 
+            {{-- Contract Editor --}}
+            <div class="col-md-12">
+                <div class="card shadow-sm border-0">
+                    <div class="card-header bg-light fw-bold d-flex align-items-center justify-content-between">
+                        <span>📃 Employee Contract</span>
+                        @if($employee->contract_accepted_at)
+                            <span class="badge bg-success text-white">✔ Accepted by employee on {{ \Carbon\Carbon::parse($employee->contract_accepted_at)->format('d M Y H:i') }}</span>
+                        @elseif($employee->contract_updated_at)
+                            <span class="badge bg-warning text-dark">⏳ Pending employee acceptance</span>
+                        @endif
+                    </div>
+                    <div class="card-body">
+                        <link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
+                        <div id="contractEditor" style="min-height:200px;">{!! $employee->contract ?? '' !!}</div>
+                        <input type="hidden" id="contractContent" value="">
+                        <div class="d-flex justify-content-end mt-3 gap-2">
+                            <button type="button" id="saveContractBtn"
+                                    data-url="{{ route('admin.employees.save-contract', $employee->id) }}"
+                                    class="btn btn-primary">
+                                💾 Save Contract
+                            </button>
+                        </div>
+                        <div id="contractSaveMsg" class="small mt-2" style="display:none;"></div>
+                    </div>
+                </div>
+            </div>
+
         </div>
     </div>
 
@@ -347,8 +388,6 @@ document.querySelectorAll('.change-status-btn').forEach(function(btn) {
         .then(function(res) { return res.json(); })
         .then(function(data) {
             if (data.success) {
-                document.getElementById('currentStatusBadge').textContent = statusName;
-                // Remove the clicked status from dropdown, add old one back
                 location.reload();
             } else {
                 alert(data.message || 'Failed to update status.');
@@ -357,6 +396,117 @@ document.querySelectorAll('.change-status-btn').forEach(function(btn) {
         .catch(function() { alert('Request failed. Please try again.'); });
     });
 });
+
+// ── Document verify toggles ────────────────────────────────────────────────
+document.querySelectorAll('.verify-doc-toggle').forEach(function(toggle) {
+    toggle.addEventListener('change', function() {
+        var docId  = this.dataset.id;
+        var url    = this.dataset.url;
+        var status = this.checked ? 1 : 0;
+        var card   = document.getElementById('doc-card-' + docId);
+        var label  = document.getElementById('verifyLabel' + docId);
+
+        fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+            body: JSON.stringify({ status: status })
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (data.success) {
+                if (card) {
+                    card.querySelector('.card').classList.toggle('border-success', status === 1);
+                    card.querySelector('.card').classList.toggle('border-warning', status === 0);
+                }
+                if (label) {
+                    label.textContent = status === 1 ? 'Verified' : 'Pending';
+                    label.className = 'form-check-label fw-medium ' + (status === 1 ? 'text-success' : 'text-warning');
+                }
+            } else {
+                alert('Failed to update document status.');
+                toggle.checked = !toggle.checked;
+            }
+        })
+        .catch(function() { alert('Request failed.'); toggle.checked = !toggle.checked; });
+    });
+});
+
+// ── Contract editor (Quill) ────────────────────────────────────────────────
+(function() {
+    var quillScript = document.createElement('script');
+    quillScript.src = 'https://cdn.quilljs.com/1.3.7/quill.min.js';
+    quillScript.onload = function() {
+        var quill = new Quill('#contractEditor', { theme: 'snow' });
+
+        document.getElementById('saveContractBtn').addEventListener('click', function() {
+            var content = quill.root.innerHTML;
+            var url     = this.dataset.url;
+            var btn     = this;
+            btn.disabled = true;
+            btn.textContent = 'Saving…';
+
+            fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+                body: JSON.stringify({ contract: content })
+            })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                btn.disabled = false;
+                btn.textContent = '💾 Save Contract';
+                var msg = document.getElementById('contractSaveMsg');
+                if (data.success) {
+                    msg.textContent = '✔ ' + data.message;
+                    msg.className = 'small mt-2 text-success';
+                } else {
+                    msg.textContent = '✘ ' + (data.message || 'Save failed.');
+                    msg.className = 'small mt-2 text-danger';
+                }
+                msg.style.display = 'block';
+                setTimeout(function() { msg.style.display = 'none'; }, 4000);
+            })
+            .catch(function() {
+                btn.disabled = false;
+                btn.textContent = '💾 Save Contract';
+                alert('Request failed. Please try again.');
+            });
+        });
+    };
+    document.head.appendChild(quillScript);
+})();
+
+// ── Bulk approve all documents ─────────────────────────────────────────────
+var bulkBtn = document.getElementById('bulkVerifyBtn');
+if (bulkBtn) {
+    bulkBtn.addEventListener('click', function() {
+        if (!confirm('Mark ALL documents as Verified?')) return;
+        var employeeId = this.dataset.employeeId;
+
+        fetch('{{ route('admin.employees.documents.bulk-verify') }}', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+            body: JSON.stringify({ employee_id: employeeId })
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (data.success) {
+                document.querySelectorAll('.verify-doc-toggle').forEach(function(t) { t.checked = true; });
+                document.querySelectorAll('[id^="verifyLabel"]').forEach(function(l) {
+                    l.textContent = 'Verified';
+                    l.className = 'form-check-label fw-medium text-success';
+                });
+                document.querySelectorAll('[id^="doc-card-"] .card').forEach(function(c) {
+                    c.classList.add('border-success');
+                    c.classList.remove('border-warning');
+                });
+                alert('All documents verified.');
+            } else {
+                alert(data.message || 'Bulk verify failed.');
+            }
+        })
+        .catch(function() { alert('Request failed.'); });
+    });
+}
 </script>
 @endpush
 

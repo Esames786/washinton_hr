@@ -319,6 +319,44 @@
             </div>
 
 
+            {{-- Contract --}}
+            @if($employee->contract)
+            <div class="col-md-12">
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-header bg-light fw-bold d-flex justify-content-between align-items-center">
+                        <span>📃 My Contract</span>
+                        @if($employee->contract_accepted_at)
+                            <span class="badge bg-success text-white">✔ Accepted on {{ \Carbon\Carbon::parse($employee->contract_accepted_at)->format('d M Y H:i') }}</span>
+                        @else
+                            <span class="badge bg-warning text-dark">⚠ Pending Your Acceptance</span>
+                        @endif
+                    </div>
+                    <div class="card-body p-3">
+                        @if(!$employee->contract_accepted_at)
+                            <div class="alert alert-warning d-flex align-items-start gap-2 mb-3">
+                                <i class="bi bi-exclamation-triangle-fill mt-1"></i>
+                                <div>
+                                    <strong>A new contract has been added by admin.</strong>
+                                    Please read the contract carefully and click <strong>Accept Contract</strong> to confirm.
+                                </div>
+                            </div>
+                        @endif
+
+                        <div class="border rounded p-3 mb-3 bg-light" style="max-height:400px;overflow-y:auto;">
+                            {!! $employee->contract !!}
+                        </div>
+
+                        @if(!$employee->contract_accepted_at)
+                            <button type="button" id="acceptContractBtn" class="btn btn-success">
+                                <i class="bi bi-check-circle me-1"></i>Accept Contract
+                            </button>
+                            <span id="acceptContractMsg" class="small ms-3" style="display:none;"></span>
+                        @endif
+                    </div>
+                </div>
+            </div>
+            @endif
+
             {{-- Leaves --}}
             <div class="col-md-12">
                 <div class="card shadow-sm border-0 h-100">
@@ -362,5 +400,53 @@
         </div>
     </div>
 
-
 @endsection
+
+@push('scripts')
+@if($employee->contract && !$employee->contract_accepted_at)
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var btn = document.getElementById('acceptContractBtn');
+    if (!btn) return;
+    btn.addEventListener('click', function () {
+        btn.disabled = true;
+        btn.textContent = 'Accepting...';
+        fetch('{{ route("contract.accept") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+            },
+            body: JSON.stringify({})
+        })
+        .then(function (r) { return r.json(); })
+        .then(function (res) {
+            if (res.success) {
+                var msg = document.getElementById('acceptContractMsg');
+                msg.textContent = '✔ Contract accepted successfully.';
+                msg.className = 'small ms-3 text-success';
+                msg.style.display = 'inline';
+                btn.style.display = 'none';
+                var header = btn.closest('.card').querySelector('.card-header .badge');
+                if (header) {
+                    header.className = 'badge bg-success text-white';
+                    header.textContent = '✔ Accepted';
+                }
+                var banner = btn.closest('.card-body').querySelector('.alert-warning');
+                if (banner) banner.remove();
+            } else {
+                btn.disabled = false;
+                btn.textContent = 'Accept Contract';
+                alert('Failed to accept contract. Please try again.');
+            }
+        })
+        .catch(function () {
+            btn.disabled = false;
+            btn.textContent = 'Accept Contract';
+            alert('An error occurred. Please try again.');
+        });
+    });
+});
+</script>
+@endif
+@endpush
