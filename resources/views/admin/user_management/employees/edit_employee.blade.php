@@ -11,7 +11,7 @@
     <div class="card h-100">
         <div class="card-body">
             <div class="form-wizard">
-                <form action="{{ route('admin.employees.update', $employee->id) }}" method="POST" enctype="multipart/form-data" class="form-select-2">
+                <form action="{{ route('admin.employees.update', $employee->id) }}" method="POST" enctype="multipart/form-data" class="form-select-2" novalidate>
                     @csrf
                     @method('PUT')
 
