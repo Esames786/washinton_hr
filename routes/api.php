@@ -17,3 +17,6 @@ use Illuminate\Support\Facades\Route;
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
+
+Route::get('/document-settings', [\App\Http\Controllers\Api\PublicDocumentSettingsController::class, 'index'])
+    ->middleware('throttle:60,1');

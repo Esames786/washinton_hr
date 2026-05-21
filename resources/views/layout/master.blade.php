@@ -48,6 +48,36 @@
 
 @stack('scripts')
 
+{{-- ── Live Chat Widget ──────────────────────────────────────────────── --}}
+@auth('admin')
+@php $hrChatAgentId = auth('admin')->user()->agent_id ?? 0; @endphp
+<div id="hr-chat-container" style="display:none;position:fixed;bottom:90px;right:20px;z-index:99999;">
+    <button id="hr-chat-close" style="position:absolute;top:10px;right:10px;z-index:100001;background:#dc3545;color:#fff;border:none;border-radius:50%;width:36px;height:36px;cursor:pointer;">✕</button>
+    <iframe id="hr-chat-widget" src="" style="width:500px;height:550px;border:none;border-radius:12px;background:#fff;box-shadow:0 10px 30px rgba(0,0,0,0.25);overflow:hidden;display:block;"></iframe>
+</div>
+<button id="hr-chat-btn" style="position:fixed;bottom:20px;right:20px;z-index:100000;background:#1a1a2e;color:#d4af37;border:2px solid #d4af37;border-radius:50px;padding:10px 18px;font-weight:600;cursor:pointer;box-shadow:0 8px 20px rgba(0,0,0,0.35);display:flex;align-items:center;gap:8px;">
+    <span>💬</span> <span>Live Chat</span>
+</button>
+<script>
+(function () {
+    var btn = document.getElementById('hr-chat-btn');
+    var container = document.getElementById('hr-chat-container');
+    var iframe = document.getElementById('hr-chat-widget');
+    var closeBtn = document.getElementById('hr-chat-close');
+    var loaded = false;
+
+    btn.addEventListener('click', function () {
+        if (!loaded) {
+            iframe.src = '{{ rtrim(env("AGENT_PORTAL_URL", "https://hellotransport.com"), "/") }}/chat-widget?user_id={{ $hrChatAgentId }}';
+            loaded = true;
+        }
+        container.style.display = container.style.display === 'none' ? 'block' : 'none';
+    });
+    closeBtn.addEventListener('click', function () { container.style.display = 'none'; });
+})();
+</script>
+@endauth
+
 {{-- ── Blocking Contract Acceptance Modal (employee portal) ─────────────── --}}
 @auth('employee')
 @php
