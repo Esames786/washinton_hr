@@ -389,9 +389,8 @@ class EmployeeDashboardController extends Controller
                     ?? ($extraStatuses[$row->pstatus] ?? ('Status ' . $row->pstatus));
                 return [
                     'history_status'      => $label,
-                    'expected_date'       => '-',
+                    'expected_date'       => $row->created_at ? \Carbon\Carbon::parse($row->created_at)->format('d-M-Y') : '-',
                     'history_description' => '-',
-                    'created_at'          => $row->created_at,
                 ];
             });
 
