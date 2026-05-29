@@ -69,7 +69,7 @@
 
     {{-- Order History Modal --}}
     <div class="modal fade" id="orderHistoryModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-dialog modal-xl modal-dialog-centered">
             <div class="modal-content">
                 <div class="card-header border-bottom bg-base py-16 px-24 d-flex align-items-center justify-content-between">
                     <h6 class="text-lg fw-semibold mb-0">Order History</h6>
