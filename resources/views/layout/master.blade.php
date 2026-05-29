@@ -49,7 +49,7 @@
 @stack('scripts')
 
 {{-- ── Live Chat Widget ──────────────────────────────────────────────── --}}
-@auth('admin')
+{{-- @auth('admin')
 @php $hrChatAgentId = auth('admin')->user()->agent_id ?? 0; @endphp
 <div id="hr-chat-container" style="display:none;position:fixed;bottom:90px;right:20px;z-index:99999;">
     <button id="hr-chat-close" style="position:absolute;top:10px;right:10px;z-index:100001;background:#dc3545;color:#fff;border:none;border-radius:50%;width:36px;height:36px;cursor:pointer;">✕</button>
@@ -76,7 +76,7 @@
     closeBtn.addEventListener('click', function () { container.style.display = 'none'; });
 })();
 </script>
-@endauth
+@endauth --}}
 
 {{-- ── Blocking Contract Acceptance Modal (employee portal) ─────────────── --}}
 @auth('employee')
