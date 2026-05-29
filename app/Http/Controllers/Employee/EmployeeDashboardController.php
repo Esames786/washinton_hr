@@ -183,7 +183,7 @@ class EmployeeDashboardController extends Controller
     {
         $request->validate([
             'document_setting_id' => 'required|integer|exists:hr_document_settings,id',
-            'file'                => 'required|file|mimes:jpg,jpeg,png,pdf|max:5120',
+            'file'                => 'required|file|max:10240',
         ]);
 
         $employee = auth('employee')->user();

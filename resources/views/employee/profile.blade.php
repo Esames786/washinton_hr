@@ -229,9 +229,8 @@
                                     </select>
                                 </div>
                                 <div class="col-md-5">
-                                    <label class="form-label small fw-semibold">File <span class="text-danger">*</span> <span class="text-muted">(JPG, PNG, PDF — max 5MB)</span></label>
-                                    <input type="file" name="file" class="form-control form-control-sm"
-                                           accept=".jpg,.jpeg,.png,.pdf" required>
+                                    <label class="form-label small fw-semibold">File <span class="text-danger">*</span> <span class="text-muted">(All formats — max 10MB)</span></label>
+                                    <input type="file" name="file" class="form-control form-control-sm" required>
                                 </div>
                                 <div class="col-md-3">
                                     <button type="submit" class="btn btn-primary btn-sm w-100">
