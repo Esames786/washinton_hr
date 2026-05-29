@@ -182,9 +182,9 @@
                                 let statusClass = 'bg-info text-white';
 
                                 html += `<tr>
-                        <td><span class="${statusClass} px-24 py-4 rounded-pill fw-medium text-sm">${row.history_status}</span></td>
-                        <td>${row.expected_date}</td>
-                        <td>${row.history_description}</td>
+                        <td><span class="${statusClass} px-24 py-4 rounded-pill fw-medium text-sm">${row.history_status ?? '-'}</span></td>
+                        <td>${row.expected_date ?? '-'}</td>
+                        <td>${row.history_description ?? '-'}</td>
                     </tr>`;
                             });
                             tbody.html(html);

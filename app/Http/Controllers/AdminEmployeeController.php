@@ -1532,17 +1532,30 @@ class AdminEmployeeController extends Controller
 
     public function order_history($orderId)
     {
+        $extraStatuses = [
+            30 => 'Pickup Approval',
+            31 => 'Delivered Approval',
+            32 => 'Schedule For Delivery',
+            33 => 'Cancel On Approval',
+            34 => 'Dispatch Approval',
+        ];
+
         $history = DB::table('report')
             ->leftJoin('pstatus', 'pstatus.id', '=', 'report.pstatus')
             ->where('report.orderId', $orderId)
             ->orderBy('report.created_at', 'desc')
-            ->select(
-                DB::raw('COALESCE(pstatus.name, report.pstatus) as history_status'),
-                DB::raw('NULL as expected_date'),
-                DB::raw('NULL as history_description'),
-                'report.created_at'
-            )
-            ->get();
+            ->select('report.pstatus', 'pstatus.name as pstatus_name', 'report.created_at')
+            ->get()
+            ->map(function ($row) use ($extraStatuses) {
+                $label = $row->pstatus_name
+                    ?? ($extraStatuses[$row->pstatus] ?? ('Status ' . $row->pstatus));
+                return [
+                    'history_status'      => $label,
+                    'expected_date'       => '-',
+                    'history_description' => '-',
+                    'created_at'          => $row->created_at,
+                ];
+            });
 
         return response()->json($history);
     }
