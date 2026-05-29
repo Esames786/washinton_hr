@@ -67,7 +67,7 @@ class EmployeeDailyActivityController extends Controller
 
         $fields = DailyActivityField::whereIn('id', function($q) use ($employee) {
             $q->select('activity_field_id')
-                ->from('role_activity_fields')
+                ->from('hr_role_activity_fields')
                 ->where('role_id', $employee->role_id);
         })->get();
 
@@ -90,7 +90,7 @@ class EmployeeDailyActivityController extends Controller
 
         $fields = DailyActivityField::whereIn('id', function($q) use ($employee) {
             $q->select('activity_field_id')
-                ->from('role_activity_fields')
+                ->from('hr_role_activity_fields')
                 ->where('role_id', $employee->role_id);
         })->get();
 
@@ -189,7 +189,7 @@ class EmployeeDailyActivityController extends Controller
 //
 //        $fields = DailyActivityField::whereIn('id', function($q) use ($employee) {
 //            $q->select('activity_field_id')
-//                ->from('role_activity_fields')
+//                ->from('hr_role_activity_fields')
 //                ->where('role_id', $employee->role_id);
 //        })->get();
 //
@@ -216,7 +216,7 @@ class EmployeeDailyActivityController extends Controller
 
         $fields = DailyActivityField::whereIn('id', function($q) use ($employee, $id) {
             $q->select('activity_field_id')
-                ->from('role_activity_fields')
+                ->from('hr_role_activity_fields')
                 ->where('role_id', $employee->role_id)
                 ->where('activity_field_id', $id);
         })->get();
