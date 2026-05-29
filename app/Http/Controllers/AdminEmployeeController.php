@@ -1540,19 +1540,19 @@ class AdminEmployeeController extends Controller
             34 => 'Dispatch Approval',
         ];
 
-        $history = DB::table('report')
-            ->leftJoin('pstatus', 'pstatus.id', '=', 'report.pstatus')
-            ->where('report.orderId', $orderId)
-            ->orderBy('report.created_at', 'desc')
-            ->select('report.pstatus', 'pstatus.name as pstatus_name', 'report.created_at')
+        $history = DB::table('call_histories')
+            ->leftJoin('pstatus', 'pstatus.id', '=', 'call_histories.pstatus')
+            ->where('call_histories.orderId', $orderId)
+            ->orderBy('call_histories.created_at', 'desc')
+            ->select('call_histories.pstatus', 'pstatus.name as pstatus_name', 'call_histories.history', 'call_histories.created_at')
             ->get()
             ->map(function ($row) use ($extraStatuses) {
                 $label = $row->pstatus_name
                     ?? ($extraStatuses[$row->pstatus] ?? ('Status ' . $row->pstatus));
                 return [
                     'history_status'      => $label,
-                    'expected_date'       => $row->created_at ? \Carbon\Carbon::parse($row->created_at)->format('d-M-Y') : '-',
-                    'history_description' => '-',
+                    'expected_date'       => $row->created_at ? \Carbon\Carbon::parse($row->created_at)->format('d-M-Y H:i') : '-',
+                    'history_description' => $row->history ? strip_tags($row->history) : '-',
                 ];
             });
 
