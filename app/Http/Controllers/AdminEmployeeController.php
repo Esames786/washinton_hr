@@ -1532,9 +1532,16 @@ class AdminEmployeeController extends Controller
 
     public function order_history($orderId)
     {
-        $history = DB::table('order_quote_status')
-            ->where('order_id', $orderId)
-            ->orderBy('created_at', 'desc')
+        $history = DB::table('report')
+            ->leftJoin('pstatus', 'pstatus.id', '=', 'report.pstatus')
+            ->where('report.orderId', $orderId)
+            ->orderBy('report.created_at', 'desc')
+            ->select(
+                DB::raw('COALESCE(pstatus.name, report.pstatus) as history_status'),
+                DB::raw('NULL as expected_date'),
+                DB::raw('NULL as history_description'),
+                'report.created_at'
+            )
             ->get();
 
         return response()->json($history);
