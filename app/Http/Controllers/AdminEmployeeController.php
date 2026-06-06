@@ -406,7 +406,7 @@ class AdminEmployeeController extends Controller
             'employee_code'         => 'required|string',
 //            'employee_code'         => 'required|string|unique:hr_employees,employee_code',
             'employment_type'       => 'required|integer',
-            'employee_status_id'    => 'required|integer',
+            'employee_status_id'    => 'nullable|integer|exists:hr_employee_statuses,id',
             'role_id'               => 'required|integer',
             'shift_id'              => 'required|integer',
             'gratuity_id'           => 'nullable|required_if:account_type_id,1,3|integer',
@@ -478,7 +478,7 @@ class AdminEmployeeController extends Controller
             $employee->department_id          = $request->department_id;
             $employee->designation_id         = $request->designation_id;
             $employee->employment_type_id     = $request->employment_type;
-            $employee->employee_status_id     = $request->employee_status_id;
+            $employee->employee_status_id     = $request->employee_status_id ?? config('bridge.defaults.employee_status_id', 7);
             $employee->role_id                = $request->role_id;
             $employee->shift_id               = $request->shift_id;
             $employee->gratuity_id            = $request->gratuity_id;
@@ -1065,7 +1065,10 @@ class AdminEmployeeController extends Controller
         ]);
 
         $employee = Employee::where('id', $request->employee_id)
-            ->where('employee_status_id', '!=', $request->status)
+            ->where(function ($q) use ($request) {
+                $q->where('employee_status_id', '!=', $request->status)
+                  ->orWhereNull('employee_status_id');
+            })
             ->first();
 
         if (!$employee) {
