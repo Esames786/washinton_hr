@@ -49,7 +49,7 @@ class UserController extends Controller
     {
         $request->validate([
             'name'     => 'required|string|max:255',
-            'email'    => 'required|email|unique:admins,email',
+            'email'    => 'required|email|unique:hr_admins,email',
             'password' => 'required|min:8',
             'role_id'  => 'required|integer|exists:hr_roles,id',
 //            'status'   => 'required|in:0,1',
@@ -89,7 +89,7 @@ class UserController extends Controller
     {
         $request->validate([
             'name'     => 'required|string|max:255',
-            'email'   => 'required|email|unique:admins,email,' . $user->id,
+            'email'   => 'required|email|unique:hr_admins,email,' . $user->id,
             'role_id'  => 'required|integer|exists:hr_roles,id',
 //            'password' => 'nullable|min:6',
 //            'status'   => 'required|in:0,1',
