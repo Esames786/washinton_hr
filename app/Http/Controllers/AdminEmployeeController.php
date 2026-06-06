@@ -1565,17 +1565,17 @@ class AdminEmployeeController extends Controller
     {
         if ($request->ajax()) {
             $query = PayrollDetail::query()
-                ->join('employees as e', 'e.id', '=', 'hr_payroll_details.employee_id')
+                ->join('hr_employees as e', 'e.id', '=', 'hr_payroll_details.employee_id')
                 ->select(
                     'e.full_name as employee',
-                    DB::raw('MONTH(payroll_details.created_at) as month'),
-                    DB::raw('YEAR(payroll_details.created_at) as year'),
-                    DB::raw('SUM(payroll_details.tax_amount) as tax_amount')
+                    DB::raw('MONTH(hr_payroll_details.created_at) as month'),
+                    DB::raw('YEAR(hr_payroll_details.created_at) as year'),
+                    DB::raw('SUM(hr_payroll_details.tax_amount) as tax_amount')
                 )
                 ->groupBy(
                     'hr_payroll_details.employee_id',
-                    DB::raw('MONTH(payroll_details.created_at)'),
-                    DB::raw('YEAR(payroll_details.created_at)')
+                    DB::raw('MONTH(hr_payroll_details.created_at)'),
+                    DB::raw('YEAR(hr_payroll_details.created_at)')
                 );
 
             // âœ… Filters
