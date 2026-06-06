@@ -334,7 +334,7 @@
             });
 
             $(document).on('click', '.status-change', function() {
-                let employeeId = datatable.row($(this).closest('tr')).data().id;
+                let employeeId = $(this).data('id');
                 let statusId = $(this).data('status');
 
                 if(statusId == 3){ // Terminated
