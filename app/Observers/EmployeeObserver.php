@@ -103,9 +103,18 @@ class EmployeeObserver
             ->post($bridgeUrl . '/bridge/employee/sync', $payload);
 
             if ($response->successful()) {
+                $agentId = $response->json('user_id');
+
+                // Save agent_id back to hr_employees without triggering observer again
+                if ($agentId) {
+                    \Illuminate\Support\Facades\DB::table('hr_employees')
+                        ->where('id', $employee->id)
+                        ->update(['agent_id' => $agentId]);
+                }
+
                 Log::info('EmployeeObserver: Employee synced to washinton_agent', [
                     'employee_id' => $employee->id,
-                    'user_id'     => $response->json('user_id'),
+                    'user_id'     => $agentId,
                     'email'       => $employee->email,
                 ]);
             } else {
