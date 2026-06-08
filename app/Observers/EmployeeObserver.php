@@ -43,7 +43,7 @@ class EmployeeObserver
     public function updated(Employee $employee)
     {
         // Only sync if key fields changed
-        if ($employee->isDirty(['first_name', 'last_name', 'email', 'phone', 'role_id'])) {
+        if ($employee->isDirty(['full_name', 'email', 'phone', 'role_id'])) {
             try {
                 $this->syncEmployeeToAgent($employee);
             } catch (\Throwable $e) {
@@ -72,16 +72,21 @@ class EmployeeObserver
             return;
         }
 
+        // Split full_name into first/last
+        $parts     = explode(' ', trim($employee->full_name ?? ''), 2);
+        $firstName = $parts[0] ?: explode('@', $employee->email)[0];
+        $lastName  = $parts[1] ?? 'Employee';
+
         // Get role information
-        $role = $employee->role;
+        $role     = $employee->role;
         $roleName = $role ? $role->name : 'Employee';
-        $roleId = $employee->role_id ?? 0;
+        $roleId   = $employee->role_id ?? 0;
 
         // Prepare payload
         $payload = [
             'employee_id' => $employee->id,
-            'first_name'  => $employee->first_name,
-            'last_name'   => $employee->last_name,
+            'first_name'  => $firstName,
+            'last_name'   => $lastName,
             'email'       => $employee->email,
             'phone'       => $employee->phone ?? '',
             'role_id'     => $roleId,
