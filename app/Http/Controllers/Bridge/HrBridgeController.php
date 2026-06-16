@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Bridge;
 
 use App\Http\Controllers\Controller;
 use App\Models\Employee;
+use App\Models\EmployeeDocument;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -452,6 +453,70 @@ class HrBridgeController extends Controller
         \Illuminate\Support\Facades\Log::info('[AdminSSO] Admin logged in', ['admin_id' => $admin->id, 'employee_id' => $data['employee_id']]);
 
         return redirect($data['redirect_path']);
+    }
+
+    /**
+     * Receive base64-encoded documents from washinton_agent and attach them to the HR employee.
+     * Called after a CR application is approved.
+     */
+    public function attachDocuments(Request $request): JsonResponse
+    {
+        abort_unless(
+            hash_equals((string) config('bridge.shared_key'), (string) $request->header('X-Bridge-Key')),
+            401
+        );
+
+        $validator = Validator::make($request->all(), [
+            'agent_id'             => ['required', 'integer'],
+            'documents'            => ['required', 'array', 'min:1'],
+            'documents.*.doc_id'   => ['required', 'integer'],
+            'documents.*.filename' => ['required', 'string'],
+            'documents.*.mime_type'=> ['required', 'string'],
+            'documents.*.content'  => ['required', 'string'],
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['message' => 'Validation failed.', 'errors' => $validator->errors()], 422);
+        }
+
+        $employee = Employee::where('agent_id', (int) $request->input('agent_id'))->first();
+
+        if (!$employee) {
+            return response()->json(['message' => 'Employee not found for agent_id ' . $request->input('agent_id') . '.'], 404);
+        }
+
+        $dir = public_path('Uploads/employees/' . $employee->id . '/');
+        if (!is_dir($dir)) {
+            mkdir($dir, 0777, true);
+        }
+
+        $saved = 0;
+        foreach ($request->input('documents') as $doc) {
+            $docId   = (int) $doc['doc_id'];
+            $content = base64_decode($doc['content'], true);
+            if ($content === false) continue;
+
+            $ext      = pathinfo($doc['filename'], PATHINFO_EXTENSION) ?: 'bin';
+            $filename = 'doc_' . $employee->id . '_' . $docId . '.' . $ext;
+            $filePath = 'Uploads/employees/' . $employee->id . '/' . $filename;
+
+            file_put_contents($dir . $filename, $content);
+
+            EmployeeDocument::updateOrCreate(
+                ['employee_id' => $employee->id, 'document_setting_id' => $docId],
+                [
+                    'file_name' => $doc['filename'],
+                    'mime_type' => $doc['mime_type'],
+                    'file_path' => $filePath,
+                    'status'    => 0,
+                ]
+            );
+            $saved++;
+        }
+
+        \Illuminate\Support\Facades\Log::info('HrBridgeController: attachDocuments saved ' . $saved . ' doc(s) for employee #' . $employee->id);
+
+        return response()->json(['success' => true, 'message' => "{$saved} document(s) attached.", 'employee_id' => $employee->id]);
     }
 
     private function generateEmployeeCode(): string

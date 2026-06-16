@@ -13,6 +13,7 @@ class VerifyCsrfToken extends Middleware
      */
     protected $except = [
         'bridge/employee/create',
+        'bridge/employee/attach-documents',
         'bridge/login',
         'bridge/agent/status',
         'bridge/agent/login',

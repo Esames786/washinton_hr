@@ -303,6 +303,7 @@ use App\Http\Controllers\Employee\EmployeeTicketMessageController;
     Route::prefix('bridge')->group(function () {
         Route::post('/login', [\App\Http\Controllers\Bridge\HrBridgeController::class, 'login']);
         Route::post('/employee/create', [\App\Http\Controllers\Bridge\HrBridgeController::class, 'createEmployee']);
+        Route::post('/employee/attach-documents', [\App\Http\Controllers\Bridge\HrBridgeController::class, 'attachDocuments']);
         Route::post('/agent/status', [\App\Http\Controllers\Bridge\HrBridgeController::class, 'agentStatus']);
         Route::post('/agent/login', [\App\Http\Controllers\Bridge\HrBridgeController::class, 'agentLogin']);
         Route::get('/sso/consume', [\App\Http\Controllers\Bridge\HrBridgeController::class, 'consume'])->name('bridge.hr.consume');
