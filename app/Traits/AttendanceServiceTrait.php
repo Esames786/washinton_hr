@@ -81,6 +81,11 @@ trait AttendanceServiceTrait
 
             $attendance->ticket_id            = $ticket_id;
             $attendance->created_by           = $employee_id;
+            // Clear any stale auto-marked metadata so a real check-in is never
+            // reported as system-generated (happens when cron marks absent first,
+            // then employee checks in and firstOrNew finds the cron record)
+            $attendance->user_type            = null;
+            $attendance->remarks              = null;
             $attendance->save();
 
             if (!$check_out_time) {
@@ -402,14 +407,18 @@ trait AttendanceServiceTrait
 
     private function calculateOvertime($attendance, $basic_salary, $shift)
     {
-        $checkOutTs = strtotime($attendance->check_out);
         $attendanceDate = $attendance->attendance_date;
+        // check_out is a bare TIME string ('04:00:00') — must prefix the attendance date
+        // or strtotime() resolves to today's date, causing massive fake overtime on old records
+        $checkOutTs = strtotime($attendanceDate . ' ' . $attendance->check_out);
         $shiftStartTs = strtotime($attendanceDate . ' ' . $shift->shift_start);
         $shiftEndTs   = strtotime($attendanceDate . ' ' . $shift->shift_end);
 
-        // Agar shift midnight cross karti hai (e.g. 16:00–02:00)
+        // Overnight shift: align shiftEnd and checkOut to the correct day
         if ($shiftEndTs <= $shiftStartTs) {
-            $shiftEndTs = strtotime('+1 day', $shiftEndTs);
+            $shiftEndTs += 24 * 3600;
+            // check-out in early morning (e.g. 04:00/05:00) is on the next calendar day
+            if ($checkOutTs < $shiftStartTs) $checkOutTs += 24 * 3600;
         }
 
         if ($checkOutTs > $shiftEndTs) {

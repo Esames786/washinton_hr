@@ -60,7 +60,15 @@ class GeneratePayrollJob implements ShouldQueue
 
                 $basicSalary = $emp->basic_salary ?? 0;
 
-                $total_basic_salary+=$basicSalary;
+                // Pro-rate salary for employees who joined mid-cycle
+                $joiningDate = $emp->joining_date ? Carbon::parse($emp->joining_date)->startOfDay() : null;
+                $proratedSalary = $basicSalary;
+                if ($joiningDate && $joiningDate->gt($from)) {
+                    $workedDays  = $joiningDate->diffInDays($to) + 1;
+                    $proratedSalary = round(($basicSalary / 30) * $workedDays, 2);
+                }
+
+                $total_basic_salary += $proratedSalary;
 
                 // -------------------------
                 // Gratuity Calculation
@@ -184,16 +192,15 @@ class GeneratePayrollJob implements ShouldQueue
                 $totalOvertimeSeconds = $overtime_info->sum('overtime_seconds');
                 $totalOvertimeAmount  = $overtime_info->sum('overtime_amount');
 
-                $netSalary = round($basicSalary - $totalDeductions + $commission, 2);
+                $netSalary = round($proratedSalary - $totalDeductions + $commission, 2);
                 $final_salary = round($netSalary + $totalOvertimeAmount, 2);
 
                 $total_net_salary += $final_salary;
-//                $netSalary       = round($earned - $employeeGratuity + $commission, 2);
 
                 $detail = new PayrollDetail();
                 $detail->payroll_id        = $this->payrollId;
                 $detail->employee_id       = $emp->id;
-                $detail->basic_salary      = $basicSalary;
+                $detail->basic_salary      = $proratedSalary;
                 $detail->total_commission  = $commission;
                 $detail->employee_gratuity = $employeeGratuity;
                 $detail->company_gratuity  = $companyGratuity;

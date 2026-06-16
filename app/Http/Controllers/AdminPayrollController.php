@@ -379,7 +379,7 @@ class AdminPayrollController extends Controller
                 'trace'   => $th->getTraceAsString(),
             ]);
             return response()->json([
-                'success' => true,
+                'success' => false,
                 'message' => 'Something went wrong while paid payroll.'
             ],500);
         }

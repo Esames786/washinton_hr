@@ -89,9 +89,10 @@ class MarkDailyAttendance extends Command
                     continue;
                 }
 
-                // Check if already marked
+                // Check if already marked — use shiftBaseDate (not $today) so overnight
+                // shift employees are checked against the date their shift actually belongs to
                 $alreadyMarked = EmployeeAttendance::where('employee_id', $employee->id)
-                    ->whereDate('attendance_date', $today)
+                    ->whereDate('attendance_date', $shiftBaseDate)
                     ->exists();
 
                 if ($alreadyMarked) {
@@ -169,10 +170,11 @@ class MarkDailyAttendance extends Command
                     $dailySalary    = round($dailySalary * ($entryWeight / 100), 2);
                 }
 
-                // Save Attendance
+                // Save Attendance — use shiftBaseDate so overnight shift records
+                // land on the correct shift date, not today's calendar date
                 $attendance = new EmployeeAttendance();
                 $attendance->employee_id = $employee->id;
-                $attendance->attendance_date = $today;
+                $attendance->attendance_date = $shiftBaseDate;
                 $attendance->attendance_status_id = $statusId;
                 if($statusId == 5) {
                     $attendance->deducted_salary = $dailySalary;

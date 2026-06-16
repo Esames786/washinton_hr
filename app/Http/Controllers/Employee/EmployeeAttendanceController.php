@@ -108,8 +108,12 @@ class EmployeeAttendanceController extends Controller
 
         try {
             $employee_id = auth('employee')->id();
-            $today = now('Asia/Karachi')->toDateString();
-            $currentTime = now('Asia/Karachi')->format('H:i:s');
+            $now = now('Asia/Karachi');
+            // Overnight shift fix: before 06:00 AM means we're still in yesterday's shift window
+            $today       = $now->hour < 6
+                ? $now->copy()->subDay()->toDateString()
+                : $now->toDateString();
+            $currentTime = $now->format('H:i:s');
 
             if ($request->type == 1) {
                 $result = $this->saveAttendance($employee_id, $today, $currentTime);
