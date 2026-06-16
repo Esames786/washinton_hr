@@ -3,6 +3,7 @@
 namespace App\Jobs;
 
 use App\Models\CommissionSetting;
+use App\Models\CommissionSlab;
 use App\Models\CurrencyRate;
 use App\Models\Employee;
 use App\Models\EmployeeAttendance;
@@ -354,9 +355,27 @@ class GeneratePayrollJob implements ShouldQueue
 
             $profit_pkr = $profit_usd * $currency_rate;
 
-            $commission_amt = $commission->commission_type_id == 1
-                ? ($profit_pkr * $commission->value) / 100
-                : $commission->value;
+            if ($commission->is_slab_based) {
+                $slab = CommissionSlab::where('commission_setting_id', $commission->id)
+                    ->where('profit_from', '<=', $profit_usd)
+                    ->where(function ($q) use ($profit_usd) {
+                        $q->whereNull('profit_to')->orWhere('profit_to', '>=', $profit_usd);
+                    })
+                    ->orderByDesc('profit_from')
+                    ->first();
+
+                if (!$slab) {
+                    return 0.0;
+                }
+
+                $commission_amt = $commission->commission_type_id == 1
+                    ? ($profit_pkr * $slab->value) / 100
+                    : $slab->value;
+            } else {
+                $commission_amt = $commission->commission_type_id == 1
+                    ? ($profit_pkr * $commission->value) / 100
+                    : $commission->value;
+            }
 
             DB::table('order_payments')
                 ->whereIn('id', $order_ids)
