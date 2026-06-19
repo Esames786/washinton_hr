@@ -258,6 +258,7 @@ use App\Http\Controllers\Employee\EmployeeTicketMessageController;
             Route::get('profile',[EmployeeDashboardController::class,'employee_profile'])->name('profile');
             Route::post('profile/upload-document', [EmployeeDashboardController::class, 'uploadDocument'])->name('profile.upload_document');
             Route::post('contract/accept', [EmployeeDashboardController::class, 'acceptContract'])->name('contract.accept');
+            Route::post('nda/sign', [\App\Http\Controllers\Employee\EmployeeNdaController::class, 'sign'])->name('nda.sign');
             Route::delete('profile/document/{id}', [EmployeeDashboardController::class, 'deleteDocument'])->name('profile.delete_document');
             Route::prefix('attendance')->name('attendance.')->group(function () {
                 Route::get('', [EmployeeAttendanceController::class, 'index'])->name('index');

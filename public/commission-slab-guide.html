@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Commission Slab Policy Guide — HR Portal</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: #f4f6f9; color: #333; }
+
+        .header {
+            background: linear-gradient(135deg, #1a73e8 0%, #0d47a1 100%);
+            color: #fff;
+            padding: 40px 60px;
+        }
+        .header h1 { font-size: 28px; font-weight: 700; }
+        .header p { font-size: 14px; margin-top: 6px; opacity: .85; }
+
+        .container { max-width: 960px; margin: 0 auto; padding: 40px 20px; }
+
+        .card {
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,.08);
+            padding: 30px 36px;
+            margin-bottom: 28px;
+        }
+        .card h2 {
+            font-size: 18px;
+            font-weight: 700;
+            color: #1a73e8;
+            border-left: 4px solid #1a73e8;
+            padding-left: 12px;
+            margin-bottom: 18px;
+        }
+        .card h3 { font-size: 15px; font-weight: 600; margin: 18px 0 8px; color: #444; }
+        .card p, .card li { font-size: 14px; line-height: 1.7; color: #555; }
+        .card ul, .card ol { padding-left: 20px; }
+        .card ul li, .card ol li { margin-bottom: 6px; }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 14px; font-size: 14px; }
+        th { background: #1a73e8; color: #fff; padding: 10px 14px; text-align: left; }
+        td { padding: 9px 14px; border-bottom: 1px solid #e8eaf0; }
+        tr:nth-child(even) td { background: #f8f9ff; }
+        tr:hover td { background: #eef2ff; }
+
+        .badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .badge-blue  { background: #e8f0fe; color: #1a73e8; }
+        .badge-green { background: #e6f4ea; color: #137333; }
+        .badge-orange{ background: #fef3e2; color: #b06000; }
+
+        .note {
+            background: #fffbe6;
+            border-left: 4px solid #f9a825;
+            padding: 12px 16px;
+            border-radius: 6px;
+            font-size: 13.5px;
+            color: #555;
+            margin-top: 14px;
+        }
+        .note strong { color: #b06000; }
+
+        .step {
+            display: flex;
+            gap: 16px;
+            align-items: flex-start;
+            margin-bottom: 16px;
+        }
+        .step-num {
+            background: #1a73e8;
+            color: #fff;
+            border-radius: 50%;
+            width: 28px;
+            height: 28px;
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 13px;
+        }
+        .step-body { font-size: 14px; line-height: 1.65; color: #555; }
+
+        .example-box {
+            background: #f0f7ff;
+            border: 1px solid #c5d9f5;
+            border-radius: 8px;
+            padding: 18px 22px;
+            margin-top: 14px;
+        }
+        .example-box p { font-size: 14px; margin-bottom: 8px; }
+        .example-box .result { font-size: 15px; font-weight: 700; color: #1a73e8; }
+
+        footer {
+            text-align: center;
+            padding: 24px;
+            font-size: 13px;
+            color: #999;
+        }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <h1>Commission Slab Policy — Admin Guide</h1>
+    <p>HR Portal &nbsp;|&nbsp; hellotransport.com &nbsp;|&nbsp; Effective: June 2026</p>
+</div>
+
+<div class="container">
+
+    <!-- OVERVIEW -->
+    <div class="card">
+        <h2>Overview</h2>
+        <p>The commission slab system rewards agents progressively — the higher the USD profit they generate in a payroll period, the higher the percentage (or flat PKR amount) they earn. Each agent is linked to one commission setting; the setting may either be a classic single-value rule or the new slab-based rule.</p>
+        <div class="note">
+            <strong>Backward compatible:</strong> All existing commission settings and employee assignments are unchanged. The slab system activates only for settings created with "Slab Based" enabled.
+        </div>
+    </div>
+
+    <!-- OFFICIAL SLAB TABLE -->
+    <div class="card">
+        <h2>Official Commission Slab Policy</h2>
+        <p>Applies to <strong>percentage-based</strong> slab plans. Profit is the total confirmed USD profit from <code>order_payments</code> for the payroll period.</p>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Profit From (USD)</th>
+                    <th>Profit To (USD)</th>
+                    <th>Commission Rate</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td>1</td><td>$100</td><td>$500</td><td>10%</td></tr>
+                <tr><td>2</td><td>$501</td><td>$1,000</td><td>15%</td></tr>
+                <tr><td>3</td><td>$1,001</td><td>$1,500</td><td>20%</td></tr>
+                <tr><td>4</td><td>$1,501</td><td>$2,000</td><td>25%</td></tr>
+                <tr><td>5</td><td>$2,001</td><td>$2,500</td><td>30%</td></tr>
+                <tr><td>6</td><td>$2,501</td><td>$3,000</td><td>35%</td></tr>
+                <tr><td>7</td><td>$3,001</td><td>$3,500</td><td>40%</td></tr>
+                <tr><td>8</td><td>$3,501</td><td>$4,000</td><td>45%</td></tr>
+                <tr><td>9</td><td>$4,001</td><td>$4,500</td><td>50%</td></tr>
+                <tr><td>10</td><td>$4,501</td><td>$5,000</td><td>55%</td></tr>
+            </tbody>
+        </table>
+
+        <div class="note">
+            <strong>Below $100 or above $5,000:</strong> Commission = PKR 0. Adjust the slab table in admin settings to extend the range if needed.
+        </div>
+    </div>
+
+    <!-- WORKED EXAMPLES -->
+    <div class="card">
+        <h2>Calculation Examples</h2>
+
+        <h3>Example 1 — Percentage Slab</h3>
+        <p>Agent earns <strong>$1,800 USD profit</strong> in June. Exchange rate = PKR 280.</p>
+        <div class="example-box">
+            <p>Profit in USD → <strong>$1,800</strong> → falls in Slab 4 ($1,501–$2,000) → rate = <strong>25%</strong></p>
+            <p>PKR Profit = 1,800 × 280 = <strong>PKR 504,000</strong></p>
+            <p class="result">Commission = 504,000 × 25% = PKR 126,000</p>
+        </div>
+
+        <h3>Example 2 — Fixed PKR Slab</h3>
+        <p>Agent earns <strong>$700 USD profit</strong>. Fixed slab plan: $501–$1,000 = PKR 6,000.</p>
+        <div class="example-box">
+            <p>Profit in USD → <strong>$700</strong> → falls in tier $501–$1,000 → flat amount = <strong>PKR 6,000</strong></p>
+            <p class="result">Commission = PKR 6,000 (no currency conversion — amount is already PKR)</p>
+        </div>
+
+        <h3>Example 3 — Classic single-value (no slabs)</h3>
+        <p>Old-style setting: 20% with <code>is_slab_based=0</code>. Agent earns $500 profit, rate = PKR 280.</p>
+        <div class="example-box">
+            <p>PKR Profit = 500 × 280 = <strong>PKR 140,000</strong></p>
+            <p class="result">Commission = 140,000 × 20% = PKR 28,000</p>
+        </div>
+    </div>
+
+    <!-- HOW TO CREATE A SLAB SETTING -->
+    <div class="card">
+        <h2>How to Create / Edit a Slab Commission Setting</h2>
+
+        <div class="step">
+            <div class="step-num">1</div>
+            <div class="step-body">Go to <strong>Admin → Commission Settings</strong> from the sidebar.</div>
+        </div>
+        <div class="step">
+            <div class="step-num">2</div>
+            <div class="step-body">Click <strong>Add Commission Setting</strong> (or the edit pencil for an existing one).</div>
+        </div>
+        <div class="step">
+            <div class="step-num">3</div>
+            <div class="step-body">Fill in <strong>Title</strong> and choose <strong>Commission Type</strong> (Percentage or Fixed).</div>
+        </div>
+        <div class="step">
+            <div class="step-num">4</div>
+            <div class="step-body">Check the <strong>"Slab Based"</strong> checkbox. The single <em>Value</em> field hides and the <em>Commission Slabs</em> table appears.</div>
+        </div>
+        <div class="step">
+            <div class="step-num">5</div>
+            <div class="step-body">Click <strong>+ Add Row</strong> for each bracket. Fill in <em>Profit From</em>, <em>Profit To</em> (leave blank for open-ended top tier), and <em>Value</em> (% rate or flat PKR).</div>
+        </div>
+        <div class="step">
+            <div class="step-num">6</div>
+            <div class="step-body">Set <strong>Target Type</strong> (Monthly), <strong>Status</strong> (Active), and click <strong>Save</strong>.</div>
+        </div>
+        <div class="step">
+            <div class="step-num">7</div>
+            <div class="step-body">Go to <strong>Admin → Employees → Edit Employee</strong> and assign the new commission setting in the <em>Commission Setting</em> dropdown. Only employees with account type <em>Commission Only</em> or <em>Salary + Commission</em> will receive commission in payroll.</div>
+        </div>
+
+        <div class="note">
+            <strong>Editing a slab setting:</strong> When you save an update, all existing slab rows for that setting are replaced with the newly submitted rows. Always re-enter all rows when editing.
+        </div>
+    </div>
+
+    <!-- SETTINGS SEEDED ON PRODUCTION -->
+    <div class="card">
+        <h2>Pre-Seeded Settings on Production</h2>
+        <p>Two slab-based settings were added to production on <strong>June 16, 2026</strong>:</p>
+
+        <table>
+            <thead>
+                <tr><th>ID</th><th>Title</th><th>Type</th><th>Tiers</th><th>Status</th></tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>10</td>
+                    <td>Sales Commission Plan (Slab %)</td>
+                    <td><span class="badge badge-blue">Percentage</span></td>
+                    <td>10 (as per policy table above)</td>
+                    <td><span class="badge badge-green">Active</span></td>
+                </tr>
+                <tr>
+                    <td>11</td>
+                    <td>Sales Commission Plan (Slab Fixed)</td>
+                    <td><span class="badge badge-orange">Fixed PKR</span></td>
+                    <td>6 (placeholder — edit in admin)</td>
+                    <td><span class="badge badge-green">Active</span></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="note">
+            <strong>Assign to employees:</strong> Edit each relevant employee and set their <em>Commission Setting</em> to ID 10 or 11 as appropriate.
+        </div>
+    </div>
+
+    <!-- PAYROLL PROCESSING -->
+    <div class="card">
+        <h2>How Slab Commission Appears in Payroll</h2>
+        <ul>
+            <li>When payroll is generated, the system fetches all <strong>confirmed + unpaid</strong> orders from <code>order_payments</code> for the agent's <code>agent_id</code> within the payroll period.</li>
+            <li>Total USD profit is summed → matched against the employee's commission setting slabs.</li>
+            <li>The matched slab's rate (%) or flat PKR value is applied to calculate the commission amount.</li>
+            <li>After payroll is generated, those orders are marked <code>is_paid = 1</code> to prevent double-counting in the next period.</li>
+            <li>The commission amount appears as an earning line <strong>"Commission from Orders"</strong> in the payslip.</li>
+            <li>If the agent's total profit falls outside all defined slab ranges → commission = <strong>PKR 0</strong>.</li>
+        </ul>
+    </div>
+
+    <!-- ADMIN ROLE & PERMISSIONS -->
+    <div class="card">
+        <h2>Admin Role & Permissions</h2>
+
+        <h3>Does the existing role setup cover the new features?</h3>
+        <p>Yes — with one action needed for non-superadmin roles.</p>
+
+        <table>
+            <thead>
+                <tr><th>Role</th><th>Access</th><th>Action Needed</th></tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>Superadmin</strong> (role_id = 1)</td>
+                    <td><span class="badge badge-green">Full access — all routes bypass permission check</span></td>
+                    <td>None</td>
+                </tr>
+                <tr>
+                    <td><strong>Other admin roles</strong></td>
+                    <td>Checked against Spatie permissions table</td>
+                    <td>Run <strong>Sync Permissions</strong> for the role, then assign commission_settings permissions</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>Why no new routes were added</h3>
+        <p>The slab system uses the exact same <code>commission_settings</code> resource routes that already existed (<code>index</code>, <code>store</code>, <code>edit</code>, <code>update</code>, <code>destroy</code>). Slab data (the rows) is submitted as part of the same form POST — not a separate endpoint. So no new permission entries are required.</p>
+
+        <h3>How to sync permissions for a non-superadmin role</h3>
+        <div class="step">
+            <div class="step-num">1</div>
+            <div class="step-body">Go to <strong>Admin → Roles</strong> and click the role you want to update.</div>
+        </div>
+        <div class="step">
+            <div class="step-num">2</div>
+            <div class="step-body">Click <strong>Sync Permissions</strong> (runs <code>POST /admin/permissions/store</code>) — this scans all current routes and adds any new ones to the permissions table.</div>
+        </div>
+        <div class="step">
+            <div class="step-num">3</div>
+            <div class="step-body">Tick the <code>commission_settings.*</code> permissions (<code>index</code>, <code>store</code>, <code>edit</code>, <code>update</code>, <code>destroy</code>, <code>assign_roles_index</code>, <code>assign_roles</code>) and click <strong>Assign Permissions</strong>.</div>
+        </div>
+
+        <div class="note">
+            <strong>Note:</strong> If the role already had commission_settings permissions assigned before, no action is needed — the slab feature works through the same routes.
+        </div>
+    </div>
+
+    <!-- ACCOUNT TYPES -->
+    <div class="card">
+        <h2>Employee Account Types &amp; Commission Eligibility</h2>
+        <table>
+            <thead>
+                <tr><th>account_type_id</th><th>Type</th><th>Commission Calculated?</th></tr>
+            </thead>
+            <tbody>
+                <tr><td>1</td><td>Salary Only</td><td>No</td></tr>
+                <tr><td>2</td><td>Commission Only</td><td>Yes (salary = 0)</td></tr>
+                <tr><td>3</td><td>Salary + Commission</td><td>Yes</td></tr>
+            </tbody>
+        </table>
+        <p style="margin-top:12px;">Employees with <code>account_type_id = 1</code> will never receive commission regardless of the commission setting assigned.</p>
+    </div>
+
+</div>
+
+<footer>
+    HR Portal — hellotransport.com &nbsp;|&nbsp; Last updated: June 16, 2026
+</footer>
+
+</body>
+</html>

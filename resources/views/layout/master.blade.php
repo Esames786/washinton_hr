@@ -46,6 +46,13 @@
 
 @include('partials.scripts')
 
+@auth('employee')
+    @if(auth('employee')->user()->nda_required)
+        @php $signRoute = route('employee.nda.sign'); @endphp
+        @include('nda.modal')
+    @endif
+@endauth
+
 @stack('scripts')
 
 {{-- ── Live Chat Widget ──────────────────────────────────────────────── --}}
