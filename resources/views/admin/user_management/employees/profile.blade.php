@@ -366,6 +366,63 @@
         </div>
     </div>
 
+    {{-- Equipment Section --}}
+    <div class="dashboard-main-body mt-3">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-light fw-bold d-flex align-items-center justify-content-between">
+                <span>🔧 Assigned Equipment</span>
+                <a href="{{ route('admin.employees.edit', $employee->id) }}" class="btn btn-sm btn-outline-primary">
+                    Manage Equipment
+                </a>
+            </div>
+            <div class="card-body p-0">
+                @php
+                    $equipments = \App\Models\EmployeeEquipment::with('equipmentType')
+                        ->where('employee_id', $employee->id)
+                        ->orderBy('assigned_date', 'desc')
+                        ->get();
+                @endphp
+                @if($equipments->isEmpty())
+                    <p class="text-muted p-3 mb-0">No equipment assigned.</p>
+                @else
+                    <div class="table-responsive">
+                        <table class="table sm-table mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Equipment</th>
+                                    <th>Asset Name</th>
+                                    <th>Serial No.</th>
+                                    <th>Assigned Date</th>
+                                    <th>Return Date</th>
+                                    <th>Status</th>
+                                    <th>Notes</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($equipments as $eq)
+                                <tr>
+                                    <td>{{ $eq->equipmentType->icon ?? '' }} {{ $eq->equipmentType->name ?? '—' }}</td>
+                                    <td>{{ $eq->asset_name ?: '—' }}</td>
+                                    <td>{{ $eq->serial_number ?: '—' }}</td>
+                                    <td>{{ $eq->assigned_date?->format('Y-m-d') ?: '—' }}</td>
+                                    <td>{{ $eq->return_date?->format('Y-m-d') ?: '—' }}</td>
+                                    <td>
+                                        @if($eq->status === 'assigned')
+                                            <span class="badge bg-success text-white">Assigned</span>
+                                        @else
+                                            <span class="badge bg-secondary text-white">Returned</span>
+                                        @endif
+                                    </td>
+                                    <td>{{ $eq->notes ?: '—' }}</td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                @endif
+            </div>
+        </div>
+    </div>
 
 @push('scripts')
 <script>

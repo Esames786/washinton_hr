@@ -772,7 +772,99 @@
                 </form>
             </div>
 
+        </div>
+    </div>
 
+    {{-- Equipment Assignment Card --}}
+    <div class="card h-100 mt-3">
+        <div class="card-header bg-base py-12 px-24 d-flex align-items-center justify-content-between">
+            <h6 class="mb-0">🔧 Assigned Equipment</h6>
+            <button class="btn btn-primary btn-sm" id="addEquipBtn">+ Assign Equipment</button>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table sm-table mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Equipment</th>
+                            <th>Asset Name</th>
+                            <th>Serial No.</th>
+                            <th>Assigned Date</th>
+                            <th>Return Date</th>
+                            <th>Status</th>
+                            <th>Notes</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="equipAssignBody">
+                        <tr><td colspan="8" class="text-center text-muted py-3">Loading...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    {{-- Assign Equipment Modal --}}
+    <div class="modal fade" id="assignEquipModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Assign Equipment</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="assignEquipError" class="alert alert-danger d-none"></div>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Equipment Type <span class="text-danger">*</span></label>
+                            <select id="aeTypeId" class="form-select">
+                                <option value="">Select type...</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Asset Name</label>
+                            <input type="text" id="aeAssetName" class="form-control" placeholder="e.g. MacBook Pro 2022">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Serial Number</label>
+                            <input type="text" id="aeSerial" class="form-control" placeholder="e.g. C02XG0VRJGH7">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Assigned Date <span class="text-danger">*</span></label>
+                            <input type="date" id="aeDate" class="form-control" value="{{ date('Y-m-d') }}">
+                        </div>
+                        <div class="col-md-12">
+                            <label class="form-label fw-semibold">Notes</label>
+                            <textarea id="aeNotes" class="form-control" rows="2" placeholder="Optional notes..."></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary btn-sm" id="aeSubmitBtn">Assign</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- Return Date Modal --}}
+    <div class="modal fade" id="returnEquipModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Mark as Returned</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="returnEquipId">
+                    <label class="form-label fw-semibold">Return Date <span class="text-danger">*</span></label>
+                    <input type="date" id="returnDate" class="form-control" value="{{ date('Y-m-d') }}">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-success btn-sm" id="returnSubmitBtn">Confirm Return</button>
+                </div>
+            </div>
         </div>
     </div>
 @endsection
@@ -1177,5 +1269,130 @@
             if (firstErrIdx !== -1) navigateToFieldsetIndex(firstErrIdx);
         })();
         @endif
+    </script>
+
+    <script>
+    // Equipment Assignment JS
+    (function() {
+        var CSRF        = '{{ csrf_token() }}';
+        var EMPLOYEE_ID = {{ $employee->id }};
+        var LIST_URL    = '{{ route("admin.employee_equipment.list", ["employeeId" => "__ID__"]) }}'.replace('__ID__', EMPLOYEE_ID);
+        var STORE_URL   = '{{ route("admin.employee_equipment.store") }}';
+        var TYPES_URL   = '{{ route("admin.equipment_types.list") }}';
+        var RETURN_BASE = '{{ url("admin/employee-equipment") }}';
+
+        function statusBadge(s) {
+            return s === 'assigned'
+                ? '<span class="badge bg-success text-white">Assigned</span>'
+                : '<span class="badge bg-secondary text-white">Returned</span>';
+        }
+
+        function loadEquipment() {
+            $.getJSON(LIST_URL, function(res) {
+                if (!res.data.length) {
+                    $('#equipAssignBody').html('<tr><td colspan="8" class="text-center text-muted py-3">No equipment assigned yet.</td></tr>');
+                    return;
+                }
+                var rows = '';
+                $.each(res.data, function(i, e) {
+                    rows += '<tr>' +
+                        '<td>' + (e.type_icon ? e.type_icon + ' ' : '') + e.type_name + '</td>' +
+                        '<td>' + (e.asset_name || '—') + '</td>' +
+                        '<td>' + (e.serial_number || '—') + '</td>' +
+                        '<td>' + (e.assigned_date || '—') + '</td>' +
+                        '<td>' + (e.return_date || '—') + '</td>' +
+                        '<td>' + statusBadge(e.status) + '</td>' +
+                        '<td>' + (e.notes || '—') + '</td>' +
+                        '<td>' +
+                            (e.status === 'assigned'
+                                ? '<button class="btn btn-xs btn-outline-warning me-1 return-btn" data-id="' + e.id + '">Return</button>'
+                                : '') +
+                            '<button class="btn btn-xs btn-outline-danger del-equip-btn" data-id="' + e.id + '">Delete</button>' +
+                        '</td>' +
+                    '</tr>';
+                });
+                $('#equipAssignBody').html(rows);
+            });
+        }
+
+        function loadTypes() {
+            $.getJSON(TYPES_URL, function(res) {
+                var opts = '<option value="">Select type...</option>';
+                $.each(res.data, function(i, t) {
+                    if (t.is_active) opts += '<option value="' + t.id + '">' + (t.icon ? t.icon + ' ' : '') + t.name + '</option>';
+                });
+                $('#aeTypeId').html(opts);
+            });
+        }
+
+        loadEquipment();
+        loadTypes();
+
+        $('#addEquipBtn').on('click', function() {
+            $('#aeTypeId').val('');
+            $('#aeAssetName, #aeSerial, #aeNotes').val('');
+            $('#aeDate').val('{{ date("Y-m-d") }}');
+            $('#assignEquipError').addClass('d-none');
+            $('#assignEquipModal').modal('show');
+        });
+
+        $('#aeSubmitBtn').on('click', function() {
+            $('#assignEquipError').addClass('d-none');
+            $.ajax({
+                url: STORE_URL, type: 'POST',
+                data: {
+                    _token: CSRF,
+                    employee_id: EMPLOYEE_ID,
+                    equipment_type_id: $('#aeTypeId').val(),
+                    asset_name: $('#aeAssetName').val(),
+                    serial_number: $('#aeSerial').val(),
+                    assigned_date: $('#aeDate').val(),
+                    notes: $('#aeNotes').val(),
+                },
+                success: function(res) {
+                    if (res.success) {
+                        $('#assignEquipModal').modal('hide');
+                        loadEquipment();
+                    }
+                },
+                error: function(xhr) {
+                    var msg = 'An error occurred.';
+                    if (xhr.responseJSON && xhr.responseJSON.errors) {
+                        msg = Object.values(xhr.responseJSON.errors).flat().join('<br>');
+                    }
+                    $('#assignEquipError').html(msg).removeClass('d-none');
+                }
+            });
+        });
+
+        $(document).on('click', '.return-btn', function() {
+            $('#returnEquipId').val($(this).data('id'));
+            $('#returnDate').val('{{ date("Y-m-d") }}');
+            $('#returnEquipModal').modal('show');
+        });
+
+        $('#returnSubmitBtn').on('click', function() {
+            var id = $('#returnEquipId').val();
+            $.ajax({
+                url: RETURN_BASE + '/' + id + '/return',
+                type: 'POST',
+                data: { _token: CSRF, return_date: $('#returnDate').val() },
+                success: function(res) {
+                    if (res.success) { $('#returnEquipModal').modal('hide'); loadEquipment(); }
+                }
+            });
+        });
+
+        $(document).on('click', '.del-equip-btn', function() {
+            if (!confirm('Remove this equipment assignment?')) return;
+            var id = $(this).data('id');
+            $.ajax({
+                url: RETURN_BASE + '/' + id,
+                type: 'DELETE',
+                data: { _token: CSRF },
+                success: function(res) { if (res.success) loadEquipment(); }
+            });
+        });
+    })();
     </script>
 @endpush

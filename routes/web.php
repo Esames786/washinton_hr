@@ -17,6 +17,8 @@ use App\Http\Controllers\EmployeeSettings\AdminShiftTypeController;
 use App\Http\Controllers\EmployeeSettings\AdminTicketTypeController;
 use App\Http\Controllers\EmployeeSettings\AdminTaxSlabController;
 use App\Http\Controllers\EmployeeSettings\CurrencyRateController;
+use App\Http\Controllers\EmployeeSettings\EquipmentTypeController;
+use App\Http\Controllers\EmployeeEquipmentController;
 use App\Http\Controllers\PettyCash\PettyCashMasterController;
 use App\Http\Controllers\PettyCash\PettyCashHeadController;
 use App\Http\Controllers\PettyCash\PettyCashTransactionController;
@@ -94,6 +96,12 @@ use App\Http\Controllers\Employee\EmployeeTicketMessageController;
                 Route::resource('employees', AdminEmployeeController::class)->except(['show']);
                 Route::get('employees/show/{id}', [AdminEmployeeController::class, 'show'])->name('employees.show');
 
+                // Employee Equipment Assignment
+                Route::get('employee-equipment/{employeeId}/list', [EmployeeEquipmentController::class, 'list'])->name('employee_equipment.list');
+                Route::post('employee-equipment', [EmployeeEquipmentController::class, 'store'])->name('employee_equipment.store');
+                Route::post('employee-equipment/{equipment}/return', [EmployeeEquipmentController::class, 'markReturned'])->name('employee_equipment.return');
+                Route::delete('employee-equipment/{equipment}', [EmployeeEquipmentController::class, 'destroy'])->name('employee_equipment.destroy');
+
                 //Roles Route
                 Route::resource('roles', RoleController::class);
 
@@ -128,6 +136,10 @@ use App\Http\Controllers\Employee\EmployeeTicketMessageController;
 
                 Route::resource('currency_settings', CurrencyRateController::class)
                     ->except(['show']);
+
+                // Equipment Type Settings
+                Route::get('equipment_types/list', [EquipmentTypeController::class, 'list'])->name('equipment_types.list');
+                Route::resource('equipment_types', EquipmentTypeController::class)->except(['show', 'create', 'edit']);
 
 
                 Route::get('gratuity_settings/assign_roles_index/{id}',[AdminGratuitySettingController::class,'assign_roles_index'])
