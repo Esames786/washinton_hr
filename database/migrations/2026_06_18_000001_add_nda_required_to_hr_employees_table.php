@@ -9,7 +9,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('hr_employees', function (Blueprint $table) {
-            $table->tinyInteger('nda_required')->default(0)->after('status');
+            $table->tinyInteger('nda_required')->default(0);
         });
     }
 
