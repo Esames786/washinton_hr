@@ -9,7 +9,7 @@
 ">
     <div style="
         background: #fff; border-radius: 10px;
-        width: 100%; max-width: 820px; max-height: 94vh;
+        width: 100%; max-width: 1080px; max-height: 96vh;
         display: flex; flex-direction: column;
         box-shadow: 0 20px 60px rgba(0,0,0,.45);
         overflow: hidden;
@@ -107,9 +107,9 @@
                         Draw Your Signature Below <span style="color:red;">*</span>
                         <span style="font-weight:400; color:#888; margin-left:8px; font-size:11px;">(Use mouse or touch)</span>
                     </label>
-                    <div style="position:relative; border:2px dashed #aab4cc; border-radius:6px; background:#fff; display:inline-block;">
-                        <canvas id="ndaSignatureCanvas" width="500" height="120"
-                                style="display:block; cursor:crosshair; touch-action:none;"></canvas>
+                    <div style="position:relative; border:2px dashed #aab4cc; border-radius:6px; background:#fff; display:block; width:100%;">
+                        <canvas id="ndaSignatureCanvas" width="900" height="130"
+                                style="display:block; cursor:crosshair; touch-action:none; width:100%; height:130px;"></canvas>
                         <button type="button" id="ndaClearSig"
                                 style="position:absolute; top:6px; right:6px; font-size:11px; padding:2px 8px; background:#eee; border:1px solid #ccc; border-radius:4px; cursor:pointer;">
                             Clear
@@ -118,11 +118,20 @@
                     <input type="hidden" id="ndaSignatureData" name="signature_data">
                 </div>
 
-                <div style="margin-bottom:16px; display:flex; align-items:flex-start; gap:8px;">
-                    <input type="checkbox" id="ndaAgreeCheck" name="agreed" value="1"
-                           style="margin-top:3px; width:15px; height:15px; cursor:pointer;" required>
-                    <label for="ndaAgreeCheck" style="font-size:13px; color:#333; cursor:pointer; line-height:1.5;">
-                        I have read the full NDA & Confidentiality Agreement and agree to comply with all its terms.
+                <div style="margin-bottom:16px; display:flex; align-items:flex-start; gap:10px;">
+                    <input type="checkbox" id="ndaAgreeCheck" name="agreed" value="1" required
+                           style="appearance:checkbox !important; -webkit-appearance:checkbox !important;
+                                  -moz-appearance:checkbox !important;
+                                  flex-shrink:0; margin-top:2px;
+                                  width:18px !important; height:18px !important;
+                                  min-width:18px !important; min-height:18px !important;
+                                  max-width:18px !important; max-height:18px !important;
+                                  border:2px solid #666 !important; border-radius:3px !important;
+                                  accent-color:#1a4ca0; cursor:pointer;
+                                  opacity:1 !important; visibility:visible !important;
+                                  display:inline-block !important; position:relative !important;">
+                    <label for="ndaAgreeCheck" style="font-size:13px; color:#333; cursor:pointer; line-height:1.6;">
+                        I have read the full NDA &amp; Confidentiality Agreement and agree to comply with all its terms.
                         I understand the consequences of violating its provisions.
                     </label>
                 </div>
