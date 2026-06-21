@@ -207,6 +207,29 @@
                             <div class="alert alert-danger py-2 small">{{ session('error') }}</div>
                         @endif
 
+                        {{-- Return to Agent Portal (only when the agent arrived via SSO) --}}
+                        @if(session('agent_sso_origin'))
+                            @php
+                                $reqTotal     = $documentSettings ? $documentSettings->where('is_required', 1)->count() : 0;
+                                $uploadedIds  = $employee->documents ? $employee->documents->pluck('document_setting_id')->all() : [];
+                                $reqUploaded  = $documentSettings ? $documentSettings->where('is_required', 1)->whereIn('id', $uploadedIds)->count() : 0;
+                                $allReqDone   = $reqTotal === 0 || $reqUploaded >= $reqTotal;
+                            @endphp
+                            <div class="alert {{ $allReqDone ? 'alert-success' : 'alert-info' }} d-flex flex-wrap justify-content-between align-items-center gap-2">
+                                <span class="small mb-0">
+                                    @if($allReqDone)
+                                        ✅ <strong>All required documents submitted.</strong> You can return to your portal — your account will activate once HR verifies them.
+                                    @else
+                                        📄 Please upload your required documents below, then return to your portal.
+                                        <span class="text-muted">({{ $reqUploaded }}/{{ $reqTotal }} required uploaded)</span>
+                                    @endif
+                                </span>
+                                <a href="{{ config('bridge.agent_portal.dashboard_url') }}" class="btn btn-success btn-sm">
+                                    ✓ Done — Return to Agent Portal
+                                </a>
+                            </div>
+                        @endif
+
                         {{-- Upload Form --}}
                         @if($documentSettings && $documentSettings->count())
                         <div class="mb-4 p-3 border rounded" style="background:#f8f9fa;">

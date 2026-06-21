@@ -83,7 +83,11 @@ class EmployeeNdaController extends Controller
         try {
             DB::table('hr_employees')
                 ->where('id', $employee->id)
-                ->update(['nda_required' => 0]);
+                ->update([
+                    'nda_required'     => 0,
+                    'nda_signed_at'    => $signedAt,
+                    'nda_document_url' => $relPath ? url('storage/' . $relPath) : null,
+                ]);
 
             if ($employee->agent_id) {
                 DB::table('user')

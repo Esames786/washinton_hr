@@ -149,6 +149,10 @@ class HrBridgeController extends Controller
             'session_id'  => $request->session()->getId(),
         ]);
 
+        // Remember the agent came from the agent portal so the profile page can
+        // offer a "Return to Agent Portal" action after onboarding.
+        $request->session()->put('agent_sso_origin', true);
+
         // Redirect to requested destination
         $to = $request->query('to', 'dashboard');
         if ($to === 'profile') {

@@ -272,6 +272,33 @@
                 </div>
             </div>
 
+            {{-- NDA Agreement --}}
+            <div class="col-md-12">
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-header bg-light fw-bold">📝 NDA Agreement</div>
+                    <div class="card-body p-3">
+                        @if($employee->nda_signed_at)
+                            <div class="d-flex flex-wrap align-items-center gap-2">
+                                <span class="badge bg-success text-white">✓ Signed</span>
+                                <span class="text-muted small">on {{ \Carbon\Carbon::parse($employee->nda_signed_at)->format('d M Y H:i') }}</span>
+                                @if($employee->nda_document_url)
+                                    <a href="{{ $employee->nda_document_url }}" target="_blank" class="btn btn-sm btn-outline-success ms-auto">
+                                        ⬇ Download Signed NDA
+                                    </a>
+                                @else
+                                    <span class="text-muted small ms-auto">(PDF unavailable)</span>
+                                @endif
+                            </div>
+                        @elseif($employee->nda_required)
+                            <span class="badge bg-warning text-dark">Pending Signature</span>
+                            <span class="text-muted small ms-2">The employee has been asked to sign and has not signed yet.</span>
+                        @else
+                            <span class="badge bg-secondary text-white">Not Required</span>
+                        @endif
+                    </div>
+                </div>
+            </div>
+
             {{-- Daily Activities Master Info --}}
             <div class="col-md-12">
                 <div class="card shadow-sm border-0 h-100">
