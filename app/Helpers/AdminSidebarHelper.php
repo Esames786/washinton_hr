@@ -33,6 +33,7 @@ class AdminSidebarHelper
                     ['title' => 'Daily Activities', 'route' => 'admin.daily_activity_fields.index', 'iconClass' => 'text-danger-main'],
                     ['title' => 'Currency Exchange Rate', 'route' => 'admin.currency_settings.index', 'iconClass' => 'text-info-main'],
                     ['title' => 'Equipment Types', 'route' => 'admin.equipment_types.index', 'iconClass' => 'text-success-main'],
+                    ['title' => 'Productivity Rules', 'route' => 'admin.productivity_rules.index', 'iconClass' => 'text-warning-main'],
 
                 ]
             ],

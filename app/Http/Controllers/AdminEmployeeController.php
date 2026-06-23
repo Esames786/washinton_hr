@@ -1175,7 +1175,7 @@ class AdminEmployeeController extends Controller
     {
         if($request->ajax()){
             $data = EmployeeAttendance::with('attendance_status','employee')
-                ->select('hr_employee_attendances.id','hr_employee_attendances.employee_id', 'hr_employee_attendances.attendance_date','hr_employee_attendances.check_in','hr_employee_attendances.check_out','hr_employee_attendances.working_hours','hr_employee_attendances.attendance_status_id');
+                ->select('hr_employee_attendances.id','hr_employee_attendances.employee_id', 'hr_employee_attendances.attendance_date','hr_employee_attendances.check_in','hr_employee_attendances.check_out','hr_employee_attendances.working_hours','hr_employee_attendances.attendance_status_id','hr_employee_attendances.productive_seconds','hr_employee_attendances.productive_percent');
 
             if($request->employee_ids) {
                 $data->whereIn('employee_id',$request->employee_ids);
@@ -1231,6 +1231,15 @@ class AdminEmployeeController extends Controller
 //                    }
 //                    return '-';
 //                })
+                ->addColumn('productive', function($row) {
+                    $secs = (int) ($row->productive_seconds ?? 0);
+                    if ($secs <= 0) return '<span class="text-muted">—</span>';
+                    $h = floor($secs / 3600);
+                    $m = floor(($secs % 3600) / 60);
+                    $human = ($h > 0 ? $h . 'h ' : '') . $m . 'm';
+                    $pct = $row->productive_percent !== null ? ' (' . rtrim(rtrim((string) $row->productive_percent, '0'), '.') . '%)' : '';
+                    return $human . $pct;
+                })
                 ->editColumn('working_hours', function($row) {
                     if ($row->working_hours) {
                         $totalSeconds = $row->working_hours;
@@ -1278,7 +1287,7 @@ class AdminEmployeeController extends Controller
                         });
                     }
                 })
-                ->rawColumns(['attendance_status_name'])
+                ->rawColumns(['attendance_status_name', 'productive'])
                 ->make(true);
         }
         $employees = Employee::select('id','full_name')->get();

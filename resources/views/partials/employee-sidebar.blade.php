@@ -2,12 +2,33 @@
     <button type="button" class="sidebar-close-btn">
         <iconify-icon icon="radix-icons:cross-2"></iconify-icon>
     </button>
+    @php
+        // CrazyRays-originated agents see CrazyRays branding in the agent HR portal.
+        $__isCrEmp = false;
+        try {
+            $__emp = auth('employee')->user();
+            if ($__emp && $__emp->agent_id) {
+                $__isCrEmp = (int) (\Illuminate\Support\Facades\DB::table('user')
+                    ->where('id', $__emp->agent_id)->value('is_crazyrays') ?? 0) === 1;
+            }
+        } catch (\Throwable $e) {}
+    @endphp
     <div>
-        <a href="#" class="sidebar-logo justify-content-center">
-            <img src="{{asset('assets/images/logo/hello_transport.png')}}" alt="site logo" class="light-logo">
-            <img src="{{asset('assets/images/logo/hello_transport.png')}}" alt="site logo" class="dark-logo">
-            <img src="{{asset('assets/images/logo/hello_transport.png')}}" alt="site logo" class="logo-icon">
-        </a>
+        @if($__isCrEmp)
+            <a href="#" class="sidebar-logo justify-content-center" style="text-decoration:none;">
+                <span style="display:inline-flex;align-items:center;gap:8px;">
+                    <span style="width:34px;height:34px;border-radius:8px;background:linear-gradient(135deg,#16a34a,#0ea5e9);color:#fff;font-weight:900;font-size:13px;display:inline-flex;align-items:center;justify-content:center;">CR</span>
+                    <span class="light-logo" style="font-weight:800;color:#111;font-size:14px;white-space:nowrap;">CrazyRays Solutions</span>
+                    <span class="dark-logo" style="font-weight:800;color:#fff;font-size:14px;white-space:nowrap;">CrazyRays Solutions</span>
+                </span>
+            </a>
+        @else
+            <a href="#" class="sidebar-logo justify-content-center">
+                <img src="{{asset('assets/images/logo/hello_transport.png')}}" alt="site logo" class="light-logo">
+                <img src="{{asset('assets/images/logo/hello_transport.png')}}" alt="site logo" class="dark-logo">
+                <img src="{{asset('assets/images/logo/hello_transport.png')}}" alt="site logo" class="logo-icon">
+            </a>
+        @endif
     </div>
     <div class="sidebar-menu-area">
                 <ul class="sidebar-menu" id="sidebar-menu">

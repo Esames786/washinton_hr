@@ -19,6 +19,7 @@ use App\Http\Controllers\EmployeeSettings\AdminTaxSlabController;
 use App\Http\Controllers\EmployeeSettings\CurrencyRateController;
 use App\Http\Controllers\EmployeeSettings\EquipmentTypeController;
 use App\Http\Controllers\EmployeeEquipmentController;
+use App\Http\Controllers\EmployeeSettings\ProductivityRuleController;
 use App\Http\Controllers\PettyCash\PettyCashMasterController;
 use App\Http\Controllers\PettyCash\PettyCashHeadController;
 use App\Http\Controllers\PettyCash\PettyCashTransactionController;
@@ -140,6 +141,10 @@ use App\Http\Controllers\Employee\EmployeeTicketMessageController;
                 // Equipment Type Settings
                 Route::get('equipment_types/list', [EquipmentTypeController::class, 'list'])->name('equipment_types.list');
                 Route::resource('equipment_types', EquipmentTypeController::class)->except(['show', 'create', 'edit']);
+
+                // Productivity Rules (active-time → attendance weightage bands)
+                Route::get('productivity_rules/list', [ProductivityRuleController::class, 'list'])->name('productivity_rules.list');
+                Route::resource('productivity_rules', ProductivityRuleController::class)->except(['show', 'create', 'edit']);
 
 
                 Route::get('gratuity_settings/assign_roles_index/{id}',[AdminGratuitySettingController::class,'assign_roles_index'])

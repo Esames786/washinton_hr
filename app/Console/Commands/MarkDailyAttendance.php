@@ -9,10 +9,13 @@ use App\Models\EmployeeLeave;
 use App\Models\EmployeeWorkingDay;
 use App\Models\Holiday;
 use App\Models\ShiftAttendanceRule;
+use App\Models\ProductivityRule;
 use App\Traits\AttendanceServiceTrait;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 
 class MarkDailyAttendance extends Command
 {
@@ -46,6 +49,10 @@ class MarkDailyAttendance extends Command
             // Get all employees
             $employees = Employee::with('shift')->where('employee_status_id',1)->get();
             $shiftRules = ShiftAttendanceRule::all()->groupBy('shift_type_id');
+
+            // Productivity bands (active-time → attendance status + deduction), highest min first
+            $prodRules = ProductivityRule::where('status', 1)->orderByDesc('min_percent')->get();
+            $hasActiveTimeTable = Schema::hasTable('agent_active_times');
 
             foreach ($employees as $employee) {
                 $shift = $employee->shift;
@@ -89,13 +96,13 @@ class MarkDailyAttendance extends Command
                     continue;
                 }
 
-                // Check if already marked — use shiftBaseDate (not $today) so overnight
-                // shift employees are checked against the date their shift actually belongs to
-                $alreadyMarked = EmployeeAttendance::where('employee_id', $employee->id)
+                // Existing record for this shift date (overnight-safe via shiftBaseDate)
+                $existing = EmployeeAttendance::where('employee_id', $employee->id)
                     ->whereDate('attendance_date', $shiftBaseDate)
-                    ->exists();
+                    ->first();
 
-                if ($alreadyMarked) {
+                // Respect a real manual check-in — never override the employee's own punch
+                if ($existing && $existing->check_in) {
                     continue;
                 }
 
@@ -155,36 +162,89 @@ class MarkDailyAttendance extends Command
                     }
                 }
 
-                // 4) Fallback = Absent
+                // ---- Productivity-based finalization (primary for portal agents) ----
+                // For a normal working day that holiday/leave/weekend didn't claim, an
+                // agent's daily active (productive) time decides the attendance band.
+                $productiveSeconds   = 0;
+                $productivePercent   = null;
+                $productivityApplied = false;
+                $entryWeight         = null;
+
+                if (!$statusId) {
+                    $shiftLenSeconds = $shiftEnd->getTimestamp() - $shiftStart->getTimestamp();
+                    if ($shiftLenSeconds <= 0) $shiftLenSeconds = 8 * 3600;
+
+                    if ($hasActiveTimeTable && $employee->agent_id) {
+                        try {
+                            $productiveSeconds = (int) (DB::table('agent_active_times')
+                                ->where('user_id', $employee->agent_id)
+                                ->whereDate('work_date', $shiftBaseDate)
+                                ->value('active_seconds') ?? 0);
+                        } catch (\Throwable $e) {
+                            $productiveSeconds = 0;
+                        }
+                    }
+
+                    if ($employee->agent_id && $productiveSeconds > 0 && $prodRules->isNotEmpty()) {
+                        $productiveSeconds = min($productiveSeconds, $shiftLenSeconds);
+                        $productivePercent = round($productiveSeconds / $shiftLenSeconds * 100, 2);
+
+                        $band = $prodRules->first(fn($r) => $productivePercent >= (float) $r->min_percent);
+                        if ($band) {
+                            $statusId            = (int) $band->attendance_status_id;
+                            $entryWeight         = (float) $band->deduction_percent;
+                            $productivityApplied = true;
+                        }
+                    }
+                }
+
+                // Fallback = Absent
                 if (!$statusId) {
                     $statusId = 5; // Absent
                 }
 
-                $rulesForShift = $shiftRules->get($shift->id, collect());
-                $rule = $rulesForShift->firstWhere('attendance_status_id', $statusId);
-
-                $entryWeight = $rule ? $rule->entry_weight : 0;
-                $basicSalary = $employee->basic_salary ?? 0;
-                $dailySalary = $basicSalary / 30;
-                if($entryWeight > 0) {
-                    $dailySalary    = round($dailySalary * ($entryWeight / 100), 2);
+                // Resolve deduction weight from shift rules when productivity didn't set it
+                if ($entryWeight === null) {
+                    $rulesForShift = $shiftRules->get($shift->id, collect());
+                    $rule = $rulesForShift->firstWhere('attendance_status_id', $statusId);
+                    $entryWeight = $rule ? $rule->entry_weight : 0;
                 }
 
+                $basicSalary = $employee->basic_salary ?? 0;
+                $dailyBasic  = $basicSalary / 30;
+
                 // Save Attendance — use shiftBaseDate so overnight shift records
-                // land on the correct shift date, not today's calendar date
-                $attendance = new EmployeeAttendance();
+                // land on the correct shift date, not today's calendar date.
+                // Update the existing auto-record if present, else create a new one.
+                $attendance = $existing ?: new EmployeeAttendance();
                 $attendance->employee_id = $employee->id;
                 $attendance->attendance_date = $shiftBaseDate;
                 $attendance->attendance_status_id = $statusId;
-                if($statusId == 5) {
-                    $attendance->deducted_salary = $dailySalary;
-                } else {
-                    $attendance->calculated_salary = $dailySalary;
-                }
                 $attendance->entry_weight = $entryWeight;
+
+                if ($productivityApplied) {
+                    // Proper deduction split so payroll (which sums deducted_salary) is correct
+                    $deducted = round($dailyBasic * ($entryWeight / 100), 2);
+                    if ($deducted > $dailyBasic) $deducted = $dailyBasic;
+                    $attendance->deducted_salary   = $deducted;
+                    $attendance->calculated_salary = round($dailyBasic - $deducted, 2);
+                    $attendance->productive_seconds = $productiveSeconds;
+                    $attendance->productive_percent = $productivePercent;
+                    $attendance->remarks = 'Auto-marked by productivity (' . $productivePercent . '% of shift)';
+                } else {
+                    // Preserve original behaviour for holiday/leave/weekend/absent
+                    $weighted = $dailyBasic;
+                    if ($entryWeight > 0) $weighted = round($dailyBasic * ($entryWeight / 100), 2);
+                    if ($statusId == 5) {
+                        $attendance->deducted_salary = $weighted;
+                    } else {
+                        $attendance->calculated_salary = $weighted;
+                    }
+                    $attendance->remarks = 'Auto-marked by system (Rule Applied)';
+                }
+
                 $attendance->user_type = 1;
-                $attendance->created_by = 1;
-                $attendance->remarks = 'Auto-marked by system (Rule Applied)';
+                $attendance->created_by = $attendance->created_by ?: 1;
 
                 if($ticket_id) {
                     $attendance->ticket_id = $ticket_id;
