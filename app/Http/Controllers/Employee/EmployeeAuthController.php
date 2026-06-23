@@ -83,13 +83,7 @@ class EmployeeAuthController extends Controller
             return back()->withErrors(['account' => $message])->withInput();
         }
 
-        if ($employee->is_logged_in == 1) {
-            $error = ['account' => ['You are already logged in from another device/browser']];
-            if ($request->expectsJson() || $request->ajax()) {
-                return response()->json(['status' => 0, 'errors' => $error]);
-            }
-            return back()->withErrors($error)->withInput();
-        }
+        // Single-session restriction removed — employees may log in from multiple devices/browsers.
 
         if (Auth::guard('employee')->attempt($credentials)) {
             $now = Carbon::now();
