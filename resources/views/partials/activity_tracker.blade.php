@@ -29,17 +29,25 @@
     paintClock();
 
     function showWelcomeBack() {
-        if (window.Swal && typeof window.Swal.fire === 'function') {
-            window.Swal.fire({ toast: true, position: 'top-end', icon: 'success',
-                title: 'Welcome back! 👋', text: 'Your work timer has resumed.',
-                showConfirmButton: false, timer: 3000, timerProgressBar: true });
-        } else {
-            var t = document.createElement('div');
-            t.innerHTML = '<strong>Welcome back! 👋</strong><br><span style="font-weight:400;">Your work timer has resumed.</span>';
-            t.style.cssText = 'position:fixed;top:20px;right:20px;z-index:2147483647;background:#16a34a;color:#fff;padding:12px 18px;border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.28);font:600 13px/1.45 Segoe UI,Arial,sans-serif;max-width:280px;';
-            document.body.appendChild(t);
-            setTimeout(function () { t.style.transition = 'opacity .4s'; t.style.opacity = '0'; setTimeout(function () { t.remove(); }, 400); }, 3000);
-        }
+        // Self-contained toast with !important inline styles so the HR theme's
+        // large heading/font rules can't inflate it (SweetAlert gets blown up here).
+        var box = document.createElement('div');
+        box.setAttribute('style', [
+            'position:fixed!important','top:20px!important','right:20px!important','z-index:2147483647!important',
+            'background:#16a34a!important','color:#fff!important','padding:12px 16px!important',
+            'border-radius:10px!important','box-shadow:0 8px 24px rgba(0,0,0,.28)!important',
+            'max-width:300px!important','width:auto!important','box-sizing:border-box!important',
+            'font-family:Segoe UI,Arial,sans-serif!important','opacity:1!important'
+        ].join(';'));
+        var title = document.createElement('div');
+        title.setAttribute('style', 'font-size:15px!important;font-weight:700!important;line-height:1.3!important;margin:0 0 2px 0!important;color:#fff!important;');
+        title.textContent = 'Welcome back! 👋';
+        var sub = document.createElement('div');
+        sub.setAttribute('style', 'font-size:12.5px!important;font-weight:400!important;line-height:1.4!important;color:#fff!important;');
+        sub.textContent = 'Your work timer has resumed.';
+        box.appendChild(title); box.appendChild(sub);
+        document.body.appendChild(box);
+        setTimeout(function () { box.style.transition = 'opacity .4s'; box.style.setProperty('opacity', '0', 'important'); setTimeout(function () { box.remove(); }, 400); }, 3000);
     }
 
     function markActive() {
