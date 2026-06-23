@@ -11,7 +11,7 @@
 @endpush
 @section('content')
     @if($shiftData)
-    <div class="card shadow-none border mb-4" id="shiftBanner"
+    <div class="card shadow-none border mb-4 js-shift-banner" id="shiftBanner"
          data-start="{{ $shiftData['start'] }}" data-end="{{ $shiftData['end'] }}">
         <div class="card-body p-20">
             <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
@@ -20,8 +20,8 @@
                     <div>
                         <p class="fw-medium text-primary-light mb-1">{{ $shiftData['name'] }} &middot; {{ $shiftData['start'] }} – {{ $shiftData['end'] }}</p>
                         <h5 class="mb-0" id="shiftCountdownLabel">
-                            <span id="shiftCountdownPhase" class="text-secondary-light">Shift</span>
-                            <span id="shiftCountdownValue" class="fw-bold">--:--:--</span>
+                            <span class="js-shift-phase text-secondary-light">Shift</span>
+                            <span class="js-shift-value fw-bold">--:--:--</span>
                         </h5>
                     </div>
                 </div>
@@ -33,21 +33,24 @@
                             $ph = intdiv($productiveSeconds, 3600);
                             $pm = intdiv($productiveSeconds % 3600, 60);
                         @endphp
-                        <span id="hrActiveTimeDisplay" data-seconds="{{ $productiveSeconds }}">{{ ($ph > 0 ? $ph.'h ' : '').$pm.'m' }}</span>
+                        <span class="js-active-time" data-seconds="{{ $productiveSeconds }}">{{ ($ph > 0 ? $ph.'h ' : '').$pm.'m' }}</span>
                         @if($productivePercent !== null)
                             <span class="text-secondary-light">({{ $productivePercent }}% of shift)</span>
                         @endif
-                        @if($productiveBand)
+                        @if($productiveBand && $productiveBand !== 'Absent')
                             @php
-                                $bandColor = ['Full Day'=>'bg-success-focus text-success-main','Half Day'=>'bg-info-focus text-info-main','Quarter Day'=>'bg-warning-focus text-warning-main','Absent'=>'bg-danger-focus text-danger-main'][$productiveBand] ?? 'bg-neutral-focus text-neutral-main';
+                                $bandColor = ['Full Day'=>'bg-success-focus text-success-main','Half Day'=>'bg-info-focus text-info-main','Quarter Day'=>'bg-warning-focus text-warning-main'][$productiveBand] ?? 'bg-neutral-focus text-neutral-main';
                             @endphp
                             <span class="{{ $bandColor }} px-16 py-2 rounded-pill fw-medium text-xs ms-1">{{ $productiveBand }}</span>
+                        @else
+                            {{-- Don't show "Absent" live — it's only decided at shift end. Keep it encouraging. --}}
+                            <span class="bg-info-focus text-info-main px-16 py-2 rounded-pill fw-medium text-xs ms-1">In progress</span>
                         @endif
                     </h6>
                 </div>
             </div>
             <div class="progress mt-3" style="height:6px;">
-                <div id="shiftProgressBar" class="progress-bar bg-primary-600" role="progressbar" style="width:0%;"></div>
+                <div class="js-shift-progress progress-bar bg-primary-600" role="progressbar" style="width:0%;"></div>
             </div>
         </div>
     </div>
@@ -288,57 +291,8 @@
 @push('scripts')
     <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 
-    <script>
-    // Live shift countdown
-    (function () {
-        var banner = document.getElementById('shiftBanner');
-        if (!banner) return;
-
-        function parseToday(hhmm) {
-            var p = (hhmm || '00:00').split(':');
-            var d = new Date();
-            d.setHours(parseInt(p[0], 10) || 0, parseInt(p[1], 10) || 0, 0, 0);
-            return d;
-        }
-        function pad(n) { return (n < 10 ? '0' : '') + n; }
-        function fmt(secs) {
-            secs = Math.max(0, Math.floor(secs));
-            var h = Math.floor(secs / 3600), m = Math.floor((secs % 3600) / 60), s = secs % 60;
-            return pad(h) + ':' + pad(m) + ':' + pad(s);
-        }
-
-        var start = parseToday(banner.dataset.start);
-        var end   = parseToday(banner.dataset.end);
-        if (end <= start) end = new Date(end.getTime() + 86400000); // overnight shift
-
-        var phaseEl = document.getElementById('shiftCountdownPhase');
-        var valEl   = document.getElementById('shiftCountdownValue');
-        var barEl   = document.getElementById('shiftProgressBar');
-
-        function tick() {
-            var now = new Date();
-            var total = (end - start) / 1000;
-            var elapsed = (now - start) / 1000;
-
-            if (now < start) {
-                phaseEl.textContent = 'Starts in';
-                valEl.textContent = fmt((start - now) / 1000);
-                barEl.style.width = '0%';
-            } else if (now < end) {
-                phaseEl.textContent = 'Time left';
-                valEl.textContent = fmt((end - now) / 1000);
-                var pct = Math.min(100, Math.max(0, (elapsed / total) * 100));
-                barEl.style.width = pct.toFixed(1) + '%';
-            } else {
-                phaseEl.textContent = 'Shift ended';
-                valEl.textContent = '00:00:00';
-                barEl.style.width = '100%';
-            }
-        }
-        tick();
-        setInterval(tick, 1000);
-    })();
-    </script>
+    {{-- Shift countdown is now driven globally by partials/activity_tracker.blade.php
+         (so it runs on every employee screen, not just the dashboard). --}}
 
     <script>
         (function() {

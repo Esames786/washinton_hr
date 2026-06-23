@@ -17,6 +17,41 @@
         </div>
         <div class="col-auto">
             <div class="d-flex flex-wrap align-items-center gap-3">
+
+                {{-- Global shift countdown + active-time (every employee screen) --}}
+                @auth('employee')
+                @if(auth('employee')->user()->agent_id)
+                @php
+                    $navEmp = auth('employee')->user();
+                    $navShift = $navEmp->shift ?? null;
+                    $navActiveSecs = 0;
+                    try {
+                        if (\Illuminate\Support\Facades\Schema::hasTable('agent_active_times')) {
+                            $navActiveSecs = (int) (\Illuminate\Support\Facades\DB::table('agent_active_times')
+                                ->where('user_id', $navEmp->agent_id)->whereDate('work_date', date('Y-m-d'))->value('active_seconds') ?? 0);
+                        }
+                    } catch (\Throwable $e) {}
+                    $navAh = intdiv($navActiveSecs, 3600); $navAm = intdiv($navActiveSecs % 3600, 60);
+                @endphp
+                @if($navShift && $navShift->shift_start && $navShift->shift_end)
+                <div class="js-shift-banner d-flex align-items-center gap-2"
+                     data-start="{{ substr($navShift->shift_start,0,5) }}" data-end="{{ substr($navShift->shift_end,0,5) }}"
+                     style="background:#eef2ff;border:1px solid #dfe6ff;border-radius:20px;padding:5px 12px;white-space:nowrap;">
+                    <span style="font-size:14px;">🕒</span>
+                    <span style="font-size:12px;color:#475569;">
+                        <span class="js-shift-phase">Shift</span>
+                        <strong class="js-shift-value" style="color:#1e293b;">--:--:--</strong>
+                    </span>
+                </div>
+                @endif
+                <span title="Your active working time today"
+                      style="display:inline-flex;align-items:center;gap:6px;background:#eafaf1;color:#157347;font-weight:600;font-size:12px;padding:5px 12px;border-radius:20px;white-space:nowrap;">
+                    <span style="width:8px;height:8px;border-radius:50%;background:#22c55e;display:inline-block;"></span>
+                    Active:&nbsp;<span class="js-active-time" data-seconds="{{ $navActiveSecs }}">{{ ($navAh > 0 ? $navAh.'h ' : '').$navAm.'m' }}</span>
+                </span>
+                @endif
+                @endauth
+
                 <button type="button" data-theme-toggle
                         class="w-40-px h-40-px bg-neutral-200 rounded-circle d-flex justify-content-center align-items-center"></button>
 

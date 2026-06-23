@@ -13,9 +13,14 @@
     var IDLE_LIMIT_MS = 60000, TICK_MS = 5000, FLUSH_MS = 60000;
     var lastActivity = Date.now(), pendingSeconds = 0, idle = false;
 
-    // Live display value (seconds). Seeded from the dashboard banner if present.
-    var seed = document.getElementById('hrActiveTimeDisplay');
-    var displaySeconds = seed && seed.dataset.seconds ? parseInt(seed.dataset.seconds, 10) || 0 : 0;
+    // Live display value (seconds). Seeded from any active-time element on the page
+    // (navbar widget + dashboard banner both carry class js-active-time).
+    function activeEls() { return document.querySelectorAll('.js-active-time, #hrActiveTimeDisplay'); }
+    var displaySeconds = 0;
+    activeEls().forEach(function (el) {
+        var s = parseInt(el.dataset.seconds || '0', 10) || 0;
+        if (s > displaySeconds) displaySeconds = s;
+    });
 
     function human(s) {
         s = Math.max(0, Math.floor(s));
@@ -23,10 +28,53 @@
         return (h > 0 ? h + 'h ' : '') + m + 'm';
     }
     function paintClock() {
-        var el = document.getElementById('hrActiveTimeDisplay');
-        if (el) el.textContent = human(displaySeconds);
+        var h = human(displaySeconds);
+        activeEls().forEach(function (el) { el.textContent = h; });
     }
     paintClock();
+
+    // ── Live shift countdown (runs on every screen; drives all .js-shift-banner) ──
+    (function () {
+        var banners = document.querySelectorAll('.js-shift-banner');
+        if (!banners.length) return;
+
+        function parseToday(hhmm) {
+            var p = (hhmm || '00:00').split(':');
+            var d = new Date();
+            d.setHours(parseInt(p[0], 10) || 0, parseInt(p[1], 10) || 0, 0, 0);
+            return d;
+        }
+        function pad(n) { return (n < 10 ? '0' : '') + n; }
+        function fmt(secs) {
+            secs = Math.max(0, Math.floor(secs));
+            return pad(Math.floor(secs / 3600)) + ':' + pad(Math.floor((secs % 3600) / 60)) + ':' + pad(secs % 60);
+        }
+        function tick() {
+            var now = new Date();
+            banners.forEach(function (b) {
+                var start = parseToday(b.dataset.start), end = parseToday(b.dataset.end);
+                if (end <= start) end = new Date(end.getTime() + 86400000); // overnight
+                var phaseEl = b.querySelector('.js-shift-phase'),
+                    valEl   = b.querySelector('.js-shift-value'),
+                    barEl   = b.querySelector('.js-shift-progress');
+                if (now < start) {
+                    if (phaseEl) phaseEl.textContent = 'Starts in';
+                    if (valEl) valEl.textContent = fmt((start - now) / 1000);
+                    if (barEl) barEl.style.width = '0%';
+                } else if (now < end) {
+                    if (phaseEl) phaseEl.textContent = 'Time left';
+                    if (valEl) valEl.textContent = fmt((end - now) / 1000);
+                    if (barEl) barEl.style.width = Math.min(100, ((now - start) / (end - start)) * 100).toFixed(1) + '%';
+                } else {
+                    if (phaseEl) phaseEl.textContent = 'Shift ended';
+                    if (valEl) valEl.textContent = '00:00:00';
+                    if (barEl) barEl.style.width = '100%';
+                }
+            });
+        }
+        tick();
+        setInterval(tick, 1000);
+    })();
 
     function showWelcomeBack() {
         // Self-contained toast with !important inline styles so the HR theme's
@@ -101,10 +149,27 @@
         .catch(function () { pendingSeconds += secs; });
     }
 
+    // Pull the latest shared total from the DB and repaint (no increment)
+    function syncTotal() {
+        fetch(HEARTBEAT_URL, {
+            method: 'POST',
+            headers: { 'X-CSRF-TOKEN': CSRF, 'Content-Type': 'application/json' },
+            body: JSON.stringify({ seconds: 0 })
+        })
+        .then(function (r) { return r.json(); })
+        .then(function (res) {
+            if (res && typeof res.today_seconds === 'number') {
+                if (res.today_seconds > displaySeconds) displaySeconds = res.today_seconds; // never go backwards mid-tick
+                paintClock();
+            }
+        })
+        .catch(function () {});
+    }
+
     setInterval(function () { flush(false); }, FLUSH_MS);
     document.addEventListener('visibilitychange', function () {
         if (document.visibilityState === 'hidden') { flush(true); idle = true; }
-        else { markActive(); }
+        else { markActive(); syncTotal(); }  // returning to tab: show the true shared total now
     });
     window.addEventListener('pagehide', function () { flush(true); });
 })();
