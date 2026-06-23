@@ -142,6 +142,42 @@ class EmployeeDashboardController extends Controller
         $difference       = $todayOrdersCount - $yesterdayOrdersCount;
         $cancelDifference = $todayCancelOrdersCount - $yesterdayCancelOrdersCount;
 
+        // ── Shift + today's productive (active) time ──────────────────────────
+        $shift = $employee->shift; // ShiftType relation
+        $shiftData = null;
+        $productiveSeconds = 0;
+        $productivePercent = null;
+        $productiveBand    = null;
+
+        if ($shift && $shift->shift_start && $shift->shift_end) {
+            $shiftData = [
+                'name'  => $shift->name ?? 'Shift',
+                'start' => substr($shift->shift_start, 0, 5), // HH:MM
+                'end'   => substr($shift->shift_end, 0, 5),
+            ];
+
+            // Shift length (overnight-safe)
+            $startTs = strtotime($today . ' ' . $shift->shift_start);
+            $endTs   = strtotime($today . ' ' . $shift->shift_end);
+            if ($endTs <= $startTs) $endTs += 86400;
+            $shiftLen = max(1, $endTs - $startTs);
+
+            if ($agentId && \Illuminate\Support\Facades\Schema::hasTable('agent_active_times')) {
+                $productiveSeconds = (int) (DB::table('agent_active_times')
+                    ->where('user_id', $agentId)
+                    ->whereDate('work_date', $today)
+                    ->value('active_seconds') ?? 0);
+            }
+
+            $cappedProductive  = min($productiveSeconds, $shiftLen);
+            $productivePercent = round($cappedProductive / $shiftLen * 100, 1);
+
+            if (\Illuminate\Support\Facades\Schema::hasTable('productivity_rules')) {
+                $band = \App\Models\ProductivityRule::resolveFor($productivePercent);
+                if ($band) $productiveBand = $band->label;
+            }
+        }
+
         return view('employee.dashboard', [
             'attendanceToday'  => $attendance['attendanceToday'],
             'checkInDisabled'  => $attendance['checkInDisabled'],
@@ -151,6 +187,10 @@ class EmployeeDashboardController extends Controller
             'difference'            => $difference,
             'todayCancelOrdersCount' => $todayCancelOrdersCount,
             'cancelDifference'      => $cancelDifference,
+            'shiftData'             => $shiftData,
+            'productiveSeconds'     => $productiveSeconds,
+            'productivePercent'     => $productivePercent,
+            'productiveBand'        => $productiveBand,
         ]);
     }
 
