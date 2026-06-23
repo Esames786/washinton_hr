@@ -33,7 +33,7 @@
                             $ph = intdiv($productiveSeconds, 3600);
                             $pm = intdiv($productiveSeconds % 3600, 60);
                         @endphp
-                        {{ ($ph > 0 ? $ph.'h ' : '').$pm.'m' }}
+                        <span id="hrActiveTimeDisplay" data-seconds="{{ $productiveSeconds }}">{{ ($ph > 0 ? $ph.'h ' : '').$pm.'m' }}</span>
                         @if($productivePercent !== null)
                             <span class="text-secondary-light">({{ $productivePercent }}% of shift)</span>
                         @endif

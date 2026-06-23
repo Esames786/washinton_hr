@@ -276,6 +276,7 @@ use App\Http\Controllers\Employee\EmployeeTicketMessageController;
             Route::post('profile/upload-document', [EmployeeDashboardController::class, 'uploadDocument'])->name('profile.upload_document');
             Route::post('contract/accept', [EmployeeDashboardController::class, 'acceptContract'])->name('contract.accept');
             Route::post('nda/sign', [\App\Http\Controllers\Employee\EmployeeNdaController::class, 'sign'])->name('nda.sign');
+            Route::post('activity-heartbeat', [\App\Http\Controllers\Employee\EmployeeActivityController::class, 'heartbeat'])->name('activity.heartbeat');
             Route::delete('profile/document/{id}', [EmployeeDashboardController::class, 'deleteDocument'])->name('profile.delete_document');
             Route::prefix('attendance')->name('attendance.')->group(function () {
                 Route::get('', [EmployeeAttendanceController::class, 'index'])->name('index');
