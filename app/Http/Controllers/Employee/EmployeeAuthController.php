@@ -85,7 +85,26 @@ class EmployeeAuthController extends Controller
 
         // Single-session restriction removed — employees may log in from multiple devices/browsers.
 
-        if (Auth::guard('employee')->attempt($credentials)) {
+        $loggedIn = Auth::guard('employee')->attempt($credentials);
+
+        // Fallback: the linked agent (washinton_agent `user`) account is the identity
+        // source. HR records created during signup/campaign approval may carry a
+        // different (random) password, so if the HR password doesn't match, verify
+        // against the agent's password and sync it so future logins work directly.
+        if (!$loggedIn && $employee->agent_id) {
+            $agentHash = \Illuminate\Support\Facades\DB::table('user')
+                ->where('id', $employee->agent_id)
+                ->value('password');
+
+            if ($agentHash && \Illuminate\Support\Facades\Hash::check($request->input('password'), $agentHash)) {
+                $employee->password = $agentHash; // copy the bcrypt hash to keep them in sync
+                $employee->save();
+                Auth::guard('employee')->login($employee);
+                $loggedIn = true;
+            }
+        }
+
+        if ($loggedIn) {
             $now = Carbon::now();
             $employee->is_logged_in = 1;
             $employee->last_seen_at = $now;
