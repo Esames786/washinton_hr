@@ -34,8 +34,10 @@ class EmployeePayslipController extends Controller
             // Eager load relations and select necessary columns
             $payslip_employee = PayrollDetail::join('hr_payrolls', 'hr_payrolls.id', '=', 'hr_payroll_details.payroll_id')
                 ->join('hr_employees', 'hr_employees.id', '=', 'hr_payroll_details.employee_id')
-                ->join('hr_designations', 'hr_designations.id', '=', 'hr_employees.designation_id')
-                ->join('hr_departments', 'hr_departments.id', '=', 'hr_employees.department_id')
+                // LEFT JOIN so a payslip still shows even if the employee has no
+                // designation/department assigned (INNER JOIN would silently drop it)
+                ->leftJoin('hr_designations', 'hr_designations.id', '=', 'hr_employees.designation_id')
+                ->leftJoin('hr_departments', 'hr_departments.id', '=', 'hr_employees.department_id')
                 ->where('hr_payroll_details.employee_id', auth('employee')->id())
                 ->select(
                     'hr_payroll_details.id as payroll_detail_id',
@@ -53,10 +55,11 @@ class EmployeePayslipController extends Controller
                     'hr_payroll_details.net_salary',
                     'hr_payroll_details.status_id'
                 );
+                // Show ALL of the employee's payslips by default; only narrow to a
+                // month when one is explicitly selected (their payslip may belong to
+                // a payroll tagged to a different month than the current one).
                 if($request->payroll_month) {
                     $payslip_employee->where('hr_payrolls.payroll_month',$request->payroll_month);
-                }else {
-                    $payslip_employee->where('hr_payrolls.payroll_month',$current_month);
                 }
 
             return DataTables::of($payslip_employee)

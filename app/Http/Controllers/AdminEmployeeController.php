@@ -1191,6 +1191,8 @@ class AdminEmployeeController extends Controller
                   $data->whereDate('attendance_date', '=', $date);
             }
 
+            $hasActiveTimeTable = \Illuminate\Support\Facades\Schema::hasTable('agent_active_times');
+
             return DataTables::of($data)
 //                ->addColumn('attendance_status_name', function($row) {
 //                    if ($row->attendance_status) {
@@ -1231,14 +1233,26 @@ class AdminEmployeeController extends Controller
 //                    }
 //                    return '-';
 //                })
-                ->addColumn('productive', function($row) {
+                ->addColumn('productive', function($row) use ($hasActiveTimeTable) {
                     $secs = (int) ($row->productive_seconds ?? 0);
+                    $pct  = $row->productive_percent;
+
+                    // Fallback: on manually checked-in days productive_seconds is null,
+                    // so read the live tracked active time from agent_active_times.
+                    if ($secs <= 0 && $hasActiveTimeTable && $row->employee && $row->employee->agent_id) {
+                        $secs = (int) (\Illuminate\Support\Facades\DB::table('agent_active_times')
+                            ->where('user_id', $row->employee->agent_id)
+                            ->whereDate('work_date', $row->attendance_date)
+                            ->value('active_seconds') ?? 0);
+                        $pct = null;
+                    }
+
                     if ($secs <= 0) return '<span class="text-muted">—</span>';
                     $h = floor($secs / 3600);
                     $m = floor(($secs % 3600) / 60);
                     $human = ($h > 0 ? $h . 'h ' : '') . $m . 'm';
-                    $pct = $row->productive_percent !== null ? ' (' . rtrim(rtrim((string) $row->productive_percent, '0'), '.') . '%)' : '';
-                    return $human . $pct;
+                    $pctStr = $pct !== null ? ' (' . rtrim(rtrim((string) $pct, '0'), '.') . '%)' : '';
+                    return $human . $pctStr;
                 })
                 ->editColumn('working_hours', function($row) {
                     if ($row->working_hours) {

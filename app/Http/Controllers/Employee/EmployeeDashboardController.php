@@ -313,23 +313,32 @@ class EmployeeDashboardController extends Controller
             }
 
             return DataTables::of($query)
-                ->addColumn('action', function ($row) {
-                    return '<div class="d-flex justify-content-center gap-2">
-                        <button class="btn btn-outline-info btn-sm order-history-btn" data-id="' . $row->id . '">History</button>
-                    </div>';
-                })
-                ->editColumn('created_at', fn($row) => $row->created_at ? Carbon::parse($row->created_at)->format('d-M-Y H:i') : '-')
-                ->addColumn('order_status', function ($row) {
+                // Column names match the DataTable in employee/dashboard.blade.php
+                ->addColumn('Listing_Status', function ($row) {
                     $ps    = self::PSTATUS[(int)$row->pstatus] ?? ['label' => 'Unknown', 'class' => 'bg-secondary'];
                     return '<span class="badge ' . $ps['class'] . ' px-2 py-1">' . $ps['label'] . '</span>';
                 })
+                ->editColumn('created_at', fn($row) => $row->created_at ? Carbon::parse($row->created_at)->format('d-M-Y H:i') : '-')
+                ->addColumn('Customer_Name',  fn($row) => $row->oname  ?? '-')
+                ->addColumn('Customer_Email', fn($row) => $row->oemail ?? '-')
+                ->addColumn('Customer_Phone', fn($row) => $row->ophone ?? '-')
+                ->addColumn('Address', fn($row) => ($row->origincity ?? '') . ', ' . ($row->originstate ?? '') . ' → ' . ($row->destinationcity ?? '') . ', ' . ($row->destinationstate ?? ''))
+                ->addColumn('Book_Price',     fn($row) => $row->payment        ?? '-')
+                ->addColumn('Deposit_Amount', fn($row) => $row->deposit_amount ?? '-')
+                ->addColumn('Paid_Amount',    fn($row) => $row->paid_amount    ?? '-')
+                ->addColumn('Paid_Method',    fn($row) => $row->payment_method ?? '-')
+                ->addColumn('Received_Date',  fn($row) => '-')
                 ->editColumn('payment_status', function ($row) {
                     $status = $row->payment_status ?? 'Unpaid';
                     $class  = $status === 'Paid' ? 'bg-success' : 'bg-warning text-dark';
                     return '<span class="badge ' . $class . ' px-2 py-1">' . $status . '</span>';
                 })
-                ->addColumn('route', fn($row) => ($row->origincity ?? '') . ', ' . ($row->originstate ?? '') . ' → ' . ($row->destinationcity ?? '') . ', ' . ($row->destinationstate ?? ''))
-                ->rawColumns(['order_status', 'payment_status', 'action'])
+                ->addColumn('action', function ($row) {
+                    return '<div class="d-flex justify-content-center gap-2">
+                        <button class="btn btn-outline-info btn-sm order-history-btn" data-id="' . $row->id . '">History</button>
+                    </div>';
+                })
+                ->rawColumns(['Listing_Status', 'payment_status', 'action'])
                 ->make(true);
         }
 
@@ -380,23 +389,33 @@ class EmployeeDashboardController extends Controller
                 ->editColumn('id', function ($row) use ($helloTransportUrl) {
                     return '<a href="' . $helloTransportUrl . '" target="_blank" class="text-primary fw-bold">' . $row->id . '</a>';
                 })
-                ->addColumn('action', function ($row) {
-                    return '<div class="d-flex justify-content-center gap-2">
-                        <button class="btn btn-outline-info btn-sm order-history-btn" data-id="' . $row->id . '" style="width:120px;">Order History</button>
-                    </div>';
-                })
-                ->editColumn('created_at', fn($row) => $row->created_at ? Carbon::parse($row->created_at)->format('d-M-Y') : '-')
-                ->addColumn('order_status', function ($row) {
+                // Column names below match the DataTable definitions in
+                // employee/order_list.blade.php and employee/dashboard.blade.php
+                ->addColumn('Listing_Status', function ($row) {
                     $ps = self::PSTATUS[(int)$row->pstatus] ?? ['label' => 'Unknown', 'class' => 'bg-secondary'];
                     return '<span class="badge ' . $ps['class'] . ' px-2 py-1">' . $ps['label'] . '</span>';
                 })
+                ->editColumn('created_at', fn($row) => $row->created_at ? Carbon::parse($row->created_at)->format('d-M-Y') : '-')
+                ->addColumn('Customer_Name',  fn($row) => $row->oname  ?? '-')
+                ->addColumn('Customer_Email', fn($row) => $row->oemail ?? '-')
+                ->addColumn('Customer_Phone', fn($row) => $row->ophone ?? '-')
+                ->addColumn('Address', fn($row) => ($row->origincity ?? '') . ', ' . ($row->originstate ?? '') . ' → ' . ($row->destinationcity ?? '') . ', ' . ($row->destinationstate ?? ''))
+                ->addColumn('Book_Price',     fn($row) => $row->payment        ?? '-')
+                ->addColumn('Deposit_Amount', fn($row) => $row->deposit_amount ?? '-')
+                ->addColumn('Paid_Amount',    fn($row) => $row->paid_amount    ?? '-')
+                ->addColumn('Paid_Method',    fn($row) => $row->payment_method ?? '-')
+                ->addColumn('Received_Date',  fn($row) => '-')
                 ->editColumn('payment_status', function ($row) {
                     $status = $row->payment_status ?? 'Unpaid';
                     $class  = $status === 'Paid' ? 'bg-success' : 'bg-warning text-dark';
                     return '<span class="badge ' . $class . ' px-2 py-1">' . $status . '</span>';
                 })
-                ->addColumn('route', fn($row) => ($row->origincity ?? '') . ', ' . ($row->originstate ?? '') . ' → ' . ($row->destinationcity ?? '') . ', ' . ($row->destinationstate ?? ''))
-                ->rawColumns(['order_status', 'payment_status', 'action', 'id'])
+                ->addColumn('action', function ($row) {
+                    return '<div class="d-flex justify-content-center gap-2">
+                        <button class="btn btn-outline-info btn-sm order-history-btn" data-id="' . $row->id . '" style="width:120px;">Order History</button>
+                    </div>';
+                })
+                ->rawColumns(['Listing_Status', 'payment_status', 'action', 'id'])
                 ->make(true);
         }
 

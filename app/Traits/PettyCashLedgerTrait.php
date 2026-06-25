@@ -21,9 +21,9 @@ class PettyCashLedgerTrait
         $openingFromMaster = $master->opening_balance ?? 0;
 
         // 2) Net impact from pre-from transactions (for this master)
-        $preNetQuery = DB::table('petty_cash_transactions as t')
-            ->join('petty_cash_heads as h', 'h.id', '=', 't.head_id')
-            ->where('t.master_id', 5)
+        $preNetQuery = DB::table('hr_petty_cash_transactions as t')
+            ->join('hr_petty_cash_heads as h', 'h.id', '=', 't.head_id')
+            ->where('t.master_id', $master_id)
             ->where('t.status', 'approved')
             ->when($head_id, fn($q) => $q->where('t.head_id', $head_id))
             ->when($from, fn($q) => $q->where('t.date', '<', $from))
@@ -42,8 +42,8 @@ class PettyCashLedgerTrait
 
 
         // 2) Transactions (between from_date and to_date)
-        $transactions = DB::table('petty_cash_transactions as t')
-            ->join('petty_cash_heads as h', 'h.id', '=', 't.head_id')
+        $transactions = DB::table('hr_petty_cash_transactions as t')
+            ->join('hr_petty_cash_heads as h', 'h.id', '=', 't.head_id')
             ->where('t.status', 'approved')
             ->when($head_id, fn($q) => $q->where('t.head_id', $head_id))
             ->when($from && $to, fn($q) => $q->whereBetween('t.date', [$from, $to]))
@@ -127,7 +127,7 @@ class PettyCashLedgerTrait
                 'id' => null,
                 'date' => $to,
                 'particulars' => 'Closing Balance',
-                'head' => $master->title,
+                'head' => $master->title ?? 'Cash at Hand',
                 'debit' => $closingDebit > 0 ? $formatNumber($closingDebit) : null,
                 'credit' => $closingCredit > 0 ? $formatNumber($closingCredit) : null,
                 'balance' => $formatNumber($balance),

@@ -18,6 +18,22 @@
                 <tr><th>Employee Gratuity</th><td class="text-end">{{ number_format($payrollDetail->employee_gratuity, 2) }}</td></tr>
                 <tr><th>Company Gratuity</th><td class="text-end">{{ number_format($payrollDetail->company_gratuity, 2) }}</td></tr>
                 <tr><th>Total Deductions</th><td class="text-end">{{ number_format($payrollDetail->total_deductions, 2) }}</td></tr>
+                @php
+                    $__prodSecs = 0;
+                    try {
+                        $__agentId = optional($payrollDetail->employee)->agent_id;
+                        $__pf = optional($payrollDetail->payroll)->from_date;
+                        $__pt = optional($payrollDetail->payroll)->to_date;
+                        if ($__agentId && $__pf && $__pt && \Illuminate\Support\Facades\Schema::hasTable('agent_active_times')) {
+                            $__prodSecs = (int) (\Illuminate\Support\Facades\DB::table('agent_active_times')
+                                ->where('user_id', $__agentId)
+                                ->whereBetween('work_date', [$__pf, $__pt])
+                                ->sum('active_seconds'));
+                        }
+                    } catch (\Throwable $e) {}
+                    $__ph = intdiv($__prodSecs, 3600); $__pm = intdiv($__prodSecs % 3600, 60);
+                @endphp
+                <tr><th>Productive Time (this period)</th><td class="text-end">{{ $__ph }}h {{ $__pm }}m</td></tr>
                 <tr>
                     <th>Net Salary</th>
                     <td id="netSalary" class="text-end"><strong>PKR {{ number_format($payrollDetail->net_salary, 2) }}</strong></td>
