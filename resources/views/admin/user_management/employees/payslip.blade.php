@@ -28,21 +28,26 @@
                 <tr><th>Company Gratuity</th><td class="text-end">{{ number_format($payrollDetail->company_gratuity, 2) }}</td></tr>
                 <tr><th>Total Deductions</th><td class="text-end">{{ number_format($payrollDetail->total_deductions, 2) }}</td></tr>
                 @php
+                    $__manual = $payrollDetail->manual_productive_minutes ?? null;
                     $__prodSecs = 0;
-                    try {
-                        $__agentId = optional($payrollDetail->employee)->agent_id;
-                        $__pf = optional($payrollDetail->payroll)->from_date;
-                        $__pt = optional($payrollDetail->payroll)->to_date;
-                        if ($__agentId && $__pf && $__pt && \Illuminate\Support\Facades\Schema::hasTable('agent_active_times')) {
-                            $__prodSecs = (int) (\Illuminate\Support\Facades\DB::table('agent_active_times')
-                                ->where('user_id', $__agentId)
-                                ->whereBetween('work_date', [$__pf, $__pt])
-                                ->sum('active_seconds'));
-                        }
-                    } catch (\Throwable $e) {}
+                    if ($__manual !== null) {
+                        $__prodSecs = (int) $__manual * 60;
+                    } else {
+                        try {
+                            $__agentId = optional($payrollDetail->employee)->agent_id;
+                            $__pf = optional($payrollDetail->payroll)->from_date;
+                            $__pt = optional($payrollDetail->payroll)->to_date;
+                            if ($__agentId && $__pf && $__pt && \Illuminate\Support\Facades\Schema::hasTable('agent_active_times')) {
+                                $__prodSecs = (int) (\Illuminate\Support\Facades\DB::table('agent_active_times')
+                                    ->where('user_id', $__agentId)
+                                    ->whereBetween('work_date', [$__pf, $__pt])
+                                    ->sum('active_seconds'));
+                            }
+                        } catch (\Throwable $e) {}
+                    }
                     $__ph = intdiv($__prodSecs, 3600); $__pm = intdiv($__prodSecs % 3600, 60);
                 @endphp
-                <tr><th>Productive Time (this period)</th><td class="text-end">{{ $__ph }}h {{ $__pm }}m</td></tr>
+                <tr><th>Productive Time (this period)</th><td class="text-end">{{ $__ph }}h {{ $__pm }}m @if($__manual !== null)<span class="text-muted" style="font-size:11px;">(manual)</span>@endif</td></tr>
                 <tr>
                     <th>Net Salary</th>
                     <td id="netSalary" class="text-end"><strong>PKR {{ number_format($payrollDetail->net_salary, 2) }}</strong></td>
@@ -108,15 +113,19 @@
                         <div class="row pb-8">
                             <div class="col-6">
                                 <label>Adjustment Type</label>
-                                <select name="adjustment_type" class="form-control" required>
+                                <select name="adjustment_type" id="adjustment_type" class="form-control" required>
                                     <option value="">Select</option>
                                     <option value="1">Earning</option>
                                     <option value="2">Deduction</option>
+                                    <option value="commission">Commission (adds to Total Commission)</option>
+                                    <option value="productive">Productive Time (minutes)</option>
+                                    <option value="leave">Leave from Annual (days, unpaid)</option>
                                 </select>
                             </div>
                             <div class="col-6">
-                                <label>Amount</label>
-                                <input type="number" step="0.01" name="amount" class="form-control" required>
+                                <label id="amount_label">Amount</label>
+                                <input type="number" step="0.01" name="amount" id="adjustment_amount" class="form-control" required>
+                                <small id="amount_hint" class="text-muted"></small>
                             </div>
                         </div>
 
@@ -140,6 +149,19 @@
 
 @push('scripts')
     <script>
+        // Relabel the amount field based on the selected adjustment kind
+        $(document).on('change', '#adjustment_type', function () {
+            var v = $(this).val();
+            var label = 'Amount', hint = '';
+            if (v === 'commission') { label = 'Commission Amount (PKR)'; hint = 'Adds to Total Commission and net salary.'; }
+            else if (v === 'productive') { label = 'Productive Time (minutes)'; hint = 'Shown on the payslip; no salary impact.'; }
+            else if (v === 'leave') { label = 'Leave Days (from Annual)'; hint = 'Reduces annual leave balance and deducts per-day salary.'; }
+            else if (v === '1') { label = 'Earning Amount (PKR)'; }
+            else if (v === '2') { label = 'Deduction Amount (PKR)'; }
+            $('#amount_label').text(label);
+            $('#amount_hint').text(hint);
+        });
+
         {{--$('#adjustmentForm').submit(function(e){--}}
         {{--    e.preventDefault();--}}
         {{--    let form = $(this);--}}

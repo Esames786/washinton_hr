@@ -166,10 +166,13 @@ class AdminPayslipController extends Controller
     public function add_adjustment(Request $request)
     {
 
+        // adjustment_type may be a payslip item type id ('1' earning / '2' deduction)
+        // OR one of the special kinds: 'commission', 'productive', 'leave'.
         $validator = Validator::make($request->all(), [
-            'adjustment_type' => 'required|integer|exists:hr_payslip_item_types,id',
-            'amount' => 'required|numeric|min:0',
-            'reason' => 'nullable|string',
+            'adjustment_type'   => 'required|string',
+            'amount'            => 'required|numeric|min:0',
+            'reason'            => 'nullable|string',
+            'payroll_detail_id' => 'required|integer',
         ]);
 
         if($validator->fails()) {
@@ -179,6 +182,9 @@ class AdminPayslipController extends Controller
                 ],422);
         }
 
+        $kind   = (string) $request->adjustment_type;
+        $amount = (float) $request->amount;
+
         DB::beginTransaction();
 
         try {
@@ -186,14 +192,56 @@ class AdminPayslipController extends Controller
             $payroll_detail = PayrollDetail::where('id',$request->payroll_detail_id)->where('status_id',1)->first();
             if($payroll_detail) {
 
-                $payslip_adjustment = new PayslipAdjustment();
-                $payslip_adjustment->payroll_detail_id = $request->payroll_detail_id;
-                $payslip_adjustment->payslip_item_type_id = $request->adjustment_type;
-                $payslip_adjustment->amount = $request->amount;
-                $payslip_adjustment->remarks = $request->reason;
-                $payslip_adjustment->created_by = auth('admin')->id();
-                $payslip_adjustment->save();
+                $payslip_adjustment = null;
 
+                if ($kind === 'commission') {
+                    // Manual commission — adds to Total Commission (raises net via base formula)
+                    $payroll_detail->total_commission = ($payroll_detail->total_commission ?? 0) + $amount;
+
+                } elseif ($kind === 'productive') {
+                    // Manual productive time (minutes) — display only, no pay impact
+                    $payroll_detail->manual_productive_minutes = (int) round($amount);
+
+                } elseif ($kind === 'leave') {
+                    // Unpaid leave from Annual: reduce annual quota AND deduct per-day salary
+                    $days  = $amount;
+                    $perDay = ($payroll_detail->basic_salary ?? 0) / 30;
+                    $deductAmount = round($perDay * $days, 2);
+
+                    // Deduct salary (record as a type-2 deduction adjustment)
+                    $payslip_adjustment = new PayslipAdjustment();
+                    $payslip_adjustment->payroll_detail_id    = $request->payroll_detail_id;
+                    $payslip_adjustment->payslip_item_type_id = 2; // deduction
+                    $payslip_adjustment->amount               = $deductAmount;
+                    $payslip_adjustment->remarks              = ($request->reason ? $request->reason . ' — ' : '') . 'Unpaid Annual Leave: ' . rtrim(rtrim(number_format($days,2),'0'),'.') . ' day(s)';
+                    $payslip_adjustment->created_by           = auth('admin')->id();
+                    $payslip_adjustment->save();
+
+                    // Reduce the employee's Annual Leave (type 3) balance
+                    DB::table('hr_employee_assign_leaves')
+                        ->where('employee_id', $payroll_detail->employee_id)
+                        ->where('leave_type_id', 3)
+                        ->where('status', 1)
+                        ->orderByDesc('id')
+                        ->limit(1)
+                        ->update(['used_quota' => DB::raw('used_quota + ' . (int) ceil($days)), 'updated_at' => now()]);
+
+                } else {
+                    // Standard earning ('1') / deduction ('2') line item
+                    if (!in_array($kind, ['1','2'], true)) {
+                        DB::rollBack();
+                        return response()->json(['message' => 'Invalid adjustment type.'], 422);
+                    }
+                    $payslip_adjustment = new PayslipAdjustment();
+                    $payslip_adjustment->payroll_detail_id    = $request->payroll_detail_id;
+                    $payslip_adjustment->payslip_item_type_id = (int) $kind;
+                    $payslip_adjustment->amount               = $amount;
+                    $payslip_adjustment->remarks              = $request->reason;
+                    $payslip_adjustment->created_by           = auth('admin')->id();
+                    $payslip_adjustment->save();
+                }
+
+                // Recalculate net salary (commission folds into the base; adjustments add/deduct)
                 $base_net_salary = ($payroll_detail->basic_salary + $payroll_detail->total_commission + $payroll_detail->employee_gratuity + $payroll_detail->company_gratuity)
                     - $payroll_detail->total_deductions;
 

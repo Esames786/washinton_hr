@@ -52,6 +52,7 @@
                     <th>Check-In</th>
                     <th>Check-Out</th>
                     <th>Working Hours</th>
+                    <th>Productive Time</th>
                     <th>Status</th>
                 </tr>
                 </thead>
@@ -87,6 +88,7 @@
                     { data: 'check_in', name: 'check_in', orderable: false },
                     { data: 'check_out', name: 'check_out', orderable: false },
                     { data: 'working_hours', name: 'working_hours', orderable: false },
+                    { data: 'productive', name: 'productive', orderable: false, searchable: false },
                     { data: 'attendance_status_name', name: 'attendance_status_name', orderable: false, searchable: false },
                 ],
                 pageLength: 10,

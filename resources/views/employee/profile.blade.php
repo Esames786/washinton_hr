@@ -230,8 +230,9 @@
                             </div>
                         @endif
 
-                        {{-- Upload Form --}}
-                        @if($documentSettings && $documentSettings->count())
+                        {{-- Upload Form — only during Document Verification (status 7).
+                             Once HR admin verifies/activates, uploading is admin-only. --}}
+                        @if($employee->employee_status_id == 7 && $documentSettings && $documentSettings->count())
                         <div class="mb-4 p-3 border rounded" style="background:#f8f9fa;">
                             <h6 class="fw-bold mb-3">📤 Upload Document</h6>
                             <form method="POST"

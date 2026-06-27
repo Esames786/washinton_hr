@@ -51,6 +51,7 @@
         @php $signRoute = route('employee.nda.sign'); @endphp
         @include('nda.modal')
     @endif
+    @include('partials.checkin_gate')
     @include('partials.activity_tracker')
 @endauth
 

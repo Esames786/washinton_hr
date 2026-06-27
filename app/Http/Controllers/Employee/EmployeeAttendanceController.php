@@ -33,8 +33,12 @@ class EmployeeAttendanceController extends Controller
     public function index(Request $request)
     {
         if ($request->ajax()) {
+            $emp     = auth('employee')->user();
+            $agentId = (int) ($emp->agent_id ?? 0);
+            $hasAAT  = \Illuminate\Support\Facades\Schema::hasTable('agent_active_times');
+
             $data = EmployeeAttendance::with('attendance_status')
-                ->select('hr_employee_attendances.id', 'hr_employee_attendances.attendance_date','hr_employee_attendances.check_in','hr_employee_attendances.check_out','hr_employee_attendances.working_hours','hr_employee_attendances.attendance_status_id')
+                ->select('hr_employee_attendances.id', 'hr_employee_attendances.attendance_date','hr_employee_attendances.check_in','hr_employee_attendances.check_out','hr_employee_attendances.working_hours','hr_employee_attendances.attendance_status_id','hr_employee_attendances.productive_seconds','hr_employee_attendances.productive_percent')
                 ->where('hr_employee_attendances.employee_id',auth('employee')->id());
 
             if ($request->from_date && $request->to_date) {
@@ -77,6 +81,22 @@ class EmployeeAttendanceController extends Controller
                     }
                     return '-';
                 })
+                ->addColumn('productive', function($row) use ($agentId, $hasAAT) {
+                    $secs = (int) ($row->productive_seconds ?? 0);
+                    $pct  = $row->productive_percent;
+                    if ($secs <= 0 && $hasAAT && $agentId) {
+                        $secs = (int) (\Illuminate\Support\Facades\DB::table('agent_active_times')
+                            ->where('user_id', $agentId)
+                            ->whereDate('work_date', $row->attendance_date)
+                            ->value('active_seconds') ?? 0);
+                        $pct = null;
+                    }
+                    if ($secs <= 0) return '<span class="text-muted">—</span>';
+                    $h = floor($secs / 3600); $m = floor(($secs % 3600) / 60);
+                    $human = ($h > 0 ? $h . 'h ' : '') . $m . 'm';
+                    $pctStr = $pct !== null ? ' (' . rtrim(rtrim((string) $pct, '0'), '.') . '%)' : '';
+                    return $human . $pctStr;
+                })
                 ->editColumn('check_in', function($row) {
                     return $row->check_in ? $row->check_in : '-';
                 })
@@ -90,7 +110,7 @@ class EmployeeAttendanceController extends Controller
                         });
                     }
                 })
-                ->rawColumns(['attendance_status_name'])
+                ->rawColumns(['attendance_status_name', 'productive'])
                 ->make(true);
         }
 
