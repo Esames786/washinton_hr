@@ -34,6 +34,7 @@ class AdminSidebarHelper
                     ['title' => 'Currency Exchange Rate', 'route' => 'admin.currency_settings.index', 'iconClass' => 'text-info-main'],
                     ['title' => 'Equipment Types', 'route' => 'admin.equipment_types.index', 'iconClass' => 'text-success-main'],
                     ['title' => 'Productivity Rules', 'route' => 'admin.productivity_rules.index', 'iconClass' => 'text-warning-main'],
+                    ['title' => 'Leave Types', 'route' => 'admin.leave_types.index', 'iconClass' => 'text-info-main'],
 
                 ]
             ],

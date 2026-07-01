@@ -1171,10 +1171,20 @@ class AdminEmployeeController extends Controller
     }
 
 
+    /** Shift length in seconds (overnight-safe); defaults to 8h when unknown. */
+    private function shiftLengthSeconds($shift): int
+    {
+        if (!$shift || empty($shift->shift_start) || empty($shift->shift_end)) return 8 * 3600;
+        $s = strtotime('2000-01-01 ' . $shift->shift_start);
+        $e = strtotime('2000-01-01 ' . $shift->shift_end);
+        if ($e <= $s) $e += 86400;
+        return max(1, $e - $s);
+    }
+
     public function attendance_list(Request $request)
     {
         if($request->ajax()){
-            $data = EmployeeAttendance::with('attendance_status','employee')
+            $data = EmployeeAttendance::with('attendance_status','employee.shift')
                 ->select('hr_employee_attendances.id','hr_employee_attendances.employee_id', 'hr_employee_attendances.attendance_date','hr_employee_attendances.check_in','hr_employee_attendances.check_out','hr_employee_attendances.working_hours','hr_employee_attendances.attendance_status_id','hr_employee_attendances.productive_seconds','hr_employee_attendances.productive_percent');
 
             if($request->employee_ids) {
@@ -1248,10 +1258,17 @@ class AdminEmployeeController extends Controller
                     }
 
                     if ($secs <= 0) return '<span class="text-muted">—</span>';
+
+                    // Always show a % (compute from the employee's shift length if not stored)
+                    if ($pct === null) {
+                        $len = $this->shiftLengthSeconds(optional($row->employee)->shift);
+                        $pct = round(min(100, $secs / $len * 100), 2);
+                    }
+
                     $h = floor($secs / 3600);
                     $m = floor(($secs % 3600) / 60);
                     $human = ($h > 0 ? $h . 'h ' : '') . $m . 'm';
-                    $pctStr = $pct !== null ? ' (' . rtrim(rtrim((string) $pct, '0'), '.') . '%)' : '';
+                    $pctStr = ' (' . rtrim(rtrim((string) $pct, '0'), '.') . '%)';
                     return $human . $pctStr;
                 })
                 ->editColumn('working_hours', function($row) {

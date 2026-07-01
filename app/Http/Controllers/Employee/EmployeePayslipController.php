@@ -14,14 +14,21 @@ class EmployeePayslipController extends Controller
 
     public function index(Request $request)
     {
-
-        $months = collect(range(0, 11))->map(function ($i) {
-            $date = now()->subMonths($i);
-            return [
-                'value' => $date->format('Y-m'),
-                'label' => $date->format('F Y')
-            ];
-        });
+        // Only list the months this employee actually has payslips for, so the
+        // month filter always returns data (payrolls may be tagged to a month
+        // other than the current one).
+        $months = PayrollDetail::join('hr_payrolls', 'hr_payrolls.id', '=', 'hr_payroll_details.payroll_id')
+            ->where('hr_payroll_details.employee_id', auth('employee')->id())
+            ->whereNotNull('hr_payrolls.payroll_month')
+            ->distinct()
+            ->orderByDesc('hr_payrolls.payroll_month')
+            ->pluck('hr_payrolls.payroll_month')
+            ->map(function ($m) {
+                $label = $m;
+                try { $label = \Carbon\Carbon::createFromFormat('Y-m', $m)->format('F Y'); } catch (\Throwable $e) {}
+                return ['value' => $m, 'label' => $label];
+            })
+            ->values();
 
         return view('employee.payslip.index',compact('months'));
     }

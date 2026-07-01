@@ -37,6 +37,16 @@ class EmployeeAttendanceController extends Controller
             $agentId = (int) ($emp->agent_id ?? 0);
             $hasAAT  = \Illuminate\Support\Facades\Schema::hasTable('agent_active_times');
 
+            // Employee's shift length (overnight-safe) for productive % calculation
+            $shift = $emp->shift ?? null;
+            $shiftLen = 8 * 3600;
+            if ($shift && $shift->shift_start && $shift->shift_end) {
+                $s = strtotime('2000-01-01 ' . $shift->shift_start);
+                $e = strtotime('2000-01-01 ' . $shift->shift_end);
+                if ($e <= $s) $e += 86400;
+                $shiftLen = max(1, $e - $s);
+            }
+
             $data = EmployeeAttendance::with('attendance_status')
                 ->select('hr_employee_attendances.id', 'hr_employee_attendances.attendance_date','hr_employee_attendances.check_in','hr_employee_attendances.check_out','hr_employee_attendances.working_hours','hr_employee_attendances.attendance_status_id','hr_employee_attendances.productive_seconds','hr_employee_attendances.productive_percent')
                 ->where('hr_employee_attendances.employee_id',auth('employee')->id());
@@ -81,7 +91,7 @@ class EmployeeAttendanceController extends Controller
                     }
                     return '-';
                 })
-                ->addColumn('productive', function($row) use ($agentId, $hasAAT) {
+                ->addColumn('productive', function($row) use ($agentId, $hasAAT, $shiftLen) {
                     $secs = (int) ($row->productive_seconds ?? 0);
                     $pct  = $row->productive_percent;
                     if ($secs <= 0 && $hasAAT && $agentId) {
@@ -92,9 +102,12 @@ class EmployeeAttendanceController extends Controller
                         $pct = null;
                     }
                     if ($secs <= 0) return '<span class="text-muted">—</span>';
+                    if ($pct === null) {
+                        $pct = round(min(100, $secs / $shiftLen * 100), 2);
+                    }
                     $h = floor($secs / 3600); $m = floor(($secs % 3600) / 60);
                     $human = ($h > 0 ? $h . 'h ' : '') . $m . 'm';
-                    $pctStr = $pct !== null ? ' (' . rtrim(rtrim((string) $pct, '0'), '.') . '%)' : '';
+                    $pctStr = ' (' . rtrim(rtrim((string) $pct, '0'), '.') . '%)';
                     return $human . $pctStr;
                 })
                 ->editColumn('check_in', function($row) {

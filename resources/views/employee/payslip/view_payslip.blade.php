@@ -38,7 +38,7 @@
                     }
                     $__ph = intdiv($__prodSecs, 3600); $__pm = intdiv($__prodSecs % 3600, 60);
                 @endphp
-                <tr><th>Productive Time (this period)</th><td class="text-end">{{ $__ph }}h {{ $__pm }}m @if($__manual !== null)<span class="text-muted" style="font-size:11px;">(manual)</span>@endif</td></tr>
+                <tr><th>Productive Time (this period)</th><td class="text-end">{{ $__ph }}h {{ $__pm }}m</td></tr>
                 <tr>
                     <th>Net Salary</th>
                     <td id="netSalary" class="text-end"><strong>PKR {{ number_format($payrollDetail->net_salary, 2) }}</strong></td>

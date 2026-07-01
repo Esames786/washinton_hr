@@ -20,6 +20,7 @@ use App\Http\Controllers\EmployeeSettings\CurrencyRateController;
 use App\Http\Controllers\EmployeeSettings\EquipmentTypeController;
 use App\Http\Controllers\EmployeeEquipmentController;
 use App\Http\Controllers\EmployeeSettings\ProductivityRuleController;
+use App\Http\Controllers\EmployeeSettings\LeaveTypeController;
 use App\Http\Controllers\PettyCash\PettyCashMasterController;
 use App\Http\Controllers\PettyCash\PettyCashHeadController;
 use App\Http\Controllers\PettyCash\PettyCashTransactionController;
@@ -145,6 +146,10 @@ use App\Http\Controllers\Employee\EmployeeTicketMessageController;
                 // Productivity Rules (active-time → attendance weightage bands)
                 Route::get('productivity_rules/list', [ProductivityRuleController::class, 'list'])->name('productivity_rules.list');
                 Route::resource('productivity_rules', ProductivityRuleController::class)->except(['show', 'create', 'edit']);
+
+                // Leave Types (Sick / Casual / Annual… + Paid/Unpaid)
+                Route::get('leave_types/list', [LeaveTypeController::class, 'list'])->name('leave_types.list');
+                Route::resource('leave_types', LeaveTypeController::class)->except(['show', 'create', 'edit']);
 
 
                 Route::get('gratuity_settings/assign_roles_index/{id}',[AdminGratuitySettingController::class,'assign_roles_index'])
