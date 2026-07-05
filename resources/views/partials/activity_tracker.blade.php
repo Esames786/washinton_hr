@@ -57,16 +57,16 @@
                 var phaseEl = b.querySelector('.js-shift-phase'),
                     valEl   = b.querySelector('.js-shift-value'),
                     barEl   = b.querySelector('.js-shift-progress');
-                // #3 client request: always show TIME LEFT IN SHIFT (never "Starts in").
-                if (now < start) {
-                    // Shift hasn't started yet — the full shift is still remaining.
-                    if (phaseEl) phaseEl.textContent = 'Time left in shift';
-                    if (valEl) valEl.textContent = fmt((end - start) / 1000);
-                    if (barEl) barEl.style.width = '0%';
-                } else if (now < end) {
+                // #3/#1 client request: always show a LIVE "Time left in shift" countdown
+                // (never "Starts in", and never a frozen value). Counts down to the shift
+                // end every second so it never appears hung.
+                if (now < end) {
                     if (phaseEl) phaseEl.textContent = 'Time left in shift';
                     if (valEl) valEl.textContent = fmt((end - now) / 1000);
-                    if (barEl) barEl.style.width = Math.min(100, ((now - start) / (end - start)) * 100).toFixed(1) + '%';
+                    if (barEl) {
+                        var pct = now < start ? 0 : Math.min(100, ((now - start) / (end - start)) * 100);
+                        barEl.style.width = pct.toFixed(1) + '%';
+                    }
                 } else {
                     if (phaseEl) phaseEl.textContent = 'Shift ended';
                     if (valEl) valEl.textContent = '00:00:00';
