@@ -81,28 +81,30 @@ use App\Http\Controllers\Employee\EmployeeTicketMessageController;
                     ->except(['show']);
 
 
-                Route::get('employees/attendance_list',[AdminEmployeeController::class,'attendance_list'])->name('employees.attendance_list');
-                Route::get('employees/break_list',[AdminEmployeeController::class,'break_list'])->name('employees.break_list');
-                Route::get('employees/daily_activity_list',[AdminEmployeeController::class,'daily_activity_list'])->name('employees.daily_activity_list');
-                Route::get('employees/order_list',[AdminEmployeeController::class,'order_list'])->name('employees.order_list');
-                Route::get('employees/order/history/{id}',[AdminEmployeeController::class,'order_history'])->name('employees.order.history');
-                Route::get('employees/monthly_tax_list',[AdminEmployeeController::class,'monthly_tax_list'])->name('employees.monthly_tax_list');
+                // #8 (2026-07-03): user-facing URI segment renamed employees -> subcontractors.
+                // Route NAMES are intentionally kept as employees.* so every route('admin.employees.*') keeps resolving.
+                Route::get('subcontractors/attendance_list',[AdminEmployeeController::class,'attendance_list'])->name('employees.attendance_list');
+                Route::get('subcontractors/break_list',[AdminEmployeeController::class,'break_list'])->name('employees.break_list');
+                Route::get('subcontractors/daily_activity_list',[AdminEmployeeController::class,'daily_activity_list'])->name('employees.daily_activity_list');
+                Route::get('subcontractors/order_list',[AdminEmployeeController::class,'order_list'])->name('employees.order_list');
+                Route::get('subcontractors/order/history/{id}',[AdminEmployeeController::class,'order_history'])->name('employees.order.history');
+                Route::get('subcontractors/monthly_tax_list',[AdminEmployeeController::class,'monthly_tax_list'])->name('employees.monthly_tax_list');
 
 
-                Route::post('employees/change-status', [AdminEmployeeController::class, 'changeStatus'])->name('employees.change-status');
-                Route::post('employees/{employee}/contract', [AdminEmployeeController::class, 'saveContract'])->name('employees.save-contract');
-                Route::get('employees/{employee}/documents', [AdminEmployeeController::class, 'getDocuments'])->name('employees.documents');
-                Route::post('employees/documents/{document}/verify', [AdminEmployeeController::class, 'verify'])->name('employees.documents.verify');
-                Route::post('employees/documents/bulk-verify', [AdminEmployeeController::class, 'bulkVerify'])->name('employees.documents.bulk-verify');
-                Route::post('employees/attach_agent', [AdminEmployeeController::class, 'attach_agent'])->name('employees.attach_agent');
-                Route::resource('employees', AdminEmployeeController::class)->except(['show']);
-                Route::get('employees/show/{id}', [AdminEmployeeController::class, 'show'])->name('employees.show');
+                Route::post('subcontractors/change-status', [AdminEmployeeController::class, 'changeStatus'])->name('employees.change-status');
+                Route::post('subcontractors/{employee}/contract', [AdminEmployeeController::class, 'saveContract'])->name('employees.save-contract');
+                Route::get('subcontractors/{employee}/documents', [AdminEmployeeController::class, 'getDocuments'])->name('employees.documents');
+                Route::post('subcontractors/documents/{document}/verify', [AdminEmployeeController::class, 'verify'])->name('employees.documents.verify');
+                Route::post('subcontractors/documents/bulk-verify', [AdminEmployeeController::class, 'bulkVerify'])->name('employees.documents.bulk-verify');
+                Route::post('subcontractors/attach_agent', [AdminEmployeeController::class, 'attach_agent'])->name('employees.attach_agent');
+                Route::resource('subcontractors', AdminEmployeeController::class)->except(['show'])->names('employees');
+                Route::get('subcontractors/show/{id}', [AdminEmployeeController::class, 'show'])->name('employees.show');
 
-                // Employee Equipment Assignment
-                Route::get('employee-equipment/{employeeId}/list', [EmployeeEquipmentController::class, 'list'])->name('employee_equipment.list');
-                Route::post('employee-equipment', [EmployeeEquipmentController::class, 'store'])->name('employee_equipment.store');
-                Route::post('employee-equipment/{equipment}/return', [EmployeeEquipmentController::class, 'markReturned'])->name('employee_equipment.return');
-                Route::delete('employee-equipment/{equipment}', [EmployeeEquipmentController::class, 'destroy'])->name('employee_equipment.destroy');
+                // Employee Equipment Assignment (URI -> subcontractor-equipment, names kept)
+                Route::get('subcontractor-equipment/{employeeId}/list', [EmployeeEquipmentController::class, 'list'])->name('employee_equipment.list');
+                Route::post('subcontractor-equipment', [EmployeeEquipmentController::class, 'store'])->name('employee_equipment.store');
+                Route::post('subcontractor-equipment/{equipment}/return', [EmployeeEquipmentController::class, 'markReturned'])->name('employee_equipment.return');
+                Route::delete('subcontractor-equipment/{equipment}', [EmployeeEquipmentController::class, 'destroy'])->name('employee_equipment.destroy');
 
                 //Roles Route
                 Route::resource('roles', RoleController::class);
@@ -199,8 +201,8 @@ use App\Http\Controllers\Employee\EmployeeTicketMessageController;
                     Route::prefix('payslip')->name('payslip.')->group(function () {
                         Route::get('',[AdminPayslipController::class,'index'])->name('index');
                         Route::get('list',[AdminPayslipController::class,'list'])->name('list');
-                        Route::get('employee/{id}',[AdminPayslipController::class,'payslip_show'])->name('employee');
-                        Route::get('employee/{id}/download',[AdminPayslipController::class,'payslip_download'])->name('employee.download');
+                        Route::get('subcontractor/{id}',[AdminPayslipController::class,'payslip_show'])->name('employee');
+                        Route::get('subcontractor/{id}/download',[AdminPayslipController::class,'payslip_download'])->name('employee.download');
                         Route::get('{payroll_id}', [AdminPayslipController::class,'show'])->name('show'); // dynamic
                         Route::post('add_adjustment',[AdminPayslipController::class,'add_adjustment'])->name('add_adjustment');
 
@@ -264,14 +266,16 @@ use App\Http\Controllers\Employee\EmployeeTicketMessageController;
     });
 
 
-    Route::prefix('employee')->name('employee.')->group(function () {
+    // #8/#9 (2026-07-03): subcontractor portal — URI prefix renamed employee -> subcontractor.
+    // Route name prefix kept as 'employee.' so every route('employee.*') reference keeps resolving.
+    Route::prefix('subcontractor')->name('employee.')->group(function () {
 
         Route::post('screenshots', [\App\Http\Controllers\ScreenshotController::class, 'store'])
             ->name('screenshots.store');
 
         Route::middleware(['guest:employee'])->group(function () {
             Route::get('login', [EmployeeAuthController::class, 'login'])->name('login');
-            Route::post('employee_login', [EmployeeAuthController::class, 'employee_login'])->name('employee_login');
+            Route::post('login-submit', [EmployeeAuthController::class, 'employee_login'])->name('employee_login');
         });
 
         Route::middleware(['employee.auth'])->group(function (){
@@ -332,6 +336,10 @@ use App\Http\Controllers\Employee\EmployeeTicketMessageController;
         Route::post('/agent/login', [\App\Http\Controllers\Bridge\HrBridgeController::class, 'agentLogin']);
         Route::get('/sso/consume', [\App\Http\Controllers\Bridge\HrBridgeController::class, 'consume'])->name('bridge.hr.consume');
     });
+
+    // #8/#9 legacy redirect: activation emails already sent point at /employee/login.
+    // Keep them working after the prefix rename. Static path — no clash with /employee/sso/{token}.
+    Route::redirect('/employee/login', '/subcontractor/login');
 
     // DB-token SSO — no signed URL, no session issues
     Route::get('/employee/sso/{token}', [\App\Http\Controllers\Bridge\HrBridgeController::class, 'consumeToken'])

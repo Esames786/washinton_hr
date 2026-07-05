@@ -163,7 +163,7 @@ $(function () {
         tbody.html('<tr><td colspan="3" class="text-center">Loading...</td></tr>');
 
         $.ajax({
-            url: '/admin/employees/order/history/' + orderId,
+            url: '/admin/subcontractors/order/history/' + orderId,
             method: 'GET',
             success: function (data) {
                 if (data.length) {
