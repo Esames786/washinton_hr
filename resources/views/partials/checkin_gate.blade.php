@@ -7,8 +7,14 @@
     try {
         $__emp = auth('employee')->user();
         if ($__emp && (int) ($__emp->employee_status_id ?? 0) === 1 && !($__emp->nda_required ?? 0)) {
+            // Must match markAttendance()'s date logic EXACTLY: shift date is Asia/Karachi and
+            // anything before 6 AM still belongs to the previous day's (overnight) shift. Using a
+            // plain date('Y-m-d') here made the gate query a different day than the check-in wrote,
+            // so on a night shift after midnight the gate never cleared. (fix)
+            $__now   = \Carbon\Carbon::now('Asia/Karachi');
+            $__today = $__now->hour < 6 ? $__now->copy()->subDay()->toDateString() : $__now->toDateString();
             $__att = \App\Models\EmployeeAttendance::where('employee_id', $__emp->id)
-                ->whereDate('attendance_date', date('Y-m-d'))->first();
+                ->whereDate('attendance_date', $__today)->first();
             $__needCheckin = !($__att && $__att->check_in);
         }
     } catch (\Throwable $e) {}
