@@ -336,14 +336,24 @@ class EmployeeAttendanceController extends Controller
             ->orderByDesc('id')
             ->first();
 
-        // Agar milta nahi, tab overnight case check karo
-        if (!$attendanceToday) {
+        // Overnight case only: if there is NO row today, OR today's row is just an empty
+        // placeholder (the daily cron/absent row has check_in=NULL), fall back to yesterday's
+        // still-OPEN session (checked in, not yet checked out). Without this, a night-shift
+        // employee saw the empty cron row and the Check-Out button stayed disabled. Requiring
+        // check_in here makes sure we only pick a genuine open session. Scoped to overnight
+        // shifts so normal day-shift behaviour is unchanged.
+        $__isOvernightShift = strtotime($shift->shift_end) <= strtotime($shift->shift_start);
+        if ($__isOvernightShift && (!$attendanceToday || !$attendanceToday->check_in)) {
             $yesterday = $now->copy()->subDay()->toDateString();
-            $attendanceToday = EmployeeAttendance::where('employee_id', $employee->id)
+            $openYesterday = EmployeeAttendance::where('employee_id', $employee->id)
                 ->where('attendance_date', $yesterday)
+                ->whereNotNull('check_in')
                 ->whereNull('check_out')
                 ->orderByDesc('id')
                 ->first();
+            if ($openYesterday) {
+                $attendanceToday = $openYesterday;
+            }
         }
 
         // Base date

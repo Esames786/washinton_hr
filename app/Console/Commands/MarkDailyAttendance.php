@@ -42,7 +42,9 @@ class MarkDailyAttendance extends Command
      */
     public function handle()
     {
-        $now = Carbon::now();
+        // HR portal operates on Pakistan Standard Time (Asia/Karachi). Pin explicitly so the
+        // daily finalization + overnight (<6 AM) logic stays correct regardless of app/server tz.
+        $now = Carbon::now('Asia/Karachi');
         $today = $now->toDateString();
 
         try {
@@ -110,13 +112,19 @@ class MarkDailyAttendance extends Command
                 $statusId = null;
                 $ticket_id =null;
 
+                // The holiday / leave / weekend checks must use the SHIFT date ($shiftBaseDate),
+                // not the calendar $today. For an overnight shift finalized after midnight these
+                // differ by a day, which previously mis-classified a night-shift worker's
+                // leave/holiday/weekend (e.g. marked Absent instead of Leave).
+                $checkDate = $shiftBaseDate;
+
                 // 1) Check Holiday
-                $holiday = Holiday::where(function ($q) use ($today) {
-                    $q->whereDate('holiday_date', $today)
-                        ->orWhere(function ($q2) use ($today) {
+                $holiday = Holiday::where(function ($q) use ($checkDate) {
+                    $q->whereDate('holiday_date', $checkDate)
+                        ->orWhere(function ($q2) use ($checkDate) {
                             $q2->where('is_recurring', 1)
-                                ->whereMonth('month', Carbon::parse($today)->month)
-                                ->whereDay('day', Carbon::parse($today)->day);
+                                ->whereMonth('month', Carbon::parse($checkDate)->month)
+                                ->whereDay('day', Carbon::parse($checkDate)->day);
                         });
                 })->where('status', 1)->first();
 
@@ -138,8 +146,8 @@ class MarkDailyAttendance extends Command
                 if (!$statusId) {
                     $leave = EmployeeLeave::where('employee_id', $employee->id)
                         ->where('status', 'approved')
-                        ->whereDate('start_date', '<=', $today)
-                        ->whereDate('end_date', '>=', $today)
+                        ->whereDate('start_date', '<=', $checkDate)
+                        ->whereDate('end_date', '>=', $checkDate)
                         ->first();
 
                     if ($leave) {
@@ -150,7 +158,7 @@ class MarkDailyAttendance extends Command
 
                 // 3) Check Working Day
                 if (!$statusId) {
-                    $dayName = Carbon::parse($today)->format('l');
+                    $dayName = Carbon::parse($checkDate)->format('l');
 
                     $workingDay = EmployeeWorkingDay::where('employee_id', $employee->id)
                         ->where('day_of_week', $dayName)

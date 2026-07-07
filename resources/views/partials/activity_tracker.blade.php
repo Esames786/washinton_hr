@@ -38,9 +38,16 @@
         var banners = document.querySelectorAll('.js-shift-banner');
         if (!banners.length) return;
 
+        // HR portal runs on Pakistan Standard Time (Asia/Karachi). The shift times are stored
+        // in PST, so the countdown must be evaluated in PST too — NOT the viewer's browser
+        // timezone. This returns "now" as a Date whose wall-clock fields (getHours etc.) reflect
+        // Karachi time regardless of where the user's computer is set.
+        function karachiNow() {
+            return new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Karachi' }));
+        }
         function parseToday(hhmm) {
             var p = (hhmm || '00:00').split(':');
-            var d = new Date();
+            var d = karachiNow(); // anchor to the Karachi (PST) calendar day
             d.setHours(parseInt(p[0], 10) || 0, parseInt(p[1], 10) || 0, 0, 0);
             return d;
         }
@@ -50,19 +57,28 @@
             return pad(Math.floor(secs / 3600)) + ':' + pad(Math.floor((secs % 3600) / 60)) + ':' + pad(secs % 60);
         }
         function tick() {
-            var now = new Date();
+            var now = karachiNow();
             banners.forEach(function (b) {
                 var start = parseToday(b.dataset.start), end = parseToday(b.dataset.end);
-                if (end <= start) end = new Date(end.getTime() + 86400000); // overnight
+                // Resolve the correct overnight window relative to "now": if we're before the
+                // shift's end-time in the early morning, the shift actually STARTED yesterday;
+                // otherwise it ENDS tomorrow. (Anchoring both to "today" mislabelled the window.)
+                if (end <= start) {
+                    if (now < end) { start = new Date(start.getTime() - 86400000); }
+                    else           { end   = new Date(end.getTime()   + 86400000); }
+                }
                 var phaseEl = b.querySelector('.js-shift-phase'),
                     valEl   = b.querySelector('.js-shift-value'),
                     barEl   = b.querySelector('.js-shift-progress');
                 // #3/#1 client request: always show a LIVE "Time left in shift" countdown
-                // (never "Starts in", and never a frozen value). Counts down to the shift
-                // end every second so it never appears hung.
+                // (never "Starts in", and never a frozen value), so it never appears hung.
                 if (now < end) {
                     if (phaseEl) phaseEl.textContent = 'Time left in shift';
-                    if (valEl) valEl.textContent = fmt((end - now) / 1000);
+                    // Before the shift starts, "time left in shift" is the full shift DURATION —
+                    // not (end - now), which used to include the pre-shift gap and showed >8h
+                    // (e.g. ~14h at 2 PM before a 20:00-04:00 shift).
+                    var secsLeft = (now < start ? (end - start) : (end - now)) / 1000;
+                    if (valEl) valEl.textContent = fmt(secsLeft);
                     if (barEl) {
                         var pct = now < start ? 0 : Math.min(100, ((now - start) / (end - start)) * 100);
                         barEl.style.width = pct.toFixed(1) + '%';

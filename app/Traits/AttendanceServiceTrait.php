@@ -47,7 +47,8 @@ trait AttendanceServiceTrait
             $yesterday = date('Y-m-d', strtotime($attendance_date . ' -1 day'));
             $attendanceYesterday = EmployeeAttendance::where('employee_id', $employee_id)
                 ->where('attendance_date', $yesterday)
-                ->whereNull('check_out')
+                ->whereNotNull('check_in') // must be a REAL open session — the daily cron/absent
+                ->whereNull('check_out')   // row has check_in=NULL and would fail the checkout guard
                 ->first();
             if ($attendanceYesterday && $check_out_time) {
                 $attendance = $attendanceYesterday; // Use yesterday's record
@@ -156,8 +157,11 @@ trait AttendanceServiceTrait
         $shiftStart = strtotime($attendance_date . ' ' . $shift->shift_start);
         $shiftEnd   = strtotime($attendance_date . ' ' . $shift->shift_end);
 
-        // Overnight shift alignment
-        if ($shiftEnd <= $shiftStart) {
+        // Overnight shift alignment. Capture the flag BEFORE mutating $shiftEnd — the loop below
+        // needs it, and re-checking "$shiftEnd <= $shiftStart" after the +24h was always false
+        // (a dead branch that left overnight rule times unaligned).
+        $isOvernight = ($shiftEnd <= $shiftStart);
+        if ($isOvernight) {
             $shiftEnd += 24 * 3600;
             if ($timestamp < $shiftStart) $timestamp += 24 * 3600;
         }
@@ -173,13 +177,15 @@ trait AttendanceServiceTrait
         for ($i = 0; $i < count($timeRules); $i++) {
             $currentRule = $timeRules[$i];
             $currentTime = strtotime($attendance_date . ' ' . $currentRule->entry_time);
-            if ($shiftEnd <= $shiftStart) $currentTime += 24 * 3600;
+            // Overnight: a rule time that falls after midnight (before shift start) is on the next day.
+            if ($isOvernight && $currentTime < $shiftStart) $currentTime += 24 * 3600;
 
-            $nextTime = $i + 1 < count($timeRules)
-                ? strtotime($attendance_date . ' ' . $timeRules[$i + 1]->entry_time)
-                : $shiftEnd;
-
-            if ($shiftEnd <= $shiftStart && $i + 1 < count($timeRules)) $nextTime += 24 * 3600;
+            if ($i + 1 < count($timeRules)) {
+                $nextTime = strtotime($attendance_date . ' ' . $timeRules[$i + 1]->entry_time);
+                if ($isOvernight && $nextTime < $shiftStart) $nextTime += 24 * 3600;
+            } else {
+                $nextTime = $shiftEnd;
+            }
 
             if ($timestamp >= $currentTime && $timestamp < $nextTime) {
                 return [
