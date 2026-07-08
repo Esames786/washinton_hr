@@ -1,5 +1,5 @@
 @extends('layout.master')
-@section('pageName', 'Employee Profile')
+@section('pageName', 'Subcontractor Profile')
 
 @section('content')
     <div class="row g-4">

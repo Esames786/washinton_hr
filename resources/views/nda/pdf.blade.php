@@ -100,7 +100,7 @@
 
 <div class="sign-section">
     <div class="sign-block">
-        <div class="label">Employee Details</div>
+        <div class="label">Subcontractor Details</div>
         <div class="sign-row">
             <span class="field-label">Employee Name:</span>
             <span class="field-value">{{ $employeeName }}</span>

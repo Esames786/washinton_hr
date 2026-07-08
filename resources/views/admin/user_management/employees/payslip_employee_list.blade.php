@@ -27,7 +27,7 @@
 
 {{--                --}}{{-- Employee Select --}}
 {{--                <div class="col-md-6">--}}
-{{--                    <label class="form-label fw-semibold">Employees</label>--}}
+{{--                    <label class="form-label fw-semibold">Subcontractors</label>--}}
 {{--                    <select name="employee_ids[]" id="employee_ids" multiple class="form-select">--}}
 {{--                        @foreach($employees as $employee)--}}
 {{--                            <option value="{{ $employee->id }}">{{ $employee->full_name }}</option>--}}
@@ -60,7 +60,7 @@
            @if($search_true)
                 <div class="col-md-1"></div>
                 <div class="col-md-4 col-6 form-select-2">
-                    <label class="form-label fw-semibold">Employees</label>
+                    <label class="form-label fw-semibold">Subcontractors</label>
                     <select name="employee_ids[]" id="employee_ids" multiple class="form-select">
                         @foreach($employees as $employee)
                             <option value="{{ $employee->id }}">{{ $employee->full_name }}</option>
@@ -100,7 +100,7 @@
 {{--                        </th>--}}
                         <th>Employee ID</th>
                         <th>Name</th>
-                        <th>Employee Code</th>
+                        <th>Subcontractor Code</th>
                         <th>CNIC</th>
                         <th>Department</th>
                         <th>Designation</th>

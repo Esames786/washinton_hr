@@ -29,7 +29,7 @@
 {{--        <div class="card-header border-bottom bg-base py-16 px-24 d-flex align-items-center justify-content-between">--}}
 {{--            <h5 class="mb-0">Tickets</h5>--}}
 {{--            <div class="d-flex gap-2">--}}
-{{--                <a href="{{route('admin.employees.create')}}" class="btn btn-primary btn-sm">Add Employee</a>--}}
+{{--                <a href="{{route('admin.employees.create')}}" class="btn btn-primary btn-sm">Add Subcontractor</a>--}}
 {{--            </div>--}}
 
 {{--        </div>--}}
@@ -39,7 +39,7 @@
                     <thead>
                     <tr>
                         <th>Ticket#</th>
-                        <th>Employee</th>
+                        <th>Subcontractor</th>
                         <th>Type</th>
                         <th>Subject</th>
                         <th>Description</th>
@@ -69,7 +69,7 @@
 
 {{--                        <div class="row pb-8">--}}
 {{--                            <div class="col-6">--}}
-{{--                                <label>Employee</label>--}}
+{{--                                <label>Subcontractor</label>--}}
 {{--                                <select name="employee_id" id="employee_id" class="form-select" required>--}}
 {{--                                    <option value="">Select Employee</option>--}}
 {{--                                    @foreach($employees as $emp)--}}

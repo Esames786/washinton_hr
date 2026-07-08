@@ -409,8 +409,9 @@ class AdminEmployeeController extends Controller
             'employee_status_id'    => 'nullable|integer|exists:hr_employee_statuses,id',
             'role_id'               => 'required|integer',
             'shift_id'              => 'required|integer',
-            'gratuity_id'           => 'nullable|required_if:account_type_id,1,3|integer',
-            'valid_gratuity_date'   => 'nullable|required_if:account_type_id,1,3|date',
+            // #7/#8: Work From Home (shift 6) does NOT require Gratuity or Leaves detail.
+            'gratuity_id'           => (int) $request->shift_id === 6 ? 'nullable|integer' : 'nullable|required_if:account_type_id,1,3|integer',
+            'valid_gratuity_date'   => (int) $request->shift_id === 6 ? 'nullable|date' : 'nullable|required_if:account_type_id,1,3|date',
             'account_type_id'       => 'required|integer',
             'commission_id'         => 'required_if:account_type_id,2,3|integer',
             'joining_date'          => 'required|date',
@@ -446,7 +447,7 @@ class AdminEmployeeController extends Controller
             'working_days'          => 'required|array|min:1',
             'working_days.*'        => 'in:0,1',
 
-            'leaves' => 'required|array',
+            'leaves' => (int) $request->shift_id === 6 ? 'nullable|array' : 'required|array',
             'leaves.*.leave_type_id' => 'required|exists:hr_leave_types,id',
             'leaves.*.assigned_quota' => 'required|integer|min:0',
             'leaves.*.valid_from' => 'required|date',
@@ -740,8 +741,9 @@ class AdminEmployeeController extends Controller
             'employee_status_id'    => 'required|integer',
             'role_id'               => 'required|integer',
             'shift_id'              => 'required|integer',
-            'gratuity_id'           => 'nullable|required_if:account_type_id,1,3|integer',
-            'valid_gratuity_date'   => 'nullable|required_if:account_type_id,1,3|date',
+            // #7/#8: Work From Home (shift 6) does NOT require Gratuity or Leaves detail.
+            'gratuity_id'           => (int) $request->shift_id === 6 ? 'nullable|integer' : 'nullable|required_if:account_type_id,1,3|integer',
+            'valid_gratuity_date'   => (int) $request->shift_id === 6 ? 'nullable|date' : 'nullable|required_if:account_type_id,1,3|date',
             'account_type_id'       => 'required|integer',
             'commission_id'         => 'required_if:account_type_id,2,3|integer',
             'joining_date'          => 'required|date',
@@ -776,7 +778,7 @@ class AdminEmployeeController extends Controller
             'working_days'          => 'required|array|min:1',
             'working_days.*'        => 'in:0,1',
 
-            'leaves' => 'required|array',
+            'leaves' => (int) $request->shift_id === 6 ? 'nullable|array' : 'required|array',
             'leaves.*.leave_type_id' => 'required|exists:hr_leave_types,id',
             'leaves.*.assigned_quota' => 'required|integer|min:0',
             'leaves.*.valid_from' => 'required|date',

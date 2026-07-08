@@ -1,5 +1,5 @@
 @extends('layout.master')
-@section('pageName', 'Add Employee')
+@section('pageName', 'Add Subcontractor')
 
 @push('cssLinks')
 <style>
@@ -199,9 +199,9 @@
                         <h6 class="text-md text-neutral-500">Employment Details</h6>
                         <div class="row gy-2">
                             <div class="col-6">
-                                <label class="form-label">Employee Code*</label>
+                                <label class="form-label">Subcontractor Code*</label>
                                 <div class="position-relative">
-                                    <input type="text" name="employee_code" class="form-control wizard-required" value="{{ old('employee_code') }}" placeholder="Enter Employee Code" required>
+                                    <input type="text" name="employee_code" class="form-control wizard-required" value="{{ old('employee_code') }}" placeholder="Enter Subcontractor Code" required>
                                     <div class="wizard-form-error"></div>
                                 </div>
                                 <span class="custom-validation text-danger small px-2"></span>
@@ -387,8 +387,10 @@
                     </fieldset>
 
                     {{-- Step 3: Employee Leaves --}}
-                    <fieldset class="wizard-fieldset">
+                    <fieldset class="wizard-fieldset" id="wfhLeavesStep">
                         <h6 class="text-md text-neutral-500">Leave Assignment</h6>
+                        {{-- #7/#8: Work From Home doesn't need leaves --}}
+                        <div id="wfhLeavesNote" class="alert alert-info" style="display:none;">Leaves are not applicable for Work From Home subcontractors.</div>
                         <div class="row gy-2">
 
                             <div class="col-12">
@@ -1051,7 +1053,34 @@
 
                 $('#shift_start').val(startTime);
                 $('#shift_end').val(endTime);
+                applyWfhToggle();
             });
+
+            // #7/#8: Work From Home (shift id 6) doesn't require Gratuity or Leaves — hide + un-require.
+            // Captures each field's ORIGINAL required/wizard-required state once, so non-WFH shifts
+            // are restored EXACTLY as they were (no behaviour change for other subcontractors).
+            function applyWfhToggle() {
+                var isWfh = String($('#shift_id').val()) === '6';
+                var $fields = $('#gratuity_id, input[name="valid_gratuity_date"], ' +
+                    '#wfhLeavesStep input[name*="[assigned_quota]"], #wfhLeavesStep input[name*="[valid_from]"], #wfhLeavesStep input[name*="[valid_to]"]');
+                $fields.each(function () {
+                    var $f = $(this);
+                    if ($f.data('wfhOrigReq') === undefined) {
+                        $f.data('wfhOrigReq', $f.prop('required'));
+                        $f.data('wfhOrigWiz', $f.hasClass('wizard-required'));
+                    }
+                    if (isWfh) {
+                        $f.prop('required', false).removeClass('wizard-required');
+                    } else {
+                        $f.prop('required', $f.data('wfhOrigReq'));
+                        $f.data('wfhOrigWiz') ? $f.addClass('wizard-required') : $f.removeClass('wizard-required');
+                    }
+                });
+                $('#gratuity_id, input[name="valid_gratuity_date"]').closest('.col-6').toggle(!isWfh);
+                $('#wfhLeavesStep .table-responsive').toggle(!isWfh);
+                $('#wfhLeavesNote').toggle(isWfh);
+            }
+            applyWfhToggle();
         });
         // =============================== Wizard Step Js End ================================
 

@@ -17,7 +17,7 @@
     <div class="card h-100">
         <div class="card-header border-bottom bg-base py-16 px-24 d-flex flex-wrap align-items-end gap-3">
             <div class="col-md-4 col-6 form-select-2">
-                <label class="form-label fw-semibold">Employees</label>
+                <label class="form-label fw-semibold">Subcontractors</label>
                 <select name="employee_ids[]" id="employee_ids" multiple class="form-select">
                     @foreach($employees as $employee)
                         <option value="{{ $employee->id }}">{{ $employee->full_name }}</option>

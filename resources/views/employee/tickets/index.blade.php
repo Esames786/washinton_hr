@@ -16,7 +16,7 @@
                 <tr>
                     <th>Ticket#</th>
                     <th>Type</th>
-                    <th>Employee</th>
+                    <th>Subcontractor</th>
                     <th>Status</th>
                     <th>Created At</th>
                     <th class="text-center">Action</th>

@@ -1,5 +1,5 @@
 @extends('layout.master')
-@section('pageName', 'Employee Profile')
+@section('pageName', 'Subcontractor Profile')
 
 @section('content')
     <div class="dashboard-main-body">
@@ -78,7 +78,7 @@
                         {{-- Profile Info --}}
                         <div class="tab-pane fade show active" id="info" role="tabpanel">
                             <ul class="list-group list-group-flush small">
-                                <li class="list-group-item"><strong>Employee Code:</strong> {{ $employee->employee_code ?? '-' }}</li>
+                                <li class="list-group-item"><strong>Subcontractor Code:</strong> {{ $employee->employee_code ?? '-' }}</li>
                                 <li class="list-group-item"><strong>Joining Date:</strong> {{ $employee->joining_date ?? '-' }}</li>
                                 <li class="list-group-item"><strong>Employment Type:</strong> {{ optional($employee->employment_type)->name ?? '-' }}</li>
                                 <li class="list-group-item"><strong>Status:</strong> {{ optional($employee->employee_status)->name ?? '-' }}</li>

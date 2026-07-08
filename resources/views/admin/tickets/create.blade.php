@@ -10,7 +10,7 @@
                 @csrf
                 <div class="row pb-3">
                     <div class="col-6">
-                        <label>Employee</label>
+                        <label>Subcontractor</label>
                         <select name="employee_id" class="form-select" required>
                             <option value="">Select Employee</option>
                             @foreach($employees as $emp)

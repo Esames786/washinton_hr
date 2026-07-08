@@ -9,6 +9,19 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     @include('partials.css')
     @stack('cssLinks')
+    {{-- #4 Responsive (Batch 5): responsive layer for HR portal tables/modals on small screens. --}}
+    <style>
+        img { max-width: 100%; height: auto; }
+        @media (max-width: 991.98px) {
+            body { overflow-x: hidden; }
+            .table-responsive { overflow-x: auto !important; -webkit-overflow-scrolling: touch; }
+            .modal-dialog { max-width: 96% !important; margin: 0.5rem auto !important; }
+        }
+        @media (max-width: 767.98px) {
+            .card-body { padding: 12px !important; }
+            .d-flex.justify-content-between { flex-wrap: wrap; gap: 6px; }
+        }
+    </style>
 </head>
 
 <body>

@@ -68,12 +68,12 @@
         <div class="card-header border-bottom bg-base py-16 px-24 d-flex flex-wrap align-items-end gap-3">
                     <div class="col-md-12 col-12">
                         <div class="d-flex gap-2 justify-content-end">
-                            <a href="{{route('admin.employees.create')}}" class="btn btn-primary btn-sm">Add Employee</a>
+                            <a href="{{route('admin.employees.create')}}" class="btn btn-primary btn-sm">Add Subcontractor</a>
                         </div>
                     </div>
                      <div class="col-md-1" style="width: 4.333333%!important"></div>
                     <div class="col-md-3 col-6 form-select-2">
-                        <label class="form-label fw-semibold">Employees</label>
+                        <label class="form-label fw-semibold">Subcontractors</label>
                         <select name="employee_ids[]" id="employee_ids" multiple class="form-select">
                             @foreach($employees as $employee)
                                 <option value="{{ $employee->id }}">{{ $employee->full_name }}</option>
@@ -121,7 +121,7 @@
                         <th>Employee ID</th>
                         <th>Name</th>
                         <th>Email</th>
-                        <th>Employee Code</th>
+                        <th>Subcontractor Code</th>
                         <th>CNIC</th>
                         <th>Agent ID</th>
                         <th>Agent Name</th>

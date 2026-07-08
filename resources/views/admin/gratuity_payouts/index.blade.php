@@ -32,7 +32,7 @@
                 <thead>
                 <tr>
                     <th>#</th>
-                    <th>Employee</th>
+                    <th>Subcontractor</th>
                     <th>Payout Date</th>
                     <th>Total Balance</th>
                     <th>Paid Amount</th>
@@ -59,7 +59,7 @@
 
                         <div class="row pb-8">
                             <div class="col-12 mb-3">
-                                <label>Employees</label>
+                                <label>Subcontractors</label>
                                 <select name="employee_id" id="employee_id" class="form-control">
                                     <option value="">-- Select Employee --</option>
                                     @foreach($employees as $employee)

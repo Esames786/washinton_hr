@@ -1,6 +1,6 @@
 @extends('layout.master')
 
-@section('pageName','Employee Dashboard')
+@section('pageName','Subcontractor Dashboard')
 @push('cssLinks')
     <style>
         .clickable-card,.clickable-card-break { cursor: pointer; transition: transform 0.2s; }

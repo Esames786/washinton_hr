@@ -32,7 +32,7 @@
                 <thead>
                 <tr>
                     <th>#</th>
-                    <th>Employee</th>
+                    <th>Subcontractor</th>
                     <th>Payout Date</th>
                     <th>Total Balance</th>
                     <th>Paid Amount</th>

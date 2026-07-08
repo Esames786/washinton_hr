@@ -54,7 +54,7 @@
                             <label>User Type</label>
                             <select name="user_type" id="user_type" class="form-control" required>
                                 <option value="admin">Admin</option>
-                                <option value="employee">Employee</option>
+                                <option value="employee">Subcontractor</option>
                             </select>
                         </div>
                     </div>

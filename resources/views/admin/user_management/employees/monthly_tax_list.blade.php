@@ -29,7 +29,7 @@
         <div class="card-header border-bottom bg-base py-16 px-24 d-flex flex-wrap align-items-end gap-3">
             <div class="col-md-1 col-6 "></div>
             <div class="col-md-4 col-6 form-select-2">
-                <label class="form-label fw-semibold">Employees</label>
+                <label class="form-label fw-semibold">Subcontractors</label>
                 <select name="employee_ids[]" id="employee_ids" multiple class="form-select">
                     @foreach($employees as $employee)
                         <option value="{{ $employee->id }}">{{ $employee->full_name }}</option>
@@ -70,7 +70,7 @@
                 <table class="table bordered-table sm-table mb-0 table-text-center" id="taxTable">
                     <thead>
                     <tr>
-                        <th>Employee</th>
+                        <th>Subcontractor</th>
                         <th>Month-Year</th>
                         <th>Tax Amount</th>
                     </tr>

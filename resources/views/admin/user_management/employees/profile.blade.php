@@ -1,5 +1,5 @@
 @extends('layout.master')
-@section('pageName', 'Employee Profile')
+@section('pageName', 'Subcontractor Profile')
 
 {{-- Extra CSS --}}
 @push('cssLinks')
@@ -127,7 +127,7 @@
                             @php
                                 $rateSymbol = ($employee?->tax_slab?->type ?? '') == 'percentage' ? '%' : '';
                             @endphp
-                            <div class="col-6"><strong>Employee Code:</strong> {{ $employee->employee_code ?? '-' }}</div>
+                            <div class="col-6"><strong>Subcontractor Code:</strong> {{ $employee->employee_code ?? '-' }}</div>
                             <div class="col-6"><strong>Joining Date:</strong> {{ $employee->joining_date ?? '-' }}</div>
                             <div class="col-6"><strong>Employment:</strong> {{ optional($employee->employment_type)->name ?? '-' }}</div>
                             <div class="col-6"><strong>Status:</strong> {{ optional($employee->employee_status)->name ?? '-' }}</div>

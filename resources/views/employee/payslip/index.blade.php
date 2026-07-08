@@ -45,7 +45,7 @@
                     <tr>
                         <th>Employee ID</th>
                         <th>Name</th>
-                        <th>Employee Code</th>
+                        <th>Subcontractor Code</th>
                         <th>CNIC</th>
                         <th>Department</th>
                         <th>Designation</th>
