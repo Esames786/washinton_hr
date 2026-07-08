@@ -75,11 +75,15 @@ class AdminPayslipController extends Controller
                 );
             if($request->payroll_id){
                 $payslip_employee->where('hr_payrolls.id', $request->payroll_id);
-            } elseif (!empty($request->employee_ids)) {
-                $payslip_employee->whereIn('hr_payroll_details.employee_id', $request->employee_ids);
-            }
-            else {
-                $payslip_employee ->where('hr_payrolls.payroll_month',$request->payroll_month);
+            } else {
+                // Employee and month filters must BOTH apply. Previously this was an elseif chain,
+                // so selecting an employee dropped the month filter and showed every month's payslip.
+                if (!empty($request->employee_ids)) {
+                    $payslip_employee->whereIn('hr_payroll_details.employee_id', $request->employee_ids);
+                }
+                if (!empty($request->payroll_month)) {
+                    $payslip_employee->where('hr_payrolls.payroll_month', $request->payroll_month);
+                }
             }
 
             return DataTables::of($payslip_employee)
