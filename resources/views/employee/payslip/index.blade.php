@@ -43,7 +43,7 @@
                 <table class="table bordered-table sm-table mb-0 table-text-center" id="employeesTable">
                     <thead>
                     <tr>
-                        <th>Employee ID</th>
+                        <th>Subcontractor ID</th>
                         <th>Name</th>
                         <th>Subcontractor Code</th>
                         <th>CNIC</th>
@@ -68,7 +68,7 @@
         $(document).ready(function() {
 
             $('#employee_ids').select2({
-                placeholder: "-- Select Employee --",
+                placeholder: "-- Select Subcontractor --",
                 allowClear: true,
                 width: '100%' // force full width
             });

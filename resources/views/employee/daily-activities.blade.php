@@ -1,6 +1,6 @@
 @extends('layout.master')
 
-@section('pageName', 'Employee Daily Activities')
+@section('pageName', 'Subcontractor Daily Activities')
 
 @push('cssLinks')
     <style>
@@ -20,7 +20,7 @@
 
     <div class="card h-100">
         <div class="card-header">
-            <h4 class="card-title">Employee Daily Activities</h4>
+            <h4 class="card-title">Subcontractor Daily Activities</h4>
             <button class="btn btn-primary btn-sm float-end" id="add_btn">
                 <i class="bi bi-plus"></i> Add New
             </button>

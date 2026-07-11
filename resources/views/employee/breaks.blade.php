@@ -25,7 +25,7 @@
             <table class="table table-bordered table-striped" id="EmployeeBreakTable" style="width: 100%;">
                 <thead>
                 <tr>
-                    <th>Employee Name</th>
+                    <th>Subcontractor Name</th>
                     <th>Break Start</th>
                     <th>Break End</th>
                     <th>Break Duration</th>

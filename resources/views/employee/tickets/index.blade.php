@@ -1,5 +1,5 @@
 @extends('layout.master')
-@section('pageName', 'Employee Tickets')
+@section('pageName', 'Subcontractor Tickets')
 
 @section('content')
     @include('partials.alerts')
