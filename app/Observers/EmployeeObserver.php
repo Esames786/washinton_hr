@@ -91,6 +91,8 @@ class EmployeeObserver
             'phone'       => $employee->phone ?? '',
             'role_id'     => $roleId,
             'role_name'   => $roleName,
+            // B6: pass city so the agent side can auto-assign the matching city panel
+            'city'        => $employee->city ?? '',
         ];
 
         try {
