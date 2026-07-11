@@ -1252,11 +1252,22 @@
             $(document).on('click', '.review-edit', function () {
                 gotoWizardStep(parseInt($(this).data('step'), 10));
             });
-            // Populate the summary right after navigation lands on the Review step.
-            $(document).on('click', '.form-wizard-next-btn', function () {
+
+            // Populate the summary the instant the Review step becomes visible.
+            // MutationObserver is timing-independent (doesn't rely on the click order
+            // of the wizard's own next-button handler); the click handler is a fallback.
+            (function () {
+                var reviewEl = document.getElementById('reviewStep');
+                if (reviewEl && window.MutationObserver) {
+                    new MutationObserver(function () {
+                        if (reviewEl.classList.contains('show')) populateReview();
+                    }).observe(reviewEl, { attributes: true, attributeFilter: ['class'] });
+                }
+            })();
+            $(document).on('click', '.form-wizard-next-btn, .form-wizard-previous-btn', function () {
                 setTimeout(function () {
                     if ($('#reviewStep').hasClass('show')) populateReview();
-                }, 60);
+                }, 80);
             });
         });
         // =============================== Wizard Step Js End ================================
