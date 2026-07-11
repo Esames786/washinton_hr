@@ -258,7 +258,7 @@
 
                 processing: true,
                 serverSide: true,
-                // order: [],
+                order: [[0, 'desc']], // B6: newest employee id first
                 // [1, 'asc']
                 searching: true,
                 rowId: 'id',

@@ -394,6 +394,10 @@ class AdminEmployeeController extends Controller
     public function store(Request $request)
     {
 
+        // B6: Gratuity & Leaves are optional per subcontractor (in addition to WFH shift 6).
+        // The form sends gratuity_enabled / assign_leaves = 0 when the admin turns them off.
+        $gratuityOff = (int) $request->shift_id === 6 || (string) $request->input('gratuity_enabled', '1') === '0';
+        $leavesOff   = (int) $request->shift_id === 6 || (string) $request->input('assign_leaves', '1') === '0';
 
         // Validation
         $request->validate([
@@ -410,8 +414,8 @@ class AdminEmployeeController extends Controller
             'role_id'               => 'required|integer',
             'shift_id'              => 'required|integer',
             // #7/#8: Work From Home (shift 6) does NOT require Gratuity or Leaves detail.
-            'gratuity_id'           => (int) $request->shift_id === 6 ? 'nullable|integer' : 'nullable|required_if:account_type_id,1,3|integer',
-            'valid_gratuity_date'   => (int) $request->shift_id === 6 ? 'nullable|date' : 'nullable|required_if:account_type_id,1,3|date',
+            'gratuity_id'           => $gratuityOff ? 'nullable|integer' : 'nullable|required_if:account_type_id,1,3|integer',
+            'valid_gratuity_date'   => $gratuityOff ? 'nullable|date' : 'nullable|required_if:account_type_id,1,3|date',
             'account_type_id'       => 'required|integer',
             'commission_id'         => 'required_if:account_type_id,2,3|integer',
             'joining_date'          => 'required|date',
@@ -447,7 +451,7 @@ class AdminEmployeeController extends Controller
             'working_days'          => 'required|array|min:1',
             'working_days.*'        => 'in:0,1',
 
-            'leaves' => (int) $request->shift_id === 6 ? 'nullable|array' : 'required|array',
+            'leaves' => $leavesOff ? 'nullable|array' : 'required|array',
             'leaves.*.leave_type_id' => 'required|exists:hr_leave_types,id',
             'leaves.*.assigned_quota' => 'required|integer|min:0',
             'leaves.*.valid_from' => 'required|date',
@@ -465,6 +469,11 @@ class AdminEmployeeController extends Controller
                     'gratuity_id' => null,
                     'valid_gratuity_date' => null,
                 ]);
+            }
+
+            // B6: gratuity toggled off (or WFH) → never persist a stale gratuity value.
+            if ($gratuityOff) {
+                $request->merge(['gratuity_id' => null, 'valid_gratuity_date' => null]);
             }
             $time_stamp = now();
 
@@ -730,6 +739,10 @@ class AdminEmployeeController extends Controller
      */
     public function update(Request $request, $id)
     {
+        // B6: Gratuity & Leaves are optional per subcontractor (in addition to WFH shift 6).
+        $gratuityOff = (int) $request->shift_id === 6 || (string) $request->input('gratuity_enabled', '1') === '0';
+        $leavesOff   = (int) $request->shift_id === 6 || (string) $request->input('assign_leaves', '1') === '0';
+
         // Validation
         $request->validate([
             'full_name'            => 'required|string|max:255',
@@ -742,8 +755,8 @@ class AdminEmployeeController extends Controller
             'role_id'               => 'required|integer',
             'shift_id'              => 'required|integer',
             // #7/#8: Work From Home (shift 6) does NOT require Gratuity or Leaves detail.
-            'gratuity_id'           => (int) $request->shift_id === 6 ? 'nullable|integer' : 'nullable|required_if:account_type_id,1,3|integer',
-            'valid_gratuity_date'   => (int) $request->shift_id === 6 ? 'nullable|date' : 'nullable|required_if:account_type_id,1,3|date',
+            'gratuity_id'           => $gratuityOff ? 'nullable|integer' : 'nullable|required_if:account_type_id,1,3|integer',
+            'valid_gratuity_date'   => $gratuityOff ? 'nullable|date' : 'nullable|required_if:account_type_id,1,3|date',
             'account_type_id'       => 'required|integer',
             'commission_id'         => 'required_if:account_type_id,2,3|integer',
             'joining_date'          => 'required|date',
@@ -778,7 +791,7 @@ class AdminEmployeeController extends Controller
             'working_days'          => 'required|array|min:1',
             'working_days.*'        => 'in:0,1',
 
-            'leaves' => (int) $request->shift_id === 6 ? 'nullable|array' : 'required|array',
+            'leaves' => $leavesOff ? 'nullable|array' : 'required|array',
             'leaves.*.leave_type_id' => 'required|exists:hr_leave_types,id',
             'leaves.*.assigned_quota' => 'required|integer|min:0',
             'leaves.*.valid_from' => 'required|date',
@@ -796,6 +809,11 @@ class AdminEmployeeController extends Controller
                     'valid_gratuity_date' => null,
                     'tax_slab_setting_id' => null
                 ]);
+            }
+
+            // B6: gratuity toggled off (or WFH) → never persist a stale gratuity value.
+            if ($gratuityOff) {
+                $request->merge(['gratuity_id' => null, 'valid_gratuity_date' => null]);
             }
 
             $employee = Employee::findOrFail($id);

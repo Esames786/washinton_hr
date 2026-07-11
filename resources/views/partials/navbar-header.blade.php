@@ -323,6 +323,14 @@
                                        href="{{route('employee.profile')}}">
                                         <iconify-icon icon="solar:user-linear" class="icon text-xl"></iconify-icon> My Profile</a>
                                 </li>
+                                {{-- B6: agents who switched over from the Hello agent portal get a way back --}}
+                                @if(session('agent_sso_origin'))
+                                    <li>
+                                        <a class="dropdown-item text-black px-0 py-8 hover-bg-transparent hover-text-primary d-flex align-items-center gap-3"
+                                           href="{{ config('bridge.agent_portal.dashboard_url') }}">
+                                            <iconify-icon icon="solar:arrow-left-linear" class="icon text-xl"></iconify-icon> Back to Hello Dashboard</a>
+                                    </li>
+                                @endif
                             @endauth
 {{--                            <li>--}}
 {{--                                <a class="dropdown-item text-black px-0 py-8 hover-bg-transparent hover-text-primary d-flex align-items-center gap-3"--}}

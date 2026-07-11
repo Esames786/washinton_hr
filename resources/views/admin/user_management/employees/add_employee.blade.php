@@ -22,7 +22,10 @@
     <div class="card h-100">
         <div class="card-body">
             <div class="form-wizard">
-                <form action="{{ route('admin.employees.store') }}" method="POST" enctype="multipart/form-data" class="form-select-2">
+                {{-- #0 (Batch 6): novalidate so native HTML validation doesn't block Publish on
+                     required fields inside hidden wizard steps ("not focusable"). Wizard JS + server
+                     validation still enforce required rules. --}}
+                <form action="{{ route('admin.employees.store') }}" method="POST" enctype="multipart/form-data" class="form-select-2" novalidate>
                     @csrf
 
                     <div class="form-wizard-header overflow-x-auto scroll-sm pb-8 my-32">
@@ -70,6 +73,12 @@
                             <li class="form-wizard-list__item">
                                 <div class="form-wizard-list__line">
                                     <span class="count">7</span>
+                                </div>
+                                <span class="text text-xs fw-semibold">Review</span>
+                            </li>
+                            <li class="form-wizard-list__item">
+                                <div class="form-wizard-list__line">
+                                    <span class="count">8</span>
                                 </div>
                                 <span class="text text-xs fw-semibold">Completed</span>
                             </li>
@@ -282,7 +291,18 @@
                                     <div class="wizard-form-error"></div>
                                 </div>
                             </div>
-                            <div class="col-6 salary-related">
+                            {{-- B6: Gratuity is optional per subcontractor. Unchecking hides + un-requires
+                                 the Gratuity fields and submits gratuity_enabled=0 so the server skips them. --}}
+                            <div class="col-12 salary-related">
+                                <input type="hidden" name="gratuity_enabled" id="gratuity_enabled" value="1">
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="gratuity_enabled_toggle" checked>
+                                    <label class="form-check-label fw-medium" for="gratuity_enabled_toggle">
+                                        Apply Gratuity for this subcontractor
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="col-6 salary-related gratuity-field">
                                 <label class="form-label">Gratuity*</label>
                                 <div class="position-relative single-form-select2">
                                     <select name="gratuity_id" id="gratuity_id"  class="form-control wizard-required" required>
@@ -295,7 +315,7 @@
                                 </div>
                                 <span class="custom-validation text-danger small px-2"></span>
                             </div>
-                            <div class="col-6 salary-related">
+                            <div class="col-6 salary-related gratuity-field">
                                 <label class="form-label">Valid Gratuity Date*</label>
                                 <div class="position-relative ">
                                     <input type="date" name="valid_gratuity_date" class="form-control wizard-required" min="{{ date('Y-m-d') }}" value="{{ old('valid_gratuity_date') }}" required>
@@ -391,6 +411,15 @@
                         <h6 class="text-md text-neutral-500">Leave Assignment</h6>
                         {{-- #7/#8: Work From Home doesn't need leaves --}}
                         <div id="wfhLeavesNote" class="alert alert-info" style="display:none;">Leaves are not applicable for Work From Home subcontractors.</div>
+                        {{-- B6: Leaves are optional per subcontractor. Unchecking hides + un-requires + disables
+                             the leave inputs (so they don't submit) and sends assign_leaves=0. --}}
+                        <input type="hidden" name="assign_leaves" id="assign_leaves" value="1">
+                        <div class="form-check form-switch mb-16">
+                            <input class="form-check-input" type="checkbox" id="assign_leaves_toggle" checked>
+                            <label class="form-check-label fw-medium" for="assign_leaves_toggle">
+                                Assign leaves to this subcontractor
+                            </label>
+                        </div>
                         <div class="row gy-2">
 
                             <div class="col-12">
@@ -676,7 +705,18 @@
                         </div>
                     </fieldset>
 
-                    {{-- Step 7: Completed --}}
+                    {{-- Step 7: Review (B6) — read-only summary with jump-back edit buttons --}}
+                    <fieldset class="wizard-fieldset" id="reviewStep">
+                        <h6 class="text-md text-neutral-500">Review &amp; Confirm</h6>
+                        <p class="text-neutral-400 text-sm">Please review the details below before publishing. Use <strong>Edit</strong> to jump back to any section.</p>
+                        <div id="reviewSummary" class="row gy-3"></div>
+                        <div class="form-group d-flex align-items-center justify-content-end gap-8 mt-24">
+                            <button type="button" class="form-wizard-previous-btn btn btn-neutral-500 border-neutral-100 px-32">Back</button>
+                            <button type="button" class="form-wizard-next-btn btn btn-primary-600 px-32">Confirm</button>
+                        </div>
+                    </fieldset>
+
+                    {{-- Step 8: Completed --}}
                     <fieldset class="wizard-fieldset">
                         <div class="text-center mb-40">
                             <img src="assets/images/gif/success-img3.gif" alt="" class="gif-image mb-24">
@@ -1053,34 +1093,171 @@
 
                 $('#shift_start').val(startTime);
                 $('#shift_end').val(endTime);
-                applyWfhToggle();
+                applyOnboardingToggles();
             });
 
-            // #7/#8: Work From Home (shift id 6) doesn't require Gratuity or Leaves — hide + un-require.
-            // Captures each field's ORIGINAL required/wizard-required state once, so non-WFH shifts
-            // are restored EXACTLY as they were (no behaviour change for other subcontractors).
-            function applyWfhToggle() {
-                var isWfh = String($('#shift_id').val()) === '6';
-                var $fields = $('#gratuity_id, input[name="valid_gratuity_date"], ' +
-                    '#wfhLeavesStep input[name*="[assigned_quota]"], #wfhLeavesStep input[name*="[valid_from]"], #wfhLeavesStep input[name*="[valid_to]"]');
-                $fields.each(function () {
+            // #7/#8 + B6: Gratuity & Leaves are optional per subcontractor.
+            //   - Work From Home (shift 6) forces BOTH off and disables the switches.
+            //   - Commission-only accounts (type 2) already hide the salary area, gratuity with it.
+            //   - Otherwise the admin can toggle each on/off.
+            // Original required/wizard-required is captured once so the enabled state restores exactly.
+            function applyOnboardingToggles() {
+                var isWfh        = String($('#shift_id').val()) === '6';
+                var salaryHidden = String($('#account_type_id').val()) === '2';
+
+                var $gSwitch = $('#gratuity_enabled_toggle');
+                var $lSwitch = $('#assign_leaves_toggle');
+
+                // WFH forces both switches off + disabled.
+                $gSwitch.prop('disabled', isWfh);
+                $lSwitch.prop('disabled', isWfh);
+                if (isWfh) { $gSwitch.prop('checked', false); $lSwitch.prop('checked', false); }
+
+                var gratuityOn = !isWfh && !salaryHidden && $gSwitch.is(':checked');
+                var leavesOn   = !isWfh && $lSwitch.is(':checked');
+
+                // Hidden flags the server reads.
+                $('#gratuity_enabled').val(gratuityOn ? '1' : '0');
+                $('#assign_leaves').val(leavesOn ? '1' : '0');
+
+                // Gratuity fields.
+                $('#gratuity_id, input[name="valid_gratuity_date"]').each(function () {
                     var $f = $(this);
-                    if ($f.data('wfhOrigReq') === undefined) {
-                        $f.data('wfhOrigReq', $f.prop('required'));
-                        $f.data('wfhOrigWiz', $f.hasClass('wizard-required'));
+                    if ($f.data('origReq') === undefined) {
+                        $f.data('origReq', $f.prop('required'));
+                        $f.data('origWiz', $f.hasClass('wizard-required'));
                     }
-                    if (isWfh) {
-                        $f.prop('required', false).removeClass('wizard-required');
+                    if (gratuityOn) {
+                        $f.prop('required', $f.data('origReq'));
+                        $f.data('origWiz') ? $f.addClass('wizard-required') : $f.removeClass('wizard-required');
                     } else {
-                        $f.prop('required', $f.data('wfhOrigReq'));
-                        $f.data('wfhOrigWiz') ? $f.addClass('wizard-required') : $f.removeClass('wizard-required');
+                        $f.prop('required', false).removeClass('wizard-required');
                     }
                 });
-                $('#gratuity_id, input[name="valid_gratuity_date"]').closest('.col-6').toggle(!isWfh);
-                $('#wfhLeavesStep .table-responsive').toggle(!isWfh);
+                $('.gratuity-field').toggle(gratuityOn);
+
+                // Leave fields — DISABLE when off so they don't submit at all.
+                $('#wfhLeavesStep input[name^="leaves"]').each(function () {
+                    var $f = $(this);
+                    if ($f.data('origReq') === undefined) {
+                        $f.data('origReq', $f.prop('required'));
+                        $f.data('origWiz', $f.hasClass('wizard-required'));
+                    }
+                    if (leavesOn) {
+                        $f.prop('disabled', false).prop('required', $f.data('origReq'));
+                        $f.data('origWiz') ? $f.addClass('wizard-required') : $f.removeClass('wizard-required');
+                    } else {
+                        $f.prop('required', false).removeClass('wizard-required').prop('disabled', true);
+                    }
+                });
+                $('#wfhLeavesStep .table-responsive').toggle(leavesOn);
                 $('#wfhLeavesNote').toggle(isWfh);
             }
-            applyWfhToggle();
+            $('#gratuity_enabled_toggle, #assign_leaves_toggle').on('change', applyOnboardingToggles);
+            $('#account_type_id').on('change', applyOnboardingToggles);
+            applyOnboardingToggles();
+
+            // ============================ B6 Review step ============================
+            function gotoWizardStep(index) {
+                var $fs = $('.wizard-fieldset');
+                $fs.removeClass('show');
+                $fs.eq(index).addClass('show');
+                $('.form-wizard-list .form-wizard-list__item').each(function (i) {
+                    $(this).removeClass('active activated');
+                    if (i < index)      $(this).addClass('activated');
+                    else if (i === index) $(this).addClass('active');
+                });
+                $('html, body').animate({ scrollTop: 0 }, 200);
+            }
+
+            function rvTxt(sel) {
+                var $e = $(sel);
+                if (!$e.length) return '';
+                if ($e.is('select')) return $.trim($e.find('option:selected').text());
+                return $.trim(($e.val() || '').toString());
+            }
+            function rvRow(label, value) {
+                var safe = (value === '' || value == null)
+                    ? '<span class="text-neutral-400">—</span>'
+                    : $('<div>').text(value).html();
+                return '<div class="col-md-4 col-6"><div class="text-neutral-400 text-xs">' + label +
+                    '</div><div class="fw-semibold">' + safe + '</div></div>';
+            }
+            function rvHead(title, step) {
+                return '<div class="col-12 d-flex align-items-center justify-content-between border-bottom pb-4 mt-8">' +
+                    '<h6 class="text-sm mb-0">' + title + '</h6>' +
+                    '<button type="button" class="btn btn-sm btn-outline-primary-600 px-16 review-edit" data-step="' + step + '">Edit</button></div>';
+            }
+            function populateReview() {
+                var h = '';
+                h += rvHead('Employee Information', 0);
+                h += rvRow('First Name', rvTxt('input[name=first_name]'));
+                h += rvRow('Last Name', rvTxt('input[name=last_name]'));
+                h += rvRow('Email', rvTxt('input[name=email]'));
+                h += rvRow('Account Type', rvTxt('#account_type_id'));
+                h += rvRow('Basic Salary', rvTxt('input[name=basic_salary]'));
+
+                h += rvHead('Employment Details', 1);
+                h += rvRow('Subcontractor Code', rvTxt('input[name=employee_code]'));
+                h += rvRow('Employment Type', rvTxt('#employment_type'));
+                h += rvRow('Department', rvTxt('#department_id'));
+                h += rvRow('Designation', rvTxt('#designation_id'));
+                h += rvRow('Joining Date', rvTxt('input[name=joining_date]'));
+                h += rvRow('Shift', rvTxt('#shift_id'));
+                h += rvRow('Gratuity', $('#gratuity_enabled').val() === '1' ? rvTxt('#gratuity_id') : 'Not applied');
+                if ($('#gratuity_enabled').val() === '1') h += rvRow('Valid Gratuity Date', rvTxt('input[name=valid_gratuity_date]'));
+                h += rvRow('Commission', rvTxt('#commission_id'));
+                h += rvRow('Role', rvTxt('#role_id'));
+                h += rvRow('Status', rvTxt('#employee_status_id'));
+
+                h += rvHead('Leave Assignment', 2);
+                if ($('#assign_leaves').val() === '1') {
+                    $('#wfhLeavesStep tbody tr').each(function () {
+                        var name = $.trim($(this).find('td:first').clone().children().remove().end().text());
+                        var q = $(this).find('input[name*="[assigned_quota]"]').val();
+                        h += rvRow(name, (q || '0') + ' days');
+                    });
+                } else {
+                    h += '<div class="col-12 text-neutral-500">No leaves assigned.</div>';
+                }
+
+                h += rvHead('Personal Information', 3);
+                h += rvRow('Father Name', rvTxt('input[name=father_name]'));
+                h += rvRow('Mother Name', rvTxt('input[name=mother_name]'));
+                h += rvRow('CNIC', rvTxt('#cnic'));
+                h += rvRow('DOB', rvTxt('input[name=dob]'));
+                h += rvRow('Gender', rvTxt('select[name=gender]'));
+                h += rvRow('Marital Status', rvTxt('#marital_status'));
+                h += rvRow('Phone', rvTxt('#phone'));
+                h += rvRow('Address', rvTxt('input[name=address]'));
+                h += rvRow('City', rvTxt('input[name=city]'));
+                h += rvRow('State', rvTxt('input[name=state]'));
+                h += rvRow('Country', rvTxt('input[name=country]'));
+
+                h += rvHead('Documents', 4);
+                $('input[name^="documents["]').each(function () {
+                    var label = $.trim($(this).closest('.col-6').find('label').text());
+                    var v = this.type === 'file' ? (this.files.length ? this.files[0].name : '') : $(this).val();
+                    h += rvRow(label, v);
+                });
+
+                h += rvHead('Bank Details', 5);
+                h += rvRow('Bank Name', rvTxt('input[name=bank_name]'));
+                h += rvRow('Account Title', rvTxt('input[name=account_title]'));
+                h += rvRow('Account Number', rvTxt('input[name=account_number]'));
+                h += rvRow('IBAN', rvTxt('input[name=iban]'));
+
+                $('#reviewSummary').html(h);
+            }
+            $(document).on('click', '.review-edit', function () {
+                gotoWizardStep(parseInt($(this).data('step'), 10));
+            });
+            // Populate the summary right after navigation lands on the Review step.
+            $(document).on('click', '.form-wizard-next-btn', function () {
+                setTimeout(function () {
+                    if ($('#reviewStep').hasClass('show')) populateReview();
+                }, 60);
+            });
         });
         // =============================== Wizard Step Js End ================================
 
