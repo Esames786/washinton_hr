@@ -51,7 +51,7 @@
             <table class="table table-bordered table-striped" id="EmployeeBreakTable" style="width: 100%;">
                 <thead>
                 <tr>
-                    <th>Employee Name</th>
+                    <th>Subcontractor Name</th>
                     <th>Break Start</th>
                     <th>Break End</th>
                     <th>Break Duration</th>
@@ -68,7 +68,7 @@
         $(function() {
 
             $('#employee_ids').select2({
-                placeholder: "-- Select Employee --",
+                placeholder: "-- Select Subcontractor --",
                 allowClear: true,
                 width: '100%' // force full width
             });

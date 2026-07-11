@@ -1,6 +1,6 @@
 @extends('layout.master')
 
-@section('pageName','hr_employees')
+@section('pageName','Subcontractors')
 @push('cssLinks')
     <style>
         .doc-card {
@@ -118,7 +118,7 @@
                         {{--                                ID--}}
                         {{--                            </div>--}}
                         {{--                        </th>--}}
-                        <th>Employee ID</th>
+                        <th>Subcontractor ID</th>
                         <th>Name</th>
                         <th>Email</th>
                         <th>Subcontractor Code</th>
@@ -242,7 +242,7 @@
 
             $('#employee_ids').select2({
                 // dropdownParent: $('#AssignRoleModal .modal-body'), // modal ke andar hi render hoga
-                placeholder: "-- Select Employee --",
+                placeholder: "-- Select Subcontractor --",
                 allowClear: true,
                 width: '100%' // force full width
             });

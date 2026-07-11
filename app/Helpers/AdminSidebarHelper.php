@@ -44,7 +44,7 @@ class AdminSidebarHelper
                 'items' => [
                     ['title' => 'Roles', 'route' => 'admin.roles.index', 'iconClass' => 'text-primary-600'],
                     ['title' => 'Users', 'route' => 'admin.users.index', 'iconClass' => 'text-warning-main'],
-                    ['title' => 'hr_employees', 'route' => 'admin.employees.index', 'iconClass' => 'text-info-main'],
+                    ['title' => 'Subcontractors', 'route' => 'admin.employees.index', 'iconClass' => 'text-info-main'],
                 ]
             ],
             [
@@ -64,7 +64,7 @@ class AdminSidebarHelper
                 'items' => [
                     ['title' => 'Generate Payroll', 'route' => 'admin.payroll.index', 'iconClass' => 'text-primary-600'],
                     ['title' => 'Paid Payroll List', 'route' => 'admin.payroll.list', 'iconClass' => 'text-warning-main'],
-                    ['title' => 'Employee Payslips', 'route' => 'admin.payroll.payslip.index', 'iconClass' => 'text-info-main'],
+                    ['title' => 'Subcontractor Payslips', 'route' => 'admin.payroll.payslip.index', 'iconClass' => 'text-info-main'],
                 ]
             ],
 
@@ -78,7 +78,7 @@ class AdminSidebarHelper
             ],
 
             [
-                'title' => 'Employee Management',
+                'title' => 'Subcontractor Management',
                 'icon'  => 'bi bi-person-badge',
                 'items' => [
                     ['title' => 'Attendance List', 'route' => 'admin.employees.attendance_list', 'iconClass' => 'text-primary-600'],

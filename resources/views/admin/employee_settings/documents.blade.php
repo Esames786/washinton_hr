@@ -1,6 +1,6 @@
 @extends('layout.master')
 
-@section('pageName','Employee Document Settings')
+@section('pageName','Subcontractor Document Settings')
 @push('cssLinks')
     <style>
         .table-text-center, th {
@@ -21,7 +21,7 @@
 
     <div class="card h-100 p-0 radius-12">
         <div class="card-header border-bottom bg-base py-16 px-24 d-flex align-items-center justify-content-between">
-            <h5 class="mb-0">Employee Document Settings</h5>
+            <h5 class="mb-0">Subcontractor Document Settings</h5>
             <button class="btn btn-primary btn-sm" id="addNewBtn">
                 Add Document Setting
             </button>

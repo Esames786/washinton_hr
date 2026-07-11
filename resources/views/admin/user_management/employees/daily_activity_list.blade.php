@@ -1,6 +1,6 @@
 @extends('layout.master')
 
-@section('pageName', 'Employee Daily Activities')
+@section('pageName', 'Subcontractor Daily Activities')
 
 @push('cssLinks')
     <style>
@@ -75,7 +75,7 @@
 
             $('#employee_ids').select2({
                 // dropdownParent: $('#AssignRoleModal .modal-body'), // modal ke andar hi render hoga
-                placeholder: "-- Select Employee --",
+                placeholder: "-- Select Subcontractor --",
                 allowClear: true,
                 width: '100%' // force full width
             });

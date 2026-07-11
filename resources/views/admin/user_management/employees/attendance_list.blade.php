@@ -51,7 +51,7 @@
             <table class="table table-bordered table-striped" id="EmployeeAttendanceTable" style="width: 100%;">
                 <thead>
                 <tr>
-                    <th>Employee Name</th>
+                    <th>Subcontractor Name</th>
                     <th>Attendance Date</th>
                     <th>Check-In</th>
                     <th>Check-Out</th>
@@ -76,7 +76,7 @@
 
             $('#employee_ids').select2({
                 // dropdownParent: $('#AssignRoleModal .modal-body'), // modal ke andar hi render hoga
-                placeholder: "-- Select Employee --",
+                placeholder: "-- Select Subcontractor --",
                 allowClear: true,
                 width: '100%' // force full width
             });

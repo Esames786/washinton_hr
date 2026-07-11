@@ -1,6 +1,6 @@
 @extends('layout.master')
 
-@section('pageName','Employees Payslips')
+@section('pageName','Subcontractor Payslips')
 @push('cssLinks')
     <style>
         .table-text-center, th {
@@ -98,7 +98,7 @@
 {{--                                Employee ID--}}
 {{--                            </div>--}}
 {{--                        </th>--}}
-                        <th>Employee ID</th>
+                        <th>Subcontractor ID</th>
                         <th>Name</th>
                         <th>Subcontractor Code</th>
                         <th>CNIC</th>
@@ -126,7 +126,7 @@
 
             $('#employee_ids').select2({
                 // dropdownParent: $('#AssignRoleModal .modal-body'), // modal ke andar hi render hoga
-                placeholder: "-- Select Employee --",
+                placeholder: "-- Select Subcontractor --",
                 allowClear: true,
                 width: '100%' // force full width
             });

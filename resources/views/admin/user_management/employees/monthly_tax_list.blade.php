@@ -89,7 +89,7 @@
     <script>
         $(function () {
             $('#employee_ids').select2({
-                placeholder: "-- Select Employee --",
+                placeholder: "-- Select Subcontractor --",
                 allowClear: true,
                 width: '100%'
             });
