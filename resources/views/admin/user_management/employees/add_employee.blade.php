@@ -441,8 +441,10 @@
                                                     <input type="hidden" name="leaves[{{ $leave->id }}][leave_type_id]" value="{{ $leave->id }}">
                                                 </td>
                                                 <td>
+                                                    {{-- B6: default quota 0 so it never blocks Publish; admin can change,
+                                                         or turn off the "Assign leaves" switch to skip leaves entirely. --}}
                                                     <input type="number" name="leaves[{{ $leave->id }}][assigned_quota]"
-                                                           class="form-control" min="0" placeholder="Enter days" required>
+                                                           class="form-control" min="0" placeholder="Enter days" value="0" required>
                                                 </td>
                                                 <td>
                                                     <input type="date" name="leaves[{{ $leave->id }}][valid_from]"
