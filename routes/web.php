@@ -341,9 +341,13 @@ use App\Http\Controllers\Employee\EmployeeTicketMessageController;
     // Keep them working after the prefix rename. Static path — no clash with /employee/sso/{token}.
     Route::redirect('/employee/login', '/subcontractor/login');
 
-    // DB-token SSO — no signed URL, no session issues
-    Route::get('/employee/sso/{token}', [\App\Http\Controllers\Bridge\HrBridgeController::class, 'consumeToken'])
+    // DB-token SSO — no signed URL, no session issues. URI renamed employee -> subcontractor;
+    // route name kept as 'employee.sso.consume'. Legacy /employee/sso kept as a redirect below.
+    Route::get('/subcontractor/sso/{token}', [\App\Http\Controllers\Bridge\HrBridgeController::class, 'consumeToken'])
         ->name('employee.sso.consume');
+    Route::get('/employee/sso/{token}', function ($token) {
+        return redirect('/subcontractor/sso/' . $token . (request()->getQueryString() ? '?' . request()->getQueryString() : ''));
+    });
 
     // Admin SSO from washinton_agent → HR admin panel
     Route::post('/bridge/admin/employee-view', [\App\Http\Controllers\Bridge\HrBridgeController::class, 'adminEmployeeView']);

@@ -401,7 +401,7 @@ class HrBridgeController extends Controller
         ]);
 
         $redirectTo  = $request->input('redirect_to', 'dashboard'); // 'dashboard' or 'profile'
-        $redirectUrl = rtrim(config('app.url'), '/') . '/employee/sso/' . $token . '?to=' . $redirectTo;
+        $redirectUrl = rtrim(config('app.url'), '/') . '/subcontractor/sso/' . $token . '?to=' . $redirectTo;
 
         return response()->json([
             'message'      => 'Redirect ready.',
