@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Employee Login</title>
+    <title>Subcontractor Login</title>
     <link rel="icon" type="image/png" href="{{ asset('assets/images/logo/hello_transport.png') }}" sizes="16x16">
     <!-- remix icon font css  -->
     <link rel="stylesheet" href="{{ asset('assets/css/remixicon.css') }}">
@@ -60,7 +60,7 @@
                 <a href="{{route('admin.login')}}" class="mb-40" style="margin-left: 35%">
                     <img src="{{asset('assets/images/logo/hello_transport.png')}}" alt="" class="logo-width-100">
                 </a>
-                <h4 class="mb-12 text-center">Employee Sign In</h4>
+                <h4 class="mb-12 text-center">Subcontractor Sign In</h4>
                 <p class="mb-32 text-secondary-light text-lg text-center">Welcome back! please enter your detail</p>
             </div>
             <form id="loginform" method="POST" action="{{ route('employee.employee_login') }}">

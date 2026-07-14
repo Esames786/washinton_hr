@@ -12,7 +12,7 @@
                     <div class="col-6">
                         <label>Subcontractor</label>
                         <select name="employee_id" class="form-select" required>
-                            <option value="">Select Employee</option>
+                            <option value="">Select Subcontractor</option>
                             @foreach($employees as $emp)
                                 <option value="{{ $emp->id }}">{{ $emp->full_name }}</option>
                             @endforeach

@@ -264,7 +264,7 @@ class AdminPayslipController extends Controller
             }
 
             return response()->json([
-                'message' => 'Employee Payslip not found',
+                'message' => 'Subcontractor Payslip not found',
             ],404);
 
         } catch (\Throwable $th) {

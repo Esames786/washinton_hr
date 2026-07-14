@@ -95,7 +95,7 @@
 {{--                                <div class="form-check style-check d-flex align-items-center">--}}
 {{--                                    <input class="form-check-input radius-4 border input-form-dark" type="checkbox" name="checkbox" id="selectAll">--}}
 {{--                                </div>--}}
-{{--                                Employee ID--}}
+{{--                                Subcontractor ID--}}
 {{--                            </div>--}}
 {{--                        </th>--}}
                         <th>Subcontractor ID</th>

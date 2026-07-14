@@ -34,7 +34,7 @@
                                 <div class="form-wizard-list__line">
                                     <span class="count">1</span>
                                 </div>
-                                <span class="text text-xs fw-semibold">Employee Information</span>
+                                <span class="text text-xs fw-semibold">Subcontractor Information</span>
                             </li>
                             <li class="form-wizard-list__item">
                                 <div class="form-wizard-list__line">
@@ -46,8 +46,7 @@
                                 <div class="form-wizard-list__line">
                                     <span class="count">3</span>
                                 </div>
-                                <span class="text text-xs fw-semibold px-2">Employee
-                                    Leaves</span>
+                                <span class="text text-xs fw-semibold px-2">Subcontractor Leaves</span>
                             </li>
                             <li class="form-wizard-list__item">
                                 <div class="form-wizard-list__line">
@@ -60,7 +59,7 @@
                                 <div class="form-wizard-list__line">
                                     <span class="count">5</span>
                                 </div>
-                                <span class="text text-xs fw-semibold">Employee Documents</span>
+                                <span class="text text-xs fw-semibold">Subcontractor Documents</span>
                             </li>
 
 
@@ -85,9 +84,9 @@
                         </ul>
                     </div>
 
-                    {{-- Step 1: Employee Information --}}
+                    {{-- Step 1: Subcontractor Information --}}
                     <fieldset class="wizard-fieldset show">
-                        <h6 class="text-md text-neutral-500">Employee Information</h6>
+                        <h6 class="text-md text-neutral-500">Subcontractor Information</h6>
                         <div class="row gy-2">
                             <div class="col-sm-6">
                                 <label class="form-label">First Name*</label>
@@ -350,7 +349,7 @@
                                 <span class="custom-validation text-danger small px-2"></span>
                             </div>
                             <div class="col-6">
-                                <label class="form-label">Employee Status*</label>
+                                <label class="form-label">Subcontractor Status*</label>
                                 <div class="position-relative">
                                     <select name="employee_status_id" id="employee_status_id" class="form-control wizard-required" required>
                                         @foreach($employee_statuses as $employee_status)
@@ -406,7 +405,7 @@
                         </div>
                     </fieldset>
 
-                    {{-- Step 3: Employee Leaves --}}
+                    {{-- Step 3: Subcontractor Leaves --}}
                     <fieldset class="wizard-fieldset" id="wfhLeavesStep">
                         <h6 class="text-md text-neutral-500">Leave Assignment</h6>
                         {{-- #7/#8: Work From Home doesn't need leaves --}}
@@ -625,9 +624,9 @@
                         </div>
                     </fieldset>
 
-                    {{-- Step 5: Employee Documents --}}
+                    {{-- Step 5: Subcontractor Documents --}}
                     <fieldset class="wizard-fieldset">
-                        <h6 class="text-md text-neutral-500">Employee Documents</h6>
+                        <h6 class="text-md text-neutral-500">Subcontractor Documents</h6>
                         <div class="row gy-2">
                             @foreach($document_types as $doc)
                                 <div class="col-6">
@@ -1192,7 +1191,7 @@
             }
             function populateReview() {
                 var h = '';
-                h += rvHead('Employee Information', 0);
+                h += rvHead('Subcontractor Information', 0);
                 h += rvRow('First Name', rvTxt('input[name=first_name]'));
                 h += rvRow('Last Name', rvTxt('input[name=last_name]'));
                 h += rvRow('Email', rvTxt('input[name=email]'));

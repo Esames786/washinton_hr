@@ -169,7 +169,7 @@
                             <div class="row g-1 small">
                                 <div class="col-12"><strong>Title:</strong> {{ $employee->gratuity->title ?? '-' }}</div>
                                 <div class="col-12"><strong>Description:</strong> {{ $employee->gratuity->description ?? '-' }}</div>
-                                <div class="col-6"><strong>Employee Contribution:</strong> {{ $employee->gratuity->employee_contribution_percentage }}%</div>
+                                <div class="col-6"><strong>Subcontractor Contribution:</strong> {{ $employee->gratuity->employee_contribution_percentage }}%</div>
                                 <div class="col-6"><strong>Company Contribution:</strong> {{ $employee->gratuity->company_contribution_percentage }}%</div>
                                 <div class="col-6"><strong>Eligibility Years:</strong> {{ $employee->gratuity->eligibility_years ?? '-' }}</div>
                                 <div class="col-6"><strong>Status:</strong>

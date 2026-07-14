@@ -388,7 +388,7 @@ class AdminEmployeeController extends Controller
 //            $employee->bankDetail()->save($bankDetail);
 //        }
 //
-//        return redirect()->route('admin.employees.index')->with('success', 'Employee created successfully.');
+//        return redirect()->route('admin.employees.index')->with('success', 'Subcontractor created successfully.');
 //    }
 
     public function store(Request $request)
@@ -635,7 +635,7 @@ class AdminEmployeeController extends Controller
 
             DB::commit();
             return redirect()->route('admin.employees.index')
-                ->with('success', 'Employee created successfully.');
+                ->with('success', 'Subcontractor created successfully.');
 
         } catch (\Throwable $th) {
             DB::rollBack();
@@ -1049,7 +1049,7 @@ class AdminEmployeeController extends Controller
 
             DB::commit();
             return redirect()->route('admin.employees.index')
-                ->with('success', 'Employee updated successfully.');
+                ->with('success', 'Subcontractor updated successfully.');
 
         } catch (\Throwable $th) {
             DB::rollBack();
@@ -1092,7 +1092,7 @@ class AdminEmployeeController extends Controller
             ->first();
 
         if (!$employee) {
-            return response()->json(['success' => false, 'message' => 'Employee not found or status unchanged!'], 404);
+            return response()->json(['success' => false, 'message' => 'Subcontractor not found or status unchanged!'], 404);
         }
 
         // Block activation if any uploaded documents are unverified

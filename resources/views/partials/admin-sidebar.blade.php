@@ -49,7 +49,7 @@
 {{--                        <a href="{{route('admin.document_settings.index')}}"><i class="ri-circle-fill circle-icon text-info-main w-auto"></i>Document Setting</a>--}}
 {{--                    </li>--}}
 {{--                    <li>--}}
-{{--                        <a href="{{route('admin.shift_attendance_rules.index')}}"><i class="ri-circle-fill circle-icon text-danger-main w-auto"></i>Employee Shifts Rules</a>--}}
+{{--                        <a href="{{route('admin.shift_attendance_rules.index')}}"><i class="ri-circle-fill circle-icon text-danger-main w-auto"></i>Subcontractor Shifts Rules</a>--}}
 {{--                    </li>--}}
 {{--                </ul>--}}
 {{--            </li>--}}

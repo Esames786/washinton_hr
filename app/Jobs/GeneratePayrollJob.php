@@ -236,7 +236,7 @@ class GeneratePayrollJob implements ShouldQueue
                 // -------------------------
 
                 if ($employeeGratuity > 0) {
-                    $this->insertItem($detail->id, self::ITEM_DEDUCTION, 'Employee Gratuity Contribution', -$employeeGratuity);
+                    $this->insertItem($detail->id, self::ITEM_DEDUCTION, 'Subcontractor Gratuity Contribution', -$employeeGratuity);
                 }
 
                 if ($absent_deduction > 0) {

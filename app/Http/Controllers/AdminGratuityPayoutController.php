@@ -125,7 +125,7 @@ class AdminGratuityPayoutController extends Controller
                 $payout =  GratuityPayout::with('payout_status')->where('employee_id',$employee->id)
                     ->where('payout_date','>=',$employee->resignation_date)->first();
                 if($payout) {
-                    session()->flash('error', 'Employee payout already '.$payout->payout_status->name);
+                    session()->flash('error', 'Subcontractor payout already '.$payout->payout_status->name);
                     return redirect()->back();
                 }
 

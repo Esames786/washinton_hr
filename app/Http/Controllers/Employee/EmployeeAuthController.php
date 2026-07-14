@@ -45,7 +45,7 @@ class EmployeeAuthController extends Controller
         ]);
 
         if (!$employee) {
-            $error = ['password' => ['Employee Not Found']];
+            $error = ['password' => ['Subcontractor Not Found']];
             if ($request->expectsJson() || $request->ajax()) {
                 return response()->json(['status' => 0, 'errors' => $error]);
             }

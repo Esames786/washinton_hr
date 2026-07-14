@@ -303,7 +303,7 @@ class HrBridgeController extends Controller
             \Illuminate\Support\Facades\DB::commit();
 
             return response()->json([
-                'message'     => 'Employee created successfully.',
+                'message'     => 'Subcontractor created successfully.',
                 'employee_id' => $employee->id,
                 'status'      => 'created',
             ], 201);

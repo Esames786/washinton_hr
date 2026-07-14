@@ -114,7 +114,7 @@ class GeneratePayrollJob_copy implements ShouldQueue
                 $this->insertItem($detail->id, self::ITEM_EARNING,  'Attendance-based Basic (earned)', $earned);
 
                 if ($employeeGratuity > 0) {
-                    $this->insertItem($detail->id, self::ITEM_DEDUCTION, 'Employee Gratuity Contribution', -$employeeGratuity);
+                    $this->insertItem($detail->id, self::ITEM_DEDUCTION, 'Subcontractor Gratuity Contribution', -$employeeGratuity);
                 }
                 if ($commission > 0) {
                     $this->insertItem($detail->id, self::ITEM_EARNING,  'Commission', $commission);

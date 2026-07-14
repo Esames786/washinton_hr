@@ -61,7 +61,7 @@
                             <div class="col-12 mb-3">
                                 <label>Subcontractors</label>
                                 <select name="employee_id" id="employee_id" class="form-control">
-                                    <option value="">-- Select Employee --</option>
+                                    <option value="">-- Select Subcontractor --</option>
                                     @foreach($employees as $employee)
                                         <option value="{{ $employee->id }}">{{ $employee->full_name }}</option>
                                     @endforeach

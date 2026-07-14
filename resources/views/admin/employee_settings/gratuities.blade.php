@@ -48,7 +48,7 @@
                         <th>ID</th>
                         <th>Title</th>
                         <th>Min Service of Years</th>
-                        <th>Employee Percentage</th>
+                        <th>Subcontractor Percentage</th>
                         <th>Company Percentage</th>
 {{--                        <th>Amount Type</th>--}}
 {{--                        <th>Amount Value</th>--}}
@@ -130,7 +130,7 @@
                         </div>
                         <div class="row pb-8 d-none" id="pf_div">
                             <div class="col-6">
-                                <label>Employee Percentage</label>
+                                <label>Subcontractor Percentage</label>
                                 <input type="number" name="employee_contribution_percentage"  placeholder="Enter % (1 - 100)" class="form-control percent-only" min="1" max="100" >
                             </div>
                             <div class="col-6">

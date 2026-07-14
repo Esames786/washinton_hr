@@ -44,7 +44,7 @@
 
 <p class="intro">
     This Non-Disclosure Agreement ("Agreement") is entered into between <strong>Crazy Rays Solutions</strong>
-    ("Company") and the undersigned Employee/Contractor ("Recipient").
+    ("Company") and the undersigned Subcontractor ("Recipient").
 </p>
 
 <div class="section">
@@ -57,7 +57,7 @@
         <li>Sales scripts, leads, and marketing strategies</li>
         <li>Company processes, SOPs, and business methods</li>
         <li>Financial information and internal reports</li>
-        <li>Employee information and company records</li>
+        <li>Subcontractor information and company records</li>
     </ul>
 </div>
 
@@ -102,7 +102,7 @@
     <div class="sign-block">
         <div class="label">Subcontractor Details</div>
         <div class="sign-row">
-            <span class="field-label">Employee Name:</span>
+            <span class="field-label">Subcontractor Name:</span>
             <span class="field-value">{{ $employeeName }}</span>
         </div>
         <div class="sign-row">
@@ -116,7 +116,7 @@
         <div class="sig-canvas-wrap">
             <div class="field-label">Signature:</div>
             @if($signatureData)
-                <img class="sig-img" src="{{ $signatureData }}" alt="Employee Signature">
+                <img class="sig-img" src="{{ $signatureData }}" alt="Subcontractor Signature">
             @endif
         </div>
     </div>

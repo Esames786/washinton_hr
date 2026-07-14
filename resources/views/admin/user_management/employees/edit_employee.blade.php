@@ -21,7 +21,7 @@
                                 <div class="form-wizard-list__line">
                                     <span class="count">1</span>
                                 </div>
-                                <span class="text text-xs fw-semibold">Employee Information</span>
+                                <span class="text text-xs fw-semibold">Subcontractor Information</span>
                             </li>
                             <li class="form-wizard-list__item">
                                 <div class="form-wizard-list__line">
@@ -33,8 +33,7 @@
                                 <div class="form-wizard-list__line">
                                     <span class="count">3</span>
                                 </div>
-                                <span class="text text-xs fw-semibold px-2">Employee
-                                    Leaves</span>
+                                <span class="text text-xs fw-semibold px-2">Subcontractor Leaves</span>
                             </li>
                             <li class="form-wizard-list__item">
                                 <div class="form-wizard-list__line">
@@ -47,7 +46,7 @@
                                 <div class="form-wizard-list__line">
                                     <span class="count">5</span>
                                 </div>
-                                <span class="text text-xs fw-semibold">Employee Documents</span>
+                                <span class="text text-xs fw-semibold">Subcontractor Documents</span>
                             </li>
 
 
@@ -66,9 +65,9 @@
                         </ul>
                     </div>
 
-                    {{-- Step 1: Employee Information --}}
+                    {{-- Step 1: Subcontractor Information --}}
                     <fieldset class="wizard-fieldset show">
-                        <h6 class="text-md text-neutral-500">Employee Information</h6>
+                        <h6 class="text-md text-neutral-500">Subcontractor Information</h6>
                         <div class="row gy-3">
                             <div class="col-sm-6">
                                 <label class="form-label">FullName*</label>
@@ -357,7 +356,7 @@
                             </div>
 
                             <div class="col-6">
-                                <label class="form-label">Employee Status*</label>
+                                <label class="form-label">Subcontractor Status*</label>
                                 <div class="position-relative">
                                     <select name="employee_status_id" id="employee_status_id" class="form-control wizard-required" required>
                                         @foreach($employee_statuses as $employee_status)
@@ -422,7 +421,7 @@
                         </div>
                     </fieldset>
 
-                    {{-- Step 3: Employee Leaves --}}
+                    {{-- Step 3: Subcontractor Leaves --}}
                     <fieldset class="wizard-fieldset" id="wfhLeavesStep">
                         <h6 class="text-md text-neutral-500">Leave Assignment</h6>
                         {{-- #7/#8: Work From Home doesn't need leaves --}}
@@ -671,9 +670,9 @@
                     </fieldset>
 
 
-                    {{-- Step 5: Employee Documents --}}
+                    {{-- Step 5: Subcontractor Documents --}}
                     <fieldset class="wizard-fieldset">
-                        <h6 class="text-md text-neutral-500">Employee Documents</h6>
+                        <h6 class="text-md text-neutral-500">Subcontractor Documents</h6>
                         <div class="row gy-3">
                             @foreach($document_types as $doc)
                                 @php
@@ -754,7 +753,7 @@
 
                             <div class="form-group d-flex align-items-center justify-content-end gap-8">
                                 <button type="button" class="form-wizard-previous-btn btn btn-neutral-500 border-neutral-100 px-32">Back</button>
-                                <button type="submit" class="btn btn-success-600 px-32">Update Employee</button>
+                                <button type="submit" class="btn btn-success-600 px-32">Update Subcontractor</button>
                             </div>
                         </div>
                     </fieldset>

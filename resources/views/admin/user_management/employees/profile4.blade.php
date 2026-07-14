@@ -4,10 +4,10 @@
 @section('content')
     <div class="row g-4">
 
-        {{-- Employee Information --}}
+        {{-- Subcontractor Information --}}
         <div class="col-12">
             <div class="card shadow-sm h-100">
-                <div class="card-header bg-primary text-white">Employee Information</div>
+                <div class="card-header bg-primary text-white">Subcontractor Information</div>
                 <div class="card-body row g-3">
                     <div class="col-md-6"><strong>First Name:</strong> {{ $employee->first_name }}</div>
                     <div class="col-md-6"><strong>Last Name:</strong> {{ $employee->last_name }}</div>

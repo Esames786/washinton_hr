@@ -307,7 +307,7 @@
                                 @endauth
 
                                 @auth('employee')
-                                        <h6 class="text-lg text-primary-light fw-semibold mb-2">{{auth('employee')->user()->full_name ?? 'Employee'}}</h6>
+                                        <h6 class="text-lg text-primary-light fw-semibold mb-2">{{auth('employee')->user()->full_name ?? 'Subcontractor'}}</h6>
                                         <span class="text-secondary-light fw-medium text-sm">{{auth('employee')->user()->role->name ?? '-'}}</span>
                                 @endauth
 

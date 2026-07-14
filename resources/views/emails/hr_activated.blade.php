@@ -16,7 +16,7 @@
           <h1 style="margin:0;color:#fff;font-size:26px;font-weight:800;letter-spacing:1px;text-transform:uppercase;">
             🚛 Hello Transport HR
           </h1>
-          <p style="margin:6px 0 0;color:rgba(255,255,255,.7);font-size:13px;">Employee Portal</p>
+          <p style="margin:6px 0 0;color:rgba(255,255,255,.7);font-size:13px;">Subcontractor Portal</p>
         </td>
       </tr>
 

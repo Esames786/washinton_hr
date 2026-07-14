@@ -202,7 +202,7 @@
                             <div class="row g-1 small">
                                 <div class="col-12"><strong>Title:</strong> {{ $employee->gratuity->title ?? '-' }}</div>
                                 <div class="col-12"><strong>Description:</strong> {{ $employee->gratuity->description ?? '-' }}</div>
-                                <div class="col-6"><strong>Employee Contribution:</strong> {{ $employee->gratuity->employee_contribution_percentage }}%</div>
+                                <div class="col-6"><strong>Subcontractor Contribution:</strong> {{ $employee->gratuity->employee_contribution_percentage }}%</div>
                                 <div class="col-6"><strong>Company Contribution:</strong> {{ $employee->gratuity->company_contribution_percentage }}%</div>
                                 <div class="col-6"><strong>Eligibility Years:</strong> {{ $employee->gratuity->eligibility_years ?? '-' }}</div>
                                 <div class="col-6"><strong>Status:</strong>
@@ -367,7 +367,7 @@
             <div class="col-md-12">
                 <div class="card shadow-sm border-0">
                     <div class="card-header bg-light fw-bold d-flex align-items-center justify-content-between">
-                        <span>📃 Employee Contract</span>
+                        <span>📃 Subcontractor Contract</span>
                         @if($employee->contract_accepted_at)
                             <span class="badge bg-success text-white">✔ Accepted by employee on {{ \Carbon\Carbon::parse($employee->contract_accepted_at)->format('d M Y H:i') }}</span>
                         @elseif($employee->contract_updated_at)

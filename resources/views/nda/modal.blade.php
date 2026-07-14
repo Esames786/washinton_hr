@@ -38,7 +38,7 @@
 
             <p style="margin-bottom:16px; color:#333; font-size:13.5px;">
                 This Non-Disclosure Agreement ("Agreement") is entered into between <strong>Crazy Rays Solutions</strong>
-                ("Company") and the undersigned Employee/Contractor ("Recipient").
+                ("Company") and the undersigned Subcontractor ("Recipient").
             </p>
 
             @foreach([
@@ -49,7 +49,7 @@
                     'Sales scripts, leads, and marketing strategies',
                     'Company processes, SOPs, and business methods',
                     'Financial information and internal reports',
-                    'Employee information and company records',
+                    'Subcontractor information and company records',
                 ]],
                 ['2. Non-Disclosure Obligation', 'The Recipient agrees not to disclose, copy, distribute, sell, share, or use confidential information for any purpose other than performing authorized duties for the Company.', []],
                 ['3. Data Security', 'The Recipient shall maintain the confidentiality of all company information and protect all company files, documents, credentials, and systems from unauthorized access.', []],
