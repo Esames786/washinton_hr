@@ -100,8 +100,11 @@
                             <div class="col-6"><strong>DOB:</strong> {{ $employee->dob ?? '-' }}</div>
                             <div class="col-6"><strong>Gender:</strong> {{ ucfirst($employee->gender ?? '-') }}</div>
                             <div class="col-6"><strong>Salary:</strong> {{ number_format($employee->basic_salary ?? 0) }}</div>
+                            {{-- #21: Tax is for in-house employees only. --}}
+                            @unless($employee->isSubcontractor())
                             <div class="col-6"><strong>Tax Slab:</strong> {{ $employee?->tax_slab?->title ?? '-' }}</div>
                             <div class="col-6"><strong>Rate {{ $rateSymbol }}:</strong> {{ $employee?->tax_slab?->rate ?? 0 }}</div>
+                            @endunless
                             <div class="col-6"><strong>Shift:</strong> {{ $employee?->shift->name ?? '—' }}</div>
                             <div class="col-6">
                                 <strong>Shift Start:</strong> {{ $employee?->shift?->shift_start ? \Carbon\Carbon::parse($employee->shift->shift_start)->format('h:i A') : '-' }}
@@ -159,8 +162,8 @@
                 </div>
             </div>
 
-            {{-- Gratuity Details --}}
-            {{-- Gratuity Details --}}
+            {{-- Gratuity Details — #21: in-house employees only --}}
+            @unless($employee->isSubcontractor())
             <div class="col-md-6">
                 <div class="card shadow-sm border-0 h-100">
                     <div class="card-header bg-light fw-bold">💰 Gratuity Details</div>
@@ -187,6 +190,7 @@
                     </div>
                 </div>
             </div>
+            @endunless
 
             {{-- Documents --}}
             <div class="col-md-12">
@@ -380,7 +384,8 @@
             </div>
             @endif
 
-            {{-- Leaves --}}
+            {{-- Leaves — #21: in-house employees only --}}
+            @unless($employee->isSubcontractor())
             <div class="col-md-12">
                 <div class="card shadow-sm border-0 h-100">
                     <div class="card-header bg-light fw-bold">📝 Assigned Leaves</div>
@@ -418,6 +423,7 @@
                     </div>
                 </div>
             </div>
+            @endunless
 
 
         </div>

@@ -242,6 +242,7 @@ class HrBridgeController extends Controller
             $employee->employee_code      = $this->generateEmployeeCode();
             $employee->joining_date       = now()->toDateString();
             $employee->employment_type_id = 3;  // Probation for new signups
+            $employee->worker_type        = 'subcontractor'; // #21: CrazyRays signups are subcontractors
             $employee->employee_status_id = 7;  // Document Verification — pending docs
             $employee->phone              = $request->input('phone');
             $employee->address            = $request->input('address');

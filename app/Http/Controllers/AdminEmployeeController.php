@@ -394,10 +394,13 @@ class AdminEmployeeController extends Controller
     public function store(Request $request)
     {
 
-        // B6: Gratuity & Leaves are optional per subcontractor (in addition to WFH shift 6).
-        // The form sends gratuity_enabled / assign_leaves = 0 when the admin turns them off.
-        $gratuityOff = (int) $request->shift_id === 6 || (string) $request->input('gratuity_enabled', '1') === '0';
-        $leavesOff   = (int) $request->shift_id === 6 || (string) $request->input('assign_leaves', '1') === '0';
+        // #21: Subcontractors get NO Leaves / Gratuity / Tax — those belong to in-house
+        // employees only. WFH shift (6) also skips gratuity & leaves. The form sends
+        // gratuity_enabled / assign_leaves = 0 when the admin turns them off.
+        $isSub       = $request->input('worker_type') === 'subcontractor';
+        $gratuityOff = $isSub || (int) $request->shift_id === 6 || (string) $request->input('gratuity_enabled', '1') === '0';
+        $leavesOff   = $isSub || (int) $request->shift_id === 6 || (string) $request->input('assign_leaves', '1') === '0';
+        $taxOff      = $isSub || (int) $request->shift_id === 6; // no tax for subcontractors / WFH
 
         // Validation
         $request->validate([
@@ -413,6 +416,7 @@ class AdminEmployeeController extends Controller
             'employee_status_id'    => 'nullable|integer|exists:hr_employee_statuses,id',
             'role_id'               => 'required|integer',
             'shift_id'              => 'required|integer',
+            'worker_type'           => 'required|in:inhouse,subcontractor',
             // #7/#8: Work From Home (shift 6) does NOT require Gratuity or Leaves detail.
             'gratuity_id'           => $gratuityOff ? 'nullable|integer' : 'nullable|required_if:account_type_id,1,3|integer',
             'valid_gratuity_date'   => $gratuityOff ? 'nullable|date' : 'nullable|required_if:account_type_id,1,3|date',
@@ -471,9 +475,13 @@ class AdminEmployeeController extends Controller
                 ]);
             }
 
-            // B6: gratuity toggled off (or WFH) → never persist a stale gratuity value.
+            // B6: gratuity toggled off (or WFH/subcontractor) → never persist a stale gratuity value.
             if ($gratuityOff) {
                 $request->merge(['gratuity_id' => null, 'valid_gratuity_date' => null]);
+            }
+            // #21: subcontractor / WFH → no tax slab at all.
+            if ($taxOff) {
+                $request->merge(['tax_slab_setting_id' => null]);
             }
             $time_stamp = now();
 
@@ -512,12 +520,17 @@ class AdminEmployeeController extends Controller
             $employee->state                  = $request->state;
             $employee->country                = $request->country;
             $employee->employee_status_id     = 7;
+            $employee->worker_type            = $isSub ? 'subcontractor' : 'inhouse';
             $employee->created_by             = auth('admin')->id();
             $employee->updated_by             = auth('admin')->id();
 
-            if ($request->filled('tax_slab_setting_id') && $request->tax_slab_setting_id > 0) {
+            // #21: subcontractor / WFH is never taxable.
+            if (!$taxOff && $request->filled('tax_slab_setting_id') && $request->tax_slab_setting_id > 0) {
                 $employee->tax_slab_setting_id = $request->tax_slab_setting_id;
                 $employee->is_taxable = 1;
+            } else {
+                $employee->tax_slab_setting_id = null;
+                $employee->is_taxable = 0;
             }
             $employee->save();
 
@@ -601,7 +614,7 @@ class AdminEmployeeController extends Controller
                 }
             }
 
-            if ($request->has('leaves')) {
+            if (!$leavesOff && $request->has('leaves')) {
                 foreach ($request->leaves as $leave) {
                     $assignLeave = new EmployeeAssignLeave();
                     $assignLeave->employee_id    = $employee->id;
@@ -739,9 +752,12 @@ class AdminEmployeeController extends Controller
      */
     public function update(Request $request, $id)
     {
-        // B6: Gratuity & Leaves are optional per subcontractor (in addition to WFH shift 6).
-        $gratuityOff = (int) $request->shift_id === 6 || (string) $request->input('gratuity_enabled', '1') === '0';
-        $leavesOff   = (int) $request->shift_id === 6 || (string) $request->input('assign_leaves', '1') === '0';
+        // #21: Subcontractors get NO Leaves / Gratuity / Tax. WFH shift (6) also skips
+        // gratuity & leaves. The form sends gratuity_enabled / assign_leaves = 0 when off.
+        $isSub       = $request->input('worker_type') === 'subcontractor';
+        $gratuityOff = $isSub || (int) $request->shift_id === 6 || (string) $request->input('gratuity_enabled', '1') === '0';
+        $leavesOff   = $isSub || (int) $request->shift_id === 6 || (string) $request->input('assign_leaves', '1') === '0';
+        $taxOff      = $isSub || (int) $request->shift_id === 6; // no tax for subcontractors / WFH
 
         // Validation
         $request->validate([
@@ -754,7 +770,8 @@ class AdminEmployeeController extends Controller
             'employee_status_id'    => 'required|integer',
             'role_id'               => 'required|integer',
             'shift_id'              => 'required|integer',
-            // #7/#8: Work From Home (shift 6) does NOT require Gratuity or Leaves detail.
+            'worker_type'           => 'required|in:inhouse,subcontractor',
+            // #7/#8/#21: WFH (shift 6) and subcontractors do NOT require Gratuity or Leaves.
             'gratuity_id'           => $gratuityOff ? 'nullable|integer' : 'nullable|required_if:account_type_id,1,3|integer',
             'valid_gratuity_date'   => $gratuityOff ? 'nullable|date' : 'nullable|required_if:account_type_id,1,3|date',
             'account_type_id'       => 'required|integer',
@@ -811,9 +828,13 @@ class AdminEmployeeController extends Controller
                 ]);
             }
 
-            // B6: gratuity toggled off (or WFH) → never persist a stale gratuity value.
+            // B6: gratuity toggled off (or WFH/subcontractor) → never persist a stale gratuity value.
             if ($gratuityOff) {
                 $request->merge(['gratuity_id' => null, 'valid_gratuity_date' => null]);
+            }
+            // #21: subcontractor / WFH → no tax slab at all.
+            if ($taxOff) {
+                $request->merge(['tax_slab_setting_id' => null]);
             }
 
             $employee = Employee::findOrFail($id);
@@ -851,11 +872,13 @@ class AdminEmployeeController extends Controller
             $employee->city             = $request->city;
             $employee->state            = $request->state;
             $employee->country          = $request->country;
+            $employee->worker_type      = $isSub ? 'subcontractor' : 'inhouse';
             $employee->updated_by       = auth('admin')->id();
-            if ($request->filled('tax_slab_setting_id') && $request->tax_slab_setting_id > 0) {
+            // #21: subcontractor / WFH is never taxable; otherwise honor the selected slab.
+            if (!$taxOff && $request->filled('tax_slab_setting_id') && $request->tax_slab_setting_id > 0) {
                 $employee->tax_slab_setting_id = $request->tax_slab_setting_id;
                 $employee->is_taxable = 1;
-            } elseif ($request->tax_slab_setting_id == null && $request->account_type_id == 2) {
+            } else {
                 $employee->tax_slab_setting_id = null;
                 $employee->is_taxable = 0;
             }
@@ -927,7 +950,10 @@ class AdminEmployeeController extends Controller
             }
 
             // ðŸ”¹ Leaves assignment (update/insert)
-            if ($request->has('leaves')) {
+            // #21/WFH: subcontractor or WFH → no leaves; deactivate any previously assigned.
+            if ($leavesOff) {
+                EmployeeAssignLeave::where('employee_id', $employee->id)->update(['status' => 0]);
+            } elseif ($request->has('leaves')) {
                 foreach ($request->leaves as $leave) {
                     $assignLeave = EmployeeAssignLeave::updateOrCreate(
                         [

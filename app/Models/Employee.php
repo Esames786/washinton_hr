@@ -60,6 +60,14 @@ class Employee extends Authenticatable
         return $this->belongsTo(EmployeeAccountType::class,'account_type_id');
     }
 
+    /**
+     * #21: subcontractors get NO Leaves / Gratuity / Tax (only in-house employees do).
+     */
+    public function isSubcontractor(): bool
+    {
+        return $this->worker_type === 'subcontractor';
+    }
+
     public function department()
     {
         return $this->belongsTo(Department::class,'department_id','id');

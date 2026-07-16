@@ -127,7 +127,7 @@
                                 <span class="custom-validation text-danger small px-2"></span>
                             </div>
 
-                            <div class="row salary-related">
+                            <div class="row salary-related tax-field">
                                 <div class="col-4">
                                     <label class="form-label">Tax Slab's</label>
                                     <div class="position-relative single-form-select2">
@@ -221,7 +221,19 @@
                                 </div>
                             </div>
 
-
+                            {{-- #21: In-house vs Subcontractor. Subcontractors get NO Leaves / Gratuity / Tax. --}}
+                            @php $wt = old('worker_type', $employee->worker_type ?? 'inhouse'); @endphp
+                            <div class="col-6">
+                                <label class="form-label">Worker Type*</label>
+                                <div class="position-relative">
+                                    <select name="worker_type" id="worker_type" class="form-control wizard-required" required>
+                                        <option value="subcontractor" {{ $wt === 'subcontractor' ? 'selected' : '' }}>Subcontractor</option>
+                                        <option value="inhouse" {{ $wt === 'inhouse' ? 'selected' : '' }}>In-house Employee</option>
+                                    </select>
+                                    <div class="wizard-form-error"></div>
+                                </div>
+                                <small class="text-neutral-400 px-2">In-house employees get Leaves, Gratuity &amp; Tax; subcontractors do not.</small>
+                            </div>
 
                             <div class="col-6">
                                 <label class="form-label">Department*</label>
@@ -1165,11 +1177,16 @@
                 applyWfhToggle();
             });
 
-            // #7/#8: Work From Home (shift id 6) doesn't require Gratuity or Leaves — hide + un-require.
-            // Captures each field's ORIGINAL required/wizard-required state once, so non-WFH shifts
-            // are restored EXACTLY as they were (no behaviour change for other subcontractors).
+            // #7/#8/#21: Work From Home (shift 6) AND subcontractors get NO Gratuity / Leaves / Tax.
+            // Captures each field's ORIGINAL required/wizard-required state once, so in-house / non-WFH
+            // records are restored EXACTLY as they were (no behaviour change for them).
             function applyWfhToggle() {
                 var isWfh = String($('#shift_id').val()) === '6';
+                var isSub = String($('#worker_type').val()) === 'subcontractor';
+                var salaryHidden = String($('#account_type_id').val()) === '2';
+                var benefitsOff  = isWfh || isSub;          // no gratuity / leaves
+                var taxOff       = benefitsOff || salaryHidden; // commission-only has no tax either
+
                 var $fields = $('#gratuity_id, input[name="valid_gratuity_date"], ' +
                     '#wfhLeavesStep input[name*="[assigned_quota]"], #wfhLeavesStep input[name*="[valid_from]"], #wfhLeavesStep input[name*="[valid_to]"]');
                 $fields.each(function () {
@@ -1178,17 +1195,41 @@
                         $f.data('wfhOrigReq', $f.prop('required'));
                         $f.data('wfhOrigWiz', $f.hasClass('wizard-required'));
                     }
-                    if (isWfh) {
-                        $f.prop('required', false).removeClass('wizard-required');
+                    if (benefitsOff) {
+                        // DISABLE so hidden leave/gratuity fields don't submit (and never trip leaves.* rules).
+                        $f.prop('required', false).removeClass('wizard-required').prop('disabled', true);
                     } else {
-                        $f.prop('required', $f.data('wfhOrigReq'));
+                        $f.prop('disabled', false).prop('required', $f.data('wfhOrigReq'));
                         $f.data('wfhOrigWiz') ? $f.addClass('wizard-required') : $f.removeClass('wizard-required');
                     }
                 });
-                $('#gratuity_id, input[name="valid_gratuity_date"]').closest('.col-6').toggle(!isWfh);
-                $('#wfhLeavesStep .table-responsive').toggle(!isWfh);
-                $('#wfhLeavesNote').toggle(isWfh);
+
+                // Tax fields — remove required, clear + disable when off so they never block submit.
+                $('#tax_slab_setting_id, #tax_title, #tax_rate').each(function () {
+                    var $f = $(this);
+                    if ($f.data('wfhOrigReq') === undefined) {
+                        $f.data('wfhOrigReq', $f.prop('required'));
+                        $f.data('wfhOrigWiz', $f.hasClass('wizard-required'));
+                    }
+                    if (taxOff) {
+                        $f.prop('required', false).removeClass('wizard-required').val('').prop('disabled', true);
+                    } else {
+                        $f.prop('disabled', false).prop('required', $f.data('wfhOrigReq'));
+                        $f.data('wfhOrigWiz') ? $f.addClass('wizard-required') : $f.removeClass('wizard-required');
+                    }
+                });
+                if (taxOff) { $('#tax_slab_setting_id').val('').trigger('change'); }
+
+                $('#gratuity_id, input[name="valid_gratuity_date"]').closest('.col-6').toggle(!benefitsOff);
+                $('#wfhLeavesStep .table-responsive').toggle(!benefitsOff);
+                $('.tax-field').toggle(!taxOff);
+                $('#wfhLeavesNote')
+                    .text(isSub
+                        ? 'Leaves, Gratuity & Tax are not applicable for subcontractors.'
+                        : 'Leaves are not applicable for Work From Home subcontractors.')
+                    .toggle(benefitsOff);
             }
+            $('#worker_type, #account_type_id').on('change', applyWfhToggle);
             applyWfhToggle();
         });
         // =============================== Wizard Step Js End ================================

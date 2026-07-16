@@ -135,7 +135,7 @@
                                 </div>
                                 <span class="custom-validation text-danger small px-2"></span>
                             </div>
-                            <div class="col-6 salary-related">
+                            <div class="col-6 salary-related tax-field">
                                 <label class="form-label">Tax Slab's</label>
                                 <div class="position-relative single-form-select2">
                                     <select name="tax_slab_setting_id" id="tax_slab_setting_id"  class="form-control">
@@ -150,13 +150,13 @@
                                     </select>
                                 </div>
                             </div>
-                                <div class="col-6 salary-related">
+                                <div class="col-6 salary-related tax-field">
                                     <label class="form-label">Slab Title</label>
                                     <div class="position-relative">
                                         <input type="text" id="tax_title" class="form-control wizard-required"  readonly>
                                     </div>
                                 </div>
-                                <div class="col-6 salary-related">
+                                <div class="col-6 salary-related tax-field">
                                     <label class="form-label">Rate</label>
                                     <div class="position-relative">
                                         <input type="text" id="tax_rate" class="form-control wizard-required" readonly>
@@ -226,6 +226,18 @@
                                     <div class="wizard-form-error"></div>
                                 </div>
                                 <span class="custom-validation text-danger small px-2"></span>
+                            </div>
+                            {{-- #21: In-house vs Subcontractor. Subcontractors get NO Leaves / Gratuity / Tax. --}}
+                            <div class="col-6">
+                                <label class="form-label">Worker Type*</label>
+                                <div class="position-relative">
+                                    <select name="worker_type" id="worker_type" class="form-control wizard-required" required>
+                                        <option value="subcontractor" {{ old('worker_type', 'subcontractor') === 'subcontractor' ? 'selected' : '' }}>Subcontractor</option>
+                                        <option value="inhouse" {{ old('worker_type') === 'inhouse' ? 'selected' : '' }}>In-house Employee</option>
+                                    </select>
+                                    <div class="wizard-form-error"></div>
+                                </div>
+                                <small class="text-neutral-400 px-2">In-house employees get Leaves, Gratuity &amp; Tax; subcontractors do not.</small>
                             </div>
                             <div class="col-6">
                                 <label class="form-label">Department*</label>
@@ -1104,22 +1116,43 @@
             // Original required/wizard-required is captured once so the enabled state restores exactly.
             function applyOnboardingToggles() {
                 var isWfh        = String($('#shift_id').val()) === '6';
+                var isSub        = String($('#worker_type').val()) === 'subcontractor';
                 var salaryHidden = String($('#account_type_id').val()) === '2';
+                // #21: subcontractors (and WFH) get NO gratuity / leaves / tax.
+                var benefitsOff  = isSub || isWfh;
 
                 var $gSwitch = $('#gratuity_enabled_toggle');
                 var $lSwitch = $('#assign_leaves_toggle');
 
-                // WFH forces both switches off + disabled.
-                $gSwitch.prop('disabled', isWfh);
-                $lSwitch.prop('disabled', isWfh);
-                if (isWfh) { $gSwitch.prop('checked', false); $lSwitch.prop('checked', false); }
+                // WFH / subcontractor force both switches off + disabled.
+                $gSwitch.prop('disabled', benefitsOff);
+                $lSwitch.prop('disabled', benefitsOff);
+                if (benefitsOff) { $gSwitch.prop('checked', false); $lSwitch.prop('checked', false); }
 
-                var gratuityOn = !isWfh && !salaryHidden && $gSwitch.is(':checked');
-                var leavesOn   = !isWfh && $lSwitch.is(':checked');
+                var gratuityOn = !benefitsOff && !salaryHidden && $gSwitch.is(':checked');
+                var leavesOn   = !benefitsOff && $lSwitch.is(':checked');
+                var taxOn      = !benefitsOff && !salaryHidden; // commission-only has no tax either
 
                 // Hidden flags the server reads.
                 $('#gratuity_enabled').val(gratuityOn ? '1' : '0');
                 $('#assign_leaves').val(leavesOn ? '1' : '0');
+
+                // Tax fields — remove required + clear when off so they never block submit.
+                $('#tax_slab_setting_id, #tax_title, #tax_rate').each(function () {
+                    var $f = $(this);
+                    if ($f.data('origReq') === undefined) {
+                        $f.data('origReq', $f.prop('required'));
+                        $f.data('origWiz', $f.hasClass('wizard-required'));
+                    }
+                    if (taxOn) {
+                        $f.prop('required', $f.data('origReq'));
+                        $f.data('origWiz') ? $f.addClass('wizard-required') : $f.removeClass('wizard-required');
+                    } else {
+                        $f.prop('required', false).removeClass('wizard-required').val('');
+                    }
+                });
+                if (!taxOn) { $('#tax_slab_setting_id').val('').trigger('change'); }
+                $('.tax-field').toggle(taxOn);
 
                 // Gratuity fields.
                 $('#gratuity_id, input[name="valid_gratuity_date"]').each(function () {
@@ -1152,10 +1185,14 @@
                     }
                 });
                 $('#wfhLeavesStep .table-responsive').toggle(leavesOn);
-                $('#wfhLeavesNote').toggle(isWfh);
+                $('#wfhLeavesNote')
+                    .text(isSub
+                        ? 'Leaves, Gratuity & Tax are not applicable for subcontractors.'
+                        : 'Leaves are not applicable for Work From Home subcontractors.')
+                    .toggle(benefitsOff);
             }
             $('#gratuity_enabled_toggle, #assign_leaves_toggle').on('change', applyOnboardingToggles);
-            $('#account_type_id').on('change', applyOnboardingToggles);
+            $('#account_type_id, #worker_type').on('change', applyOnboardingToggles);
             applyOnboardingToggles();
 
             // ============================ B6 Review step ============================
@@ -1201,6 +1238,7 @@
                 h += rvHead('Employment Details', 1);
                 h += rvRow('Subcontractor Code', rvTxt('input[name=employee_code]'));
                 h += rvRow('Employment Type', rvTxt('#employment_type'));
+                h += rvRow('Worker Type', rvTxt('#worker_type'));
                 h += rvRow('Department', rvTxt('#department_id'));
                 h += rvRow('Designation', rvTxt('#designation_id'));
                 h += rvRow('Joining Date', rvTxt('input[name=joining_date]'));
