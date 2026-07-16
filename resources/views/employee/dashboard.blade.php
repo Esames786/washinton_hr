@@ -10,6 +10,19 @@
     </style>
 @endpush
 @section('content')
+    {{-- #17: My Profile quick access above the dashboard --}}
+    <a href="{{ route('employee.profile') }}" class="card shadow-none border mb-4 clickable-card d-block text-decoration-none">
+        <div class="card-body p-16 d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center gap-3">
+                <div style="width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,#6366f1,#0ea5e9);color:#fff;display:flex;align-items:center;justify-content:center;font-size:20px;">👤</div>
+                <div>
+                    <h6 class="mb-0 text-primary-light">My Profile</h6>
+                    <span class="text-secondary-light text-sm">View your profile, documents &amp; status</span>
+                </div>
+            </div>
+            <span class="text-2xl text-secondary-light">&rsaquo;</span>
+        </div>
+    </a>
     @if($shiftData)
     <div class="card shadow-none border mb-4 js-shift-banner" id="shiftBanner"
          data-start="{{ $shiftData['start'] }}" data-end="{{ $shiftData['end'] }}">

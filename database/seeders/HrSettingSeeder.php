@@ -24,9 +24,9 @@ class HrSettingSeeder extends Seeder
             ['id' => 4,  'name' => 'Resigned',              'created_at' => now(), 'updated_at' => now()],
             ['id' => 5,  'name' => 'Training',              'created_at' => now(), 'updated_at' => now()],
             ['id' => 6,  'name' => 'Trail',                 'created_at' => now(), 'updated_at' => now()],
-            ['id' => 7,  'name' => 'Document Verification', 'created_at' => now(), 'updated_at' => now()],
+            ['id' => 7,  'name' => 'Documents Verification Pending', 'created_at' => now(), 'updated_at' => now()],
             ['id' => 8,  'name' => 'Pending Contract',      'created_at' => now(), 'updated_at' => now()],
-            ['id' => 9,  'name' => 'Management Approval',   'created_at' => now(), 'updated_at' => now()],
+            ['id' => 9,  'name' => 'Management Approval Pending',   'created_at' => now(), 'updated_at' => now()],
             ['id' => 10, 'name' => 'Deployed',              'created_at' => now(), 'updated_at' => now()],
         ]);
 
