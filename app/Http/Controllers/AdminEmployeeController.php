@@ -1157,7 +1157,10 @@ class AdminEmployeeController extends Controller
 
             if ((int) $request->status === 1) {
                 try {
-                    Mail::to($employee->email)->send(new HrActivatedEmail($employee->full_name, $employee->email));
+                    // #17: brand the activation email by the subcontractor's origin.
+                    $__brand = $employee->isCrazyrays() ? 'CrazyRays Solutions' : 'Hello Transport';
+                    $__support = $employee->isCrazyrays() ? 'careers@crazyrayssolutions.com.pk' : 'info@hellotransport.com';
+                    Mail::to($employee->email)->send(new HrActivatedEmail($employee->full_name, $employee->email, $__brand, $__support));
                 } catch (\Throwable $e) {
                     Log::warning('changeStatus: HR activation email failed', ['employee_id' => $employee->id, 'error' => $e->getMessage()]);
                 }

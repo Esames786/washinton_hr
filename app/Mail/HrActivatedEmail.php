@@ -12,18 +12,23 @@ class HrActivatedEmail extends Mailable
 
     public $employeeName;
     public $employeeEmail;
+    public $brand;
+    public $supportEmail;
 
-    public function __construct($employeeName, $employeeEmail)
+    // #17: brand the activation email by the subcontractor's origin (CrazyRays vs Hello Transport).
+    public function __construct($employeeName, $employeeEmail, $brand = 'Hello Transport', $supportEmail = 'info@hellotransport.com')
     {
         $this->employeeName  = $employeeName;
         $this->employeeEmail = $employeeEmail;
+        $this->brand         = $brand;
+        $this->supportEmail  = $supportEmail;
     }
 
     public function build()
     {
         return $this
-            ->from(config('mail.from.address', 'noreply@hellotransport.com'), 'Hello Transport HR')
-            ->subject('Your Hello Transport HR Account is Now Active!')
+            ->from(config('mail.from.address', 'noreply@hellotransport.com'), $this->brand . ' HR')
+            ->subject('Your ' . $this->brand . ' HR Account is Now Active!')
             ->view('emails.hr_activated');
     }
 }

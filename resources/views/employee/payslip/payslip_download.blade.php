@@ -81,7 +81,8 @@
 
         <!-- Center: Company name and payslip title -->
         <div class="header-text">
-            <h2>Hello Transport</h2>
+            {{-- #17: brand by the subcontractor's origin --}}
+            <h2>{{ optional($payrollDetail->employee)->brandName() ?? 'Hello Transport' }}</h2>
             <p><strong>Payslip for {{ \Carbon\Carbon::createFromFormat('Y-m', $payrollDetail->payroll->payroll_month)->format('Y-F') }}</strong></p>
         </div>
 

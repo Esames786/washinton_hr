@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>HR Account Active — Hello Transport</title>
+<title>HR Account Active — {{ $brand }}</title>
 </head>
 <body style="margin:0;padding:0;background:#f4f6f9;font-family:'Segoe UI',Arial,sans-serif;">
 <table width="100%" cellpadding="0" cellspacing="0" style="background:#f4f6f9;padding:32px 0;">
@@ -14,7 +14,7 @@
       <tr>
         <td style="background:linear-gradient(135deg,#062e39 0%,#0d5c70 100%);padding:32px 40px;text-align:center;">
           <h1 style="margin:0;color:#fff;font-size:26px;font-weight:800;letter-spacing:1px;text-transform:uppercase;">
-            🚛 Hello Transport HR
+            🚛 {{ $brand }} HR
           </h1>
           <p style="margin:6px 0 0;color:rgba(255,255,255,.7);font-size:13px;">Subcontractor Portal</p>
         </td>
@@ -36,7 +36,7 @@
             Hi {{ $employeeName }},
           </h2>
           <p style="margin:0 0 20px;color:#555;font-size:14px;line-height:1.7;">
-            Your <strong>Hello Transport HR Portal</strong> account has been activated. You can now log in to view your payslips, submit leave requests, track attendance, and manage your employee profile.
+            Your <strong>{{ $brand }} HR Portal</strong> account has been activated. You can now log in to view your payslips, submit leave requests, track attendance, and manage your employee profile.
           </p>
 
           <!-- Login Box -->
@@ -88,11 +88,11 @@
       <tr>
         <td style="background:#f8f9fa;padding:20px 40px;text-align:center;border-top:1px solid #e9ecef;">
           <p style="margin:0 0 6px;color:#6c757d;font-size:12px;">
-            If you did not register for a Hello Transport account, please contact us at
-            <a href="mailto:info@hellotransport.com" style="color:#062e39;">info@hellotransport.com</a>
+            If you did not register for a {{ $brand }} account, please contact us at
+            <a href="mailto:{{ $supportEmail }}" style="color:#062e39;">{{ $supportEmail }}</a>
           </p>
           <p style="margin:0;color:#adb5bd;font-size:12px;">
-            © {{ date('Y') }} Hello Transport HR. All Rights Reserved.<br>
+            © {{ date('Y') }} {{ $brand }} HR. All Rights Reserved.<br>
             This email was sent to <strong>{{ $employeeEmail }}</strong>
           </p>
         </td>

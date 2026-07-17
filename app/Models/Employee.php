@@ -68,6 +68,25 @@ class Employee extends Authenticatable
         return $this->worker_type === 'subcontractor';
     }
 
+    /**
+     * #17: CrazyRays-originated agents (cr-application converted users) are branded
+     * "CrazyRays Solutions"; everyone else is "Hello Transport". The flag lives on the
+     * linked agent-portal user (shared DB), same check the sidebar uses.
+     */
+    public function isCrazyrays(): bool
+    {
+        if (!$this->agent_id) {
+            return false;
+        }
+        return (int) \Illuminate\Support\Facades\DB::table('user')
+            ->where('id', $this->agent_id)->value('is_crazyrays') === 1;
+    }
+
+    public function brandName(): string
+    {
+        return $this->isCrazyrays() ? 'CrazyRays Solutions' : 'Hello Transport';
+    }
+
     public function department()
     {
         return $this->belongsTo(Department::class,'department_id','id');
