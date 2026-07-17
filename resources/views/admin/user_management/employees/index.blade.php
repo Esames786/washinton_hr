@@ -103,6 +103,16 @@
                             @endforeach
                         </select>
                     </div>
+                    {{-- #13: filter by status (Documents Verification Pending / Active / etc.) --}}
+                    <div class="col-md-3 col-6">
+                        <label class="form-label fw-semibold">Status</label>
+                        <select name="employee_status_id" id="employee_status_id" class="form-select">
+                            <option value="">All Statuses</option>
+                            @foreach(($employee_statuses ?? []) as $st)
+                                <option value="{{ $st->id }}">{{ $st->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
                     <div class="col-md-1 d-grid">
                         <button type="button" id="search_btn" class="btn btn-primary d-flex">
                             <i class="bi bi-search"></i>  Search
@@ -274,6 +284,7 @@
                         d.employee_ids = $('#employee_ids').val();          // multi-select
                         d.account_type_id = $('#account_type_id').val();    // single select
                         d.employment_type_id = $('#employment_type_id').val(); // single select
+                        d.employee_status_id = $('#employee_status_id').val(); // #13 status filter
                         // if (d.search && d.search.value) {
                         //     d.columns[1].search.value = d.search.value; // title column
                         //     d.search.value = ''; // clear global search

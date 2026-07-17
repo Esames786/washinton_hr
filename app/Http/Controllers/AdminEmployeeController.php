@@ -264,6 +264,11 @@ class AdminEmployeeController extends Controller
                     if ($request->filled('employment_type_id')) {
                         $query->where('hr_employees.employment_type_id', $request->employment_type_id);
                     }
+
+                    // #13: status filter (Documents Verification Pending / Active / etc.)
+                    if ($request->filled('employee_status_id')) {
+                        $query->where('hr_employees.employee_status_id', $request->employee_status_id);
+                    }
                 })
 
                 ->rawColumns(['action','employee_status_id'])
@@ -278,7 +283,8 @@ class AdminEmployeeController extends Controller
         $employees = Employee::where('worker_type', $type)->get();
         $account_types = EmployeeAccountType::where('id','!=',2)->get();
         $employee_types = EmploymentType::all();
-        return view('admin.user_management.employees.index', compact('authorized_users', 'employees', 'account_types', 'employee_types', 'type'));
+        $employee_statuses = EmployeeStatus::all();
+        return view('admin.user_management.employees.index', compact('authorized_users', 'employees', 'account_types', 'employee_types', 'employee_statuses', 'type'));
     }
 
     /**
@@ -1613,6 +1619,15 @@ class AdminEmployeeController extends Controller
                     $from = $row->origincity ? $row->origincity . ', ' . $row->originstate : '-';
                     $to   = $row->destinationcity ? $row->destinationcity . ', ' . $row->destinationstate : '-';
                     return $from . ' &rarr; ' . $to;
+                })
+                // #12: mask the customer's email & phone (subcontractors shouldn't see full contact).
+                ->editColumn('oemail', function ($row) {
+                    $e = trim((string) $row->oemail);
+                    return $e === '' ? '-' : mb_substr($e, 0, 2) . '****';
+                })
+                ->editColumn('ophone', function ($row) {
+                    $d = preg_replace('/\D/', '', (string) $row->ophone);
+                    return $d === '' ? '-' : substr($d, 0, 3) . '****';
                 })
                 ->rawColumns(['action', 'pstatus', 'payment_status', 'route'])
                 ->make(true);
