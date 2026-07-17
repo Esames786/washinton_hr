@@ -119,9 +119,9 @@
                                 </div>
                             </div>
                             <div class="col-6 salary-related">
-                                <label class="form-label">Basic Salary*</label>
+                                <label class="form-label">Basic Pay*</label>
                                 <div class="position-relative">
-                                    <input type="number" name="basic_salary" class="form-control wizard-required" value="{{ old('basic_salary',$employee->basic_salary ?? '') }}" placeholder="Enter Basic Salary" required>
+                                    <input type="number" name="basic_salary" class="form-control wizard-required" value="{{ old('basic_salary',$employee->basic_salary ?? '') }}" placeholder="Enter Basic Pay" required>
                                     <div class="wizard-form-error"></div>
                                 </div>
                                 <span class="custom-validation text-danger small px-2"></span>
@@ -521,7 +521,8 @@
                             <div class="col-6">
                                 <label class="form-label">Mother Name</label>
                                 <div class="position-relative">
-                                    <input type="text" name="mother_name" class="form-control  wizard-required"
+                                    {{-- #14: Mother Name is optional --}}
+                                    <input type="text" name="mother_name" class="form-control"
                                            value="{{ old('mother_name', $employee->mother_name) }}">
                                     <div class="wizard-form-error"></div>
                                 </div>
@@ -901,7 +902,7 @@
                         $(this).removeAttr('required').removeClass('wizard-required');
                     });
 
-                    // Set Basic Salary = 1
+                    // Set Basic Pay = 1
                     $('#basic_salary').val(1);
                 } else {
                     // Show and restore required

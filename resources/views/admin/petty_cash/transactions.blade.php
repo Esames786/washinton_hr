@@ -113,7 +113,7 @@
                                 <input type="number" step="0.01" id="total_deduction" name="total_deduction" class="form-control" readonly>
                             </div>
                             <div class="col-md-4 mb-3">
-                                <label>Total Net Salary</label>
+                                <label>Total Net Pay</label>
                                 <input type="number" step="0.01" id="total_net_salary" name="total_net_salary" class="form-control" readonly>
                             </div>
                         </div>

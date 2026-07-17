@@ -13,7 +13,7 @@
     <div class="card">
         <div class="card-body">
             <table class="table table-bordered">
-                <tr><th>Basic Salary</th><td class="text-end">{{ number_format($payrollDetail->basic_salary, 2) }}</td></tr>
+                <tr><th>Basic Pay</th><td class="text-end">{{ number_format($payrollDetail->basic_salary, 2) }}</td></tr>
                 <tr><th>Total Commission</th><td class="text-end">{{ number_format($payrollDetail->total_commission, 2) }}</td></tr>
                 @unless(optional($payrollDetail->employee)->isSubcontractor())
                 <tr><th>Subcontractor Gratuity</th><td class="text-end">{{ number_format($payrollDetail->employee_gratuity, 2) }}</td></tr>
@@ -42,7 +42,7 @@
                 @endphp
                 <tr><th>Productive Time (this period)</th><td class="text-end">{{ $__ph }}h {{ $__pm }}m</td></tr>
                 <tr>
-                    <th>Net Salary</th>
+                    <th>Net Pay</th>
                     <td id="netSalary" class="text-end"><strong>PKR {{ number_format($payrollDetail->net_salary, 2) }}</strong></td>
                 </tr>
             </table>

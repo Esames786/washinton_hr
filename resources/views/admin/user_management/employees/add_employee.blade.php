@@ -128,9 +128,9 @@
                                 </div>
                             </div>
                             <div class="col-6 salary-related">
-                                <label class="form-label">Basic Salary*</label>
+                                <label class="form-label">Basic Pay*</label>
                                 <div class="position-relative">
-                                    <input type="number" name="basic_salary" class="form-control wizard-required" value="{{ old('basic_salary') }}" placeholder="Enter Basic Salary" required>
+                                    <input type="number" name="basic_salary" class="form-control wizard-required" value="{{ old('basic_salary') }}" placeholder="Enter Basic Pay" required>
                                     <div class="wizard-form-error"></div>
                                 </div>
                                 <span class="custom-validation text-danger small px-2"></span>
@@ -498,7 +498,8 @@
                             <div class="col-6">
                                 <label class="form-label">Mother Name</label>
                                 <div class="position-relative">
-                                    <input type="text" name="mother_name" class="form-control wizard-required" value="{{ old('mother_name') }}" required>
+                                    {{-- #14: Mother Name is optional --}}
+                                    <input type="text" name="mother_name" class="form-control" value="{{ old('mother_name') }}">
                                     <div class="wizard-form-error"></div>
                                 </div>
                                 <span class="custom-validation text-danger small px-2"></span>
@@ -768,7 +769,7 @@
                         $(this).removeAttr('required').removeClass('wizard-required');
                     });
 
-                    // Set Basic Salary = 1
+                    // Set Basic Pay = 1
                     $('#basic_salary').val(1);
                 } else {
                     // Show and restore required
@@ -1233,7 +1234,7 @@
                 h += rvRow('Last Name', rvTxt('input[name=last_name]'));
                 h += rvRow('Email', rvTxt('input[name=email]'));
                 h += rvRow('Account Type', rvTxt('#account_type_id'));
-                h += rvRow('Basic Salary', rvTxt('input[name=basic_salary]'));
+                h += rvRow('Basic Pay', rvTxt('input[name=basic_salary]'));
 
                 h += rvHead('Employment Details', 1);
                 h += rvRow('Subcontractor Code', rvTxt('input[name=employee_code]'));

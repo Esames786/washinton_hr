@@ -99,7 +99,7 @@
                             <div class="col-6"><strong>CNIC / Passport:</strong> {{ $employee->cnic ?? '-' }}</div>
                             <div class="col-6"><strong>DOB:</strong> {{ $employee->dob ?? '-' }}</div>
                             <div class="col-6"><strong>Gender:</strong> {{ ucfirst($employee->gender ?? '-') }}</div>
-                            <div class="col-6"><strong>Salary:</strong> {{ number_format($employee->basic_salary ?? 0) }}</div>
+                            <div class="col-6"><strong>Pay:</strong> {{ number_format($employee->basic_salary ?? 0) }}</div>
                             {{-- #21: Tax is for in-house employees only. --}}
                             @unless($employee->isSubcontractor())
                             <div class="col-6"><strong>Tax Slab:</strong> {{ $employee?->tax_slab?->title ?? '-' }}</div>
@@ -141,6 +141,10 @@
                 <div class="card shadow-sm border-0 h-100">
                     <div class="card-header bg-light fw-bold">📅 Working Days</div>
                     <div class="card-body p-3">
+                        {{-- #1: make the 6-day requirement explicit --}}
+                        <div class="alert alert-info py-2 px-3 mb-3 small">
+                            <strong>Note:</strong> This role requires working <strong>6 days a week</strong> (Monday–Saturday).
+                        </div>
                         <div class="d-flex align-items-center flex-wrap gap-4">
                             @php
                                 $dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
@@ -238,7 +242,7 @@
                              Once HR admin verifies/activates, uploading is admin-only. --}}
                         @if($employee->employee_status_id == 7 && $documentSettings && $documentSettings->count())
                         <div class="mb-4 p-3 border rounded" style="background:#f8f9fa;">
-                            <h6 class="fw-bold mb-3">📤 Upload Document</h6>
+                            <h6 class="fw-bold mb-3">📤 Required Documents</h6>
                             <form method="POST"
                                   action="{{ route('employee.profile.upload_document') }}"
                                   enctype="multipart/form-data"

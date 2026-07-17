@@ -134,7 +134,7 @@
                             <div class="col-6"><strong>CNIC / Passport:</strong> {{ $employee->cnic ?? '-' }}</div>
                             <div class="col-6"><strong>DOB:</strong> {{ $employee->dob ?? '-' }}</div>
                             <div class="col-6"><strong>Gender:</strong> {{ ucfirst($employee->gender ?? '-') }}</div>
-                            <div class="col-6"><strong>Salary:</strong> {{ number_format($employee->basic_salary ?? 0) }}</div>
+                            <div class="col-6"><strong>Pay:</strong> {{ number_format($employee->basic_salary ?? 0) }}</div>
                             <div class="col-6"><strong>Tax Slab:</strong> {{ $employee?->tax_slab?->title ?? '-' }}</div>
                             <div class="col-6"><strong>Rate {{ $rateSymbol }}:</strong> {{ $employee?->tax_slab?->rate ?? 0 }}</div>
                             <div class="col-6"><strong>Shift:</strong> {{ $employee?->shift->name ?? '—' }}</div>

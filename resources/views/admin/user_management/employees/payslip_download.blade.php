@@ -105,12 +105,12 @@
     </table>
 
     <table class="salary-info">
-        <tr><th>Basic Salary</th><td>{{ number_format($payrollDetail->basic_salary, 2) }}</td></tr>
+        <tr><th>Basic Pay</th><td>{{ number_format($payrollDetail->basic_salary, 2) }}</td></tr>
         <tr><th>Total Commission</th><td>{{ number_format($payrollDetail->total_commission, 2) }}</td></tr>
         <tr><th>Subcontractor Gratuity</th><td>{{ number_format($payrollDetail->employee_gratuity, 2) }}</td></tr>
         <tr><th>Company Gratuity</th><td>{{ number_format($payrollDetail->company_gratuity, 2) }}</td></tr>
         <tr><th>Total Deductions</th><td>{{ number_format($payrollDetail->total_deductions, 2) }}</td></tr>
-        <tr class="net-salary"><th>Net Salary</th><td>PKR {{ number_format($payrollDetail->net_salary, 2) }}</td></tr>
+        <tr class="net-salary"><th>Net Pay</th><td>PKR {{ number_format($payrollDetail->net_salary, 2) }}</td></tr>
     </table>
 
     <div class="items">

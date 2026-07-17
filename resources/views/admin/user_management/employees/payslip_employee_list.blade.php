@@ -104,8 +104,8 @@
                         <th>CNIC</th>
                         <th>Department</th>
                         <th>Designation</th>
-                        <th>Basic Salary</th>
-                        <th>Net Salary</th>
+                        <th>Basic Pay</th>
+                        <th>Net Pay</th>
                         <th>Status</th>
 {{--                        @if(!$search_true)--}}
                             <th>Action</th>
