@@ -164,17 +164,9 @@ class PakistanReadySeeder extends Seeder
         // Columns: id, title, is_required, description, input_type,
         //          status, created_by, updated_by, timestamps
         // ─────────────────────────────────────────────────────────────────
-        DB::table('hr_document_settings')->truncate();
-        DB::table('hr_document_settings')->insert([
-            ['id'=>1,'title'=>'CNIC (National ID)','is_required'=>1,'description'=>'Computerized National Identity Card','input_type'=>'file','status'=>1,'created_at'=>$now,'updated_at'=>$now],
-            ['id'=>2,'title'=>'Educational Certificate','is_required'=>1,'description'=>'Highest degree or diploma','input_type'=>'file','status'=>1,'created_at'=>$now,'updated_at'=>$now],
-            ['id'=>3,'title'=>'Experience Letter','is_required'=>0,'description'=>'Previous employer experience letter','input_type'=>'file','status'=>1,'created_at'=>$now,'updated_at'=>$now],
-            ['id'=>4,'title'=>'Passport','is_required'=>0,'description'=>'Valid passport copy','input_type'=>'file','status'=>1,'created_at'=>$now,'updated_at'=>$now],
-            ['id'=>5,'title'=>'Bank Account Details','is_required'=>1,'description'=>'Bank account verification document','input_type'=>'file','status'=>1,'created_at'=>$now,'updated_at'=>$now],
-            ['id'=>6,'title'=>'Medical Certificate','is_required'=>0,'description'=>'Fitness certificate from doctor','input_type'=>'file','status'=>1,'created_at'=>$now,'updated_at'=>$now],
-            ['id'=>7,'title'=>'Police Clearance','is_required'=>0,'description'=>'Character certificate from police','input_type'=>'file','status'=>1,'created_at'=>$now,'updated_at'=>$now],
-        ]);
-        $this->command->info('✓ Document Settings seeded');
+        // Document settings: delegated to the production-safe DocumentSettingSeeder
+        // (updateOrInsert — never truncates the doc table, so employee_documents links stay intact).
+        $this->call(\Database\Seeders\DocumentSettingSeeder::class);
 
         // ─────────────────────────────────────────────────────────────────
         // 9. CURRENCY EXCHANGE RATES
