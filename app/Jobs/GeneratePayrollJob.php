@@ -77,7 +77,8 @@ class GeneratePayrollJob implements ShouldQueue
                 $employeeGratuity = 0;
                 $companyGratuity = 0;
 
-                if ($emp->gratuity_id){
+                // Subcontractors (Work From Home) never accrue gratuity.
+                if ($emp->gratuity_id && $emp->worker_type !== 'subcontractor'){
                     if($date >= $emp->valid_gratuity_date){
                         $gratuity = GratuitySetting::where('status', 1)
                             ->where('id',$emp->gratuity_id)
@@ -162,7 +163,8 @@ class GeneratePayrollJob implements ShouldQueue
                 // -------------------------
                 $taxAmount = 0;
                 $appliedSlabId =null;
-                if ($emp->is_taxable && $emp->tax_slab_setting_id) {
+                // Subcontractors (Work From Home) are not taxed.
+                if ($emp->is_taxable && $emp->tax_slab_setting_id && $emp->worker_type !== 'subcontractor') {
                     $slab = TaxSlabSetting::where('status', 1)->find($emp->tax_slab_setting_id);
                     if ($slab) {
                         $taxableIncome = $basicSalary; // taxable base

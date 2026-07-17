@@ -224,8 +224,10 @@ class HrBridgeController extends Controller
         // Commission: default to Standard 5% (id=1) for commission-based accounts
         $commissionId = in_array($accountTypeId, [2, 3]) ? 1 : null;
 
-        // Gratuity: default to Standard (id=1) for salary accounts, No Gratuity (id=3) for commission-only
-        $gratuityId = ($accountTypeId === 2) ? 3 : 1;
+        // Gratuity: subcontractors (Work From Home) never get gratuity; otherwise
+        // Standard (id=1) for salary accounts, No Gratuity (id=3) for commission-only.
+        $isSubcontractor = $request->input('employment_type') !== 'in_house';
+        $gratuityId = $isSubcontractor ? null : (($accountTypeId === 2) ? 3 : 1);
 
         // Tax slab: 0% exempt (id=1) for all new signups
         $taxSlabId = 1;

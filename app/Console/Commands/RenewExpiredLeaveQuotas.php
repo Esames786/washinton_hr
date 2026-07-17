@@ -26,9 +26,9 @@ class RenewExpiredLeaveQuotas extends Command
                 ->get();
 
             foreach ($expiredQuotas as $quota) {
-                // Skip if employee is not active
+                // Skip if employee is not active, or is a subcontractor (WFH → no leaves).
                 $employee = Employee::find($quota->employee_id);
-                if (!$employee || (int) $employee->employee_status_id !== 1) {
+                if (!$employee || (int) $employee->employee_status_id !== 1 || $employee->worker_type === 'subcontractor') {
                     $skipped++;
                     continue;
                 }
