@@ -287,6 +287,10 @@ use App\Http\Controllers\Employee\EmployeeTicketMessageController;
             Route::post('nda/sign', [\App\Http\Controllers\Employee\EmployeeNdaController::class, 'sign'])->name('nda.sign');
             Route::post('activity-heartbeat', [\App\Http\Controllers\Employee\EmployeeActivityController::class, 'heartbeat'])->name('activity.heartbeat');
             Route::delete('profile/document/{id}', [EmployeeDashboardController::class, 'deleteDocument'])->name('profile.delete_document');
+            // P3: house ownership (#3/#7) + self-reported working equipment (#9)
+            Route::post('profile/house-ownership', [EmployeeDashboardController::class, 'setHouseOwnership'])->name('profile.house_ownership');
+            Route::post('profile/equipment', [EmployeeDashboardController::class, 'addEquipment'])->name('profile.add_equipment');
+            Route::delete('profile/equipment/{id}', [EmployeeDashboardController::class, 'deleteEquipment'])->name('profile.delete_equipment');
             Route::prefix('attendance')->name('attendance.')->group(function () {
                 Route::get('', [EmployeeAttendanceController::class, 'index'])->name('index');
                 Route::post('mark', [EmployeeAttendanceController::class, 'markAttendance'])->name('mark');

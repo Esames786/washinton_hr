@@ -203,15 +203,24 @@ class EmployeeDashboardController extends Controller
         $employee = Employee::with([
             'bankDetail', 'documents', 'working_days',
             'employment_type', 'employee_status', 'assignedLeaves',
-            'gratuity', 'role.activityFields', 'shift', 'tax_slab',
+            'gratuity', 'role.activityFields', 'shift', 'tax_slab', 'workEquipment',
         ])->where('id', $employee_id)->first();
 
         if (!$employee) {
             return redirect()->route('employee.dashboard');
         }
 
-        // Load document settings so employee knows what to upload
-        $documentSettings = \App\Models\DocumentSetting::where('status', 1)->get();
+        // P3 (#3/#7): conditional documents only show for the matching house ownership.
+        // Unconditional docs always show; own/rent docs only when the employee has chosen that.
+        $ownership = $employee->house_ownership;
+        $documentSettings = \App\Models\DocumentSetting::where('status', 1)
+            ->where(function ($q) use ($ownership) {
+                $q->whereNull('condition');
+                if ($ownership) {
+                    $q->orWhere('condition', $ownership);
+                }
+            })
+            ->get();
 
         return view('employee.profile', compact('employee', 'documentSettings'));
     }
@@ -223,12 +232,28 @@ class EmployeeDashboardController extends Controller
     {
         $request->validate([
             'document_setting_id' => 'required|integer|exists:hr_document_settings,id',
-            'file'                => 'required|file|max:10240',
         ]);
 
-        $employee = auth('employee')->user();
-
+        $employee   = auth('employee')->user();
         $docSetting = \App\Models\DocumentSetting::findOrFail($request->document_setting_id);
+
+        // P3: per-document limits (max_files) + allowed kind (image | video | any).
+        $maxFiles = max(1, (int) ($docSetting->max_files ?? 1));
+        $kind     = $docSetting->file_kind ?? 'any';
+        $mimeRule = $kind === 'image' ? 'mimes:jpg,jpeg,png,webp'
+                  : ($kind === 'video' ? 'mimes:mp4,mov,webm,avi,mkv,3gp' : '');
+        $maxKb    = $kind === 'video' ? 61440 : 10240; // 60MB video, 10MB otherwise
+
+        $request->validate([
+            'file' => trim('required|file|max:' . $maxKb . ($mimeRule ? '|' . $mimeRule : '')),
+        ]);
+
+        // Enforce the per-document file cap (multi-file types like Selfie accumulate up to max_files).
+        $existingCount = \App\Models\EmployeeDocument::where('employee_id', $employee->id)
+            ->where('document_setting_id', $docSetting->id)->count();
+        if ($maxFiles > 1 && $existingCount >= $maxFiles) {
+            return back()->with('error', 'You can upload at most ' . $maxFiles . ' file(s) for "' . $docSetting->title . '". Remove one to add another.');
+        }
 
         $path = 'Uploads/employees/' . $employee->id . '/';
         if (!file_exists(public_path($path))) {
@@ -236,21 +261,29 @@ class EmployeeDashboardController extends Controller
         }
 
         $file     = $request->file('file');
-        $filename = 'doc_' . $employee->id . '_' . $request->document_setting_id . '_' . time() . '.' . $file->getClientOriginalExtension();
+        $filename = 'doc_' . $employee->id . '_' . $docSetting->id . '_' . time() . '_' . mt_rand(100, 999) . '.' . $file->getClientOriginalExtension();
         $file->move(public_path($path), $filename);
 
-        \App\Models\EmployeeDocument::updateOrCreate(
-            [
+        $payload = [
+            'file_name' => $docSetting->title,
+            'mime_type' => $file->getClientMimeType(),
+            'file_path' => $path . $filename,
+            'status'    => 0, // pending verification
+        ];
+
+        if ($maxFiles > 1) {
+            // Multi-file: each upload is a new row (up to max_files).
+            \App\Models\EmployeeDocument::create(array_merge($payload, [
                 'employee_id'         => $employee->id,
-                'document_setting_id' => $request->document_setting_id,
-            ],
-            [
-                'file_name' => $docSetting->title,
-                'mime_type' => $file->getClientMimeType(),
-                'file_path' => $path . $filename,
-                'status'    => 0, // pending verification
-            ]
-        );
+                'document_setting_id' => $docSetting->id,
+            ]));
+        } else {
+            // Single-file: replace the existing one (unchanged behaviour).
+            \App\Models\EmployeeDocument::updateOrCreate(
+                ['employee_id' => $employee->id, 'document_setting_id' => $docSetting->id],
+                $payload
+            );
+        }
 
         return back()->with('success', 'Document "' . $docSetting->title . '" uploaded successfully. Awaiting verification.');
     }
@@ -265,6 +298,45 @@ class EmployeeDashboardController extends Controller
         $employee->save();
 
         return response()->json(['success' => true, 'message' => 'Contract accepted']);
+    }
+
+    // ─────────────────────────────────────────────────────────────────────
+    // P3 (#3/#7): house ownership — drives which conditional documents apply.
+    // ─────────────────────────────────────────────────────────────────────
+    public function setHouseOwnership(\Illuminate\Http\Request $request)
+    {
+        $request->validate(['house_ownership' => 'required|in:own,rent']);
+        $employee = auth('employee')->user();
+        $employee->house_ownership = $request->house_ownership;
+        $employee->save();
+
+        return back()->with('success', 'Saved. The required documents have been updated for your selection.');
+    }
+
+    // ─────────────────────────────────────────────────────────────────────
+    // P3 (#9): self-reported working equipment.
+    // ─────────────────────────────────────────────────────────────────────
+    public function addEquipment(\Illuminate\Http\Request $request)
+    {
+        $request->validate([
+            'name'    => 'required|string|max:150',
+            'details' => 'nullable|string|max:255',
+        ]);
+        \App\Models\EmployeeWorkEquipment::create([
+            'employee_id' => auth('employee')->id(),
+            'name'        => $request->name,
+            'details'     => $request->details,
+        ]);
+
+        return back()->with('success', 'Equipment added.');
+    }
+
+    public function deleteEquipment($id)
+    {
+        \App\Models\EmployeeWorkEquipment::where('employee_id', auth('employee')->id())
+            ->where('id', $id)->firstOrFail()->delete();
+
+        return back()->with('success', 'Equipment removed.');
     }
 
     public function deleteDocument($id)

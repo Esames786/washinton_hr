@@ -243,6 +243,26 @@
                         @if($employee->employee_status_id == 7 && $documentSettings && $documentSettings->count())
                         <div class="mb-4 p-3 border rounded" style="background:#f8f9fa;">
                             <h6 class="fw-bold mb-3">📤 Required Documents</h6>
+
+                            {{-- P3 (#3/#7): house ownership drives the conditional documents shown below --}}
+                            <div class="alert alert-light border mb-3">
+                                <form method="POST" action="{{ route('employee.profile.house_ownership') }}" class="row g-2 align-items-end">
+                                    @csrf
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-semibold">Do you own or rent your house? <span class="text-danger">*</span></label>
+                                        <select name="house_ownership" class="form-select form-select-sm" required>
+                                            <option value="">-- Select --</option>
+                                            <option value="own"  @selected($employee->house_ownership === 'own')>I own my house</option>
+                                            <option value="rent" @selected($employee->house_ownership === 'rent')>I live in a rented house</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <button type="submit" class="btn btn-outline-primary btn-sm w-100">Save</button>
+                                    </div>
+                                    <div class="col-12"><small class="text-muted">Rented → upload <strong>Rental Agreement</strong> + <strong>Landlord CNIC</strong>. Owned → upload a <strong>Bill</strong> if your CNIC address is different.</small></div>
+                                </form>
+                            </div>
+
                             <form method="POST"
                                   action="{{ route('employee.profile.upload_document') }}"
                                   enctype="multipart/form-data"
@@ -321,6 +341,49 @@
                             </div>
                         @else
                             <p class="text-muted small">No documents uploaded yet. Please upload the required documents above.</p>
+                        @endif
+                    </div>
+                </div>
+            </div>
+
+            {{-- P3 (#8/#9): Workplace & Working Equipment --}}
+            <div class="col-md-12">
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-header bg-light fw-bold">🧰 Working Equipment</div>
+                    <div class="card-body p-3">
+                        <p class="small text-muted">List the equipment you will use for work (e.g. Laptop, Headset, Internet). Also upload <strong>Workplace Pictures</strong> in the documents section above.</p>
+                        @if($employee->employee_status_id == 7)
+                        <form method="POST" action="{{ route('employee.profile.add_equipment') }}" class="row g-2 align-items-end mb-3">
+                            @csrf
+                            <div class="col-md-4"><label class="form-label small fw-semibold">Equipment <span class="text-danger">*</span></label>
+                                <input type="text" name="name" class="form-control form-control-sm" placeholder="e.g. Laptop" required></div>
+                            <div class="col-md-5"><label class="form-label small fw-semibold">Details</label>
+                                <input type="text" name="details" class="form-control form-control-sm" placeholder="e.g. Core i5, 8GB RAM, Windows 11"></div>
+                            <div class="col-md-3"><button type="submit" class="btn btn-primary btn-sm w-100"><i class="bi bi-plus-lg"></i> Add</button></div>
+                        </form>
+                        @endif
+                        @if($employee->workEquipment && $employee->workEquipment->count())
+                        <table class="table table-sm mb-0">
+                            <thead><tr><th>Equipment</th><th>Details</th><th></th></tr></thead>
+                            <tbody>
+                            @foreach($employee->workEquipment as $eq)
+                                <tr>
+                                    <td>{{ $eq->name }}</td>
+                                    <td class="text-muted">{{ $eq->details ?: '—' }}</td>
+                                    <td class="text-end">
+                                        @if($employee->employee_status_id == 7)
+                                        <form method="POST" action="{{ route('employee.profile.delete_equipment', $eq->id) }}" class="d-inline" onsubmit="return confirm('Remove this equipment?');">
+                                            @csrf @method('DELETE')
+                                            <button class="btn btn-sm btn-outline-danger py-0 px-2">Remove</button>
+                                        </form>
+                                        @endif
+                                    </td>
+                                </tr>
+                            @endforeach
+                            </tbody>
+                        </table>
+                        @else
+                            <p class="small text-muted mb-0">No equipment added yet.</p>
                         @endif
                     </div>
                 </div>

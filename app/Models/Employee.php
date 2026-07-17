@@ -87,6 +87,12 @@ class Employee extends Authenticatable
         return $this->isCrazyrays() ? 'CrazyRays Solutions' : 'Hello Transport';
     }
 
+    /** P3 (#9): subcontractor's self-reported working equipment. */
+    public function workEquipment()
+    {
+        return $this->hasMany(\App\Models\EmployeeWorkEquipment::class, 'employee_id');
+    }
+
     public function department()
     {
         return $this->belongsTo(Department::class,'department_id','id');
