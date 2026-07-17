@@ -181,6 +181,7 @@ class HrBridgeController extends Controller
             'agent_id'       => ['nullable', 'integer'],
             'shift_type_id'  => ['nullable', 'integer'],   // from signup form
             'account_type_id'=> ['nullable', 'integer'],   // 1=Salary, 2=Commission, 3=Salary+Commission
+            'employment_type'=> ['nullable', 'in:work_from_home,in_house'], // employment-split
         ]);
 
         if ($validator->fails()) {
@@ -242,7 +243,9 @@ class HrBridgeController extends Controller
             $employee->employee_code      = $this->generateEmployeeCode();
             $employee->joining_date       = now()->toDateString();
             $employee->employment_type_id = 3;  // Probation for new signups
-            $employee->worker_type        = 'subcontractor'; // #21: CrazyRays signups are subcontractors
+            // Employment-split: In-House applicants become in-house employees; everyone
+            // else (Work From Home campaign applicants) is a subcontractor.
+            $employee->worker_type        = $request->input('employment_type') === 'in_house' ? 'inhouse' : 'subcontractor';
             $employee->employee_status_id = 7;  // Document Verification — pending docs
             $employee->phone              = $request->input('phone');
             $employee->address            = $request->input('address');
