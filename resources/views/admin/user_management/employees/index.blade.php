@@ -64,16 +64,21 @@
 
     @include('partials.alerts')
 
+    @php $isSub = ($type ?? 'inhouse') === 'subcontractor'; @endphp
     <div class="card h-100 p-0 radius-12">
         <div class="card-header border-bottom bg-base py-16 px-24 d-flex flex-wrap align-items-end gap-3">
-                    <div class="col-md-12 col-12">
+                    <div class="col-md-12 col-12 d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0">{{ $isSub ? 'Subcontractors (Work From Home)' : 'On-Site Process' }}</h6>
                         <div class="d-flex gap-2 justify-content-end">
-                            <a href="{{route('admin.employees.create')}}" class="btn btn-primary btn-sm">Add Subcontractor</a>
+                            {{-- Add is only for the standalone Subcontractor listing; On-Site/In-House records come from applications. --}}
+                            @if($isSub)
+                                <a href="{{route('admin.employees.create')}}" class="btn btn-primary btn-sm">Add Subcontractor</a>
+                            @endif
                         </div>
                     </div>
                      <div class="col-md-1" style="width: 4.333333%!important"></div>
                     <div class="col-md-3 col-6 form-select-2">
-                        <label class="form-label fw-semibold">Subcontractors</label>
+                        <label class="form-label fw-semibold">{{ $isSub ? 'Subcontractors' : 'Employees' }}</label>
                         <select name="employee_ids[]" id="employee_ids" multiple class="form-select">
                             @foreach($employees as $employee)
                                 <option value="{{ $employee->id }}">{{ $employee->full_name }}</option>
@@ -265,6 +270,7 @@
                 ajax: {
                     url: "{{ route('admin.employees.index') }}",
                     data: function (d) {
+                        d.type = '{{ $type ?? "inhouse" }}';                 // employment-split
                         d.employee_ids = $('#employee_ids').val();          // multi-select
                         d.account_type_id = $('#account_type_id').val();    // single select
                         d.employment_type_id = $('#employment_type_id').val(); // single select

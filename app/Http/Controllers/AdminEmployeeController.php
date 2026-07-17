@@ -63,10 +63,13 @@ class AdminEmployeeController extends Controller
 
     public function index(Request $request)
     {
+        // Employment-split: 'inhouse' → On-Site Process page, 'subcontractor' → Subcontractor listing.
+        $type = $request->get('type') === 'subcontractor' ? 'subcontractor' : 'inhouse';
+
         if ($request->ajax()) {
 
             // Eager load relations and select necessary columns
-            $employees = Employee::select(
+            $employees = Employee::where('hr_employees.worker_type', $type)->select(
                 'hr_employees.id',
                 'hr_employees.full_name',
                 'hr_employees.email',
@@ -272,10 +275,10 @@ class AdminEmployeeController extends Controller
             ->where('deleted', 0)
             ->orderBy('name')
             ->get();
-        $employees = Employee::all();
+        $employees = Employee::where('worker_type', $type)->get();
         $account_types = EmployeeAccountType::where('id','!=',2)->get();
         $employee_types = EmploymentType::all();
-        return view('admin.user_management.employees.index', compact('authorized_users', 'employees', 'account_types', 'employee_types'));
+        return view('admin.user_management.employees.index', compact('authorized_users', 'employees', 'account_types', 'employee_types', 'type'));
     }
 
     /**

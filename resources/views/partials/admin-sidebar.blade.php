@@ -98,7 +98,7 @@
                             <ul class="sidebar-submenu">
                                 @foreach($submenuItems as $item)
                                     <li>
-                                        <a href="{{ route($item['route']) }}">
+                                        <a href="{{ route($item['route'], $item['params'] ?? []) }}">
                                             <i class="ri-circle-fill circle-icon {{ $item['iconClass'] ?? '' }} w-auto"></i>
                                             {{ $item['title'] }}
                                         </a>

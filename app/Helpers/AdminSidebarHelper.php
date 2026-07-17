@@ -44,7 +44,8 @@ class AdminSidebarHelper
                 'items' => [
                     ['title' => 'Roles', 'route' => 'admin.roles.index', 'iconClass' => 'text-primary-600'],
                     ['title' => 'Users', 'route' => 'admin.users.index', 'iconClass' => 'text-warning-main'],
-                    ['title' => 'Subcontractors', 'route' => 'admin.employees.index', 'iconClass' => 'text-info-main'],
+                    // Employment-split: In-House / On-Site employees only.
+                    ['title' => 'On-Site Process', 'route' => 'admin.employees.index', 'iconClass' => 'text-info-main'],
                 ]
             ],
             [
@@ -81,6 +82,8 @@ class AdminSidebarHelper
                 'title' => 'Subcontractor Management',
                 'icon'  => 'bi bi-person-badge',
                 'items' => [
+                    // Employment-split: Work From Home campaign subcontractors.
+                    ['title' => 'Subcontractors', 'route' => 'admin.employees.index', 'params' => ['type' => 'subcontractor'], 'iconClass' => 'text-info-main'],
                     ['title' => 'Attendance List', 'route' => 'admin.employees.attendance_list', 'iconClass' => 'text-primary-600'],
                     ['title' => 'Break List', 'route' => 'admin.employees.break_list', 'iconClass' => 'text-warning-600'],
                     [
