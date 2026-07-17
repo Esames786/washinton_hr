@@ -18,6 +18,24 @@
         <div class="col-auto">
             <div class="d-flex flex-wrap align-items-center gap-3">
 
+                {{-- Live Pakistan (server) time — small running clock --}}
+                <span class="d-flex align-items-center gap-1 text-secondary-light" title="Pakistan Standard Time" style="font-variant-numeric:tabular-nums;">
+                    <iconify-icon icon="solar:clock-circle-outline"></iconify-icon>
+                    <span id="pkClock" class="fw-semibold">--:--:--</span>
+                    <span class="text-xs">PKT</span>
+                </span>
+                <script>
+                (function () {
+                    var el = document.getElementById('pkClock');
+                    function tick() {
+                        if (el) el.textContent = new Intl.DateTimeFormat('en-GB', {
+                            timeZone: 'Asia/Karachi', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true
+                        }).format(new Date());
+                    }
+                    tick(); setInterval(tick, 1000);
+                })();
+                </script>
+
                 {{-- Global shift countdown + active-time (every employee screen) --}}
                 @auth('employee')
                 @if(auth('employee')->user()->agent_id)
