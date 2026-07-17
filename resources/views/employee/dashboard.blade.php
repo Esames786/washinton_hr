@@ -3,15 +3,15 @@
 @section('pageName','Subcontractor Dashboard')
 @push('cssLinks')
     <style>
-        .clickable-card,.clickable-card-break { cursor: pointer; transition: transform 0.2s; }
-        .clickable-card:hover,.clickable-card-break:hover { transform: translateY(-5px); }
+        .clickable-card,.clickable-card-break,.profile-quick-card { cursor: pointer; transition: transform 0.2s; }
+        .clickable-card:hover,.clickable-card-break:hover,.profile-quick-card:hover { transform: translateY(-5px); }
         .disabled-card { opacity: 0.5; pointer-events: none; cursor: not-allowed; }
 
     </style>
 @endpush
 @section('content')
     {{-- #17: My Profile quick access above the dashboard --}}
-    <a href="{{ route('employee.profile') }}" class="card shadow-none border mb-4 clickable-card d-block text-decoration-none">
+    <a href="{{ route('employee.profile') }}" class="card shadow-none border mb-4 profile-quick-card d-block text-decoration-none">
         <div class="card-body p-16 d-flex align-items-center justify-content-between">
             <div class="d-flex align-items-center gap-3">
                 <div style="width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,#6366f1,#0ea5e9);color:#fff;display:flex;align-items:center;justify-content:center;font-size:20px;">👤</div>
