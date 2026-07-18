@@ -33,8 +33,8 @@ class DocumentSettingSeeder extends Seeder
             [7,  'Police Clearance',            0, 'Character certificate from police',              0, 1, 'any',   null],
             [8,  'smart card',                  0, 'Smart card',                                     0, 1, 'any',   null],
             [9,  'Bill',                        0, 'Utility bill (owned house, if CNIC address differs)', 1, 1, 'any', 'own'],  // #7
-            [10, 'CNIC (Front & Back)',         1, 'Single PDF/image with BOTH front and back of CNIC.', 1, 1, 'any', null],   // #15
-            [11, 'CNIC Back',                   0, 'CNIC back (deprecated, merged into #10)',         0, 1, 'any',   null],  // #15
+            [10, 'CNIC Front',                  1, 'Upload a clear photo/scan of the FRONT side of your CNIC.', 1, 1, 'any', null],
+            [11, 'CNIC Back',                   1, 'Upload a clear photo/scan of the BACK side of your CNIC.',  1, 1, 'any', null],
             [12, 'Resume',                      1, 'Updated CV / resume',                            1, 1, 'any',   null],
             [13, 'Father/Mother CNIC',          1, "Father's or Mother's CNIC",                      1, 1, 'any',   null],
             [14, 'Selfie (4 angles)',           1, 'Up to 4 selfies from different angles, plain blue/white background.', 1, 4, 'image', null],  // #4
