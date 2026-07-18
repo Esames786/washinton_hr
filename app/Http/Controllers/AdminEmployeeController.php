@@ -440,7 +440,9 @@ class AdminEmployeeController extends Controller
             'mother_name'           => 'nullable|string|max:255',
             // CNIC: accept both the 13-digit form captured at signup and the dashed
             // XXXXX-XXXXXXX-X (15-char) form, so synced subcontractors don't have to be re-typed.
-            'cnic'                  => 'required|string|regex:/^(\d{13}|\d{5}-\d{7}-\d)$/|unique:hr_employees,cnic',
+            // MUST be an array — the regex contains '|', which Laravel would otherwise treat as a
+            // rule separator (splitting the pattern → "No ending delimiter '/' found").
+            'cnic'                  => ['required', 'string', 'regex:/^(\d{13}|\d{5}-\d{7}-\d)$/', 'unique:hr_employees,cnic'],
             'dob'                   => 'nullable|date|before_or_equal:today',
             'gender'                => 'nullable|in:male,female,other',
             'marital_status'        => 'nullable|in:single,married,divorced,widowed',
@@ -801,7 +803,9 @@ class AdminEmployeeController extends Controller
             'mother_name'           => 'nullable|string|max:255',
             // CNIC: accept both the 13-digit form captured at signup and the dashed
             // XXXXX-XXXXXXX-X (15-char) form, so synced subcontractors don't have to be re-typed.
-            'cnic' => 'required|string|regex:/^(\d{13}|\d{5}-\d{7}-\d)$/|unique:hr_employees,cnic,' . $id,
+            // MUST be an array — the regex contains '|', which Laravel would otherwise treat as a
+            // rule separator (splitting the pattern → "No ending delimiter '/' found").
+            'cnic' => ['required', 'string', 'regex:/^(\d{13}|\d{5}-\d{7}-\d)$/', 'unique:hr_employees,cnic,' . $id],
             'dob'                   => 'nullable|date|before_or_equal:today',
             'gender'                => 'nullable|in:male,female,other',
             'marital_status'        => 'nullable|in:single,married,divorced,widowed',
