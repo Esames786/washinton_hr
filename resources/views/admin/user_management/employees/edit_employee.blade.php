@@ -695,8 +695,13 @@
                                 <div class="col-6">
                                     <label class="form-label">
                                         {{ $doc->title }}
-                                        @if($doc->is_required)
+                                        {{-- Only mark required if it is required AND not already provided
+                                             (e.g. via CrazyRays signup). Otherwise the red * is misleading. --}}
+                                        @if($doc->is_required && !$existingDoc)
                                             <span class="text-danger">*</span>
+                                        @endif
+                                        @if($existingDoc)
+                                            <span class="badge bg-success-subtle text-success">✓ Uploaded</span>
                                         @endif
                                     </label>
                                     <div class="position-relative">
@@ -712,7 +717,9 @@
                                         @endif
                                         <div class="wizard-form-error"></div>
                                     </div>
-                                    @if($doc->description)
+                                    @if($existingDoc)
+                                        <small class="text-success d-block">Already on file: {{ $existingDoc->file_name }} — choose a file only to replace it.</small>
+                                    @elseif($doc->description)
                                         <small class="text-muted">{{ $doc->description }}</small>
                                     @endif
                                 </div>
@@ -1188,8 +1195,12 @@
                 var benefitsOff  = isWfh || isSub;          // no gratuity / leaves
                 var taxOff       = benefitsOff || salaryHidden; // commission-only has no tax either
 
+                // NOTE: use name^="leaves" so the hidden leaves[N][leave_type_id] input is
+                // disabled too (matches add_employee). If only the quota/date inputs are
+                // disabled, the leave_type_id hidden fields still POST → the server sees
+                // partial leaves[] rows and rejects "leaves.N.assigned_quota is required".
                 var $fields = $('#gratuity_id, input[name="valid_gratuity_date"], ' +
-                    '#wfhLeavesStep input[name*="[assigned_quota]"], #wfhLeavesStep input[name*="[valid_from]"], #wfhLeavesStep input[name*="[valid_to]"]');
+                    '#wfhLeavesStep input[name^="leaves"]');
                 $fields.each(function () {
                     var $f = $(this);
                     if ($f.data('wfhOrigReq') === undefined) {

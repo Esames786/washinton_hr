@@ -438,16 +438,20 @@ class AdminEmployeeController extends Controller
             'designation_id'        => 'nullable|integer|max:255',
             'father_name'           => 'nullable|string|max:255',
             'mother_name'           => 'nullable|string|max:255',
-            'cnic'                  => 'required|string|size:15|unique:hr_employees,cnic',
+            // CNIC: accept both the 13-digit form captured at signup and the dashed
+            // XXXXX-XXXXXXX-X (15-char) form, so synced subcontractors don't have to be re-typed.
+            'cnic'                  => 'required|string|regex:/^(\d{13}|\d{5}-\d{7}-\d)$/|unique:hr_employees,cnic',
             'dob'                   => 'nullable|date|before_or_equal:today',
             'gender'                => 'nullable|in:male,female,other',
             'marital_status'        => 'nullable|in:single,married,divorced,widowed',
             'kids_count'            => 'nullable|integer|min:0',
             'skills'                => 'nullable|string',
-            'phone'                 => 'nullable|regex:/^[0-9]{11,}$/',
-            'phone2'                => 'nullable|regex:/^[0-9]{11,}$/',
+            // Phone: accept an optional "+<country code> " prefix (e.g. "+92 3001234567")
+            // as captured by the CrazyRays signup, as well as the plain 11-digit local form.
+            'phone'                 => 'nullable|regex:/^\+?[0-9][0-9\s-]{9,}$/',
+            'phone2'                => 'nullable|regex:/^\+?[0-9][0-9\s-]{9,}$/',
             'contact_person'        => 'nullable|string|max:255',
-            'emergency_contact'     => 'nullable|regex:/^[0-9]{11,}$/',
+            'emergency_contact'     => 'nullable|regex:/^\+?[0-9][0-9\s-]{9,}$/',
             'address'               => 'nullable|string|max:255',
             'city'                  => 'nullable|string|max:255',
             'state'                 => 'nullable|string|max:255',
@@ -464,11 +468,14 @@ class AdminEmployeeController extends Controller
             'working_days'          => 'required|array|min:1',
             'working_days.*'        => 'in:0,1',
 
+            // #21: when leaves are OFF (subcontractor / WFH shift 6 / toggle off) the per-item
+            // rules must ALSO relax — otherwise any stray leaves[] row still submitted by the
+            // form (e.g. the hidden leave_type_id) fails "…field is required".
             'leaves' => $leavesOff ? 'nullable|array' : 'required|array',
-            'leaves.*.leave_type_id' => 'required|exists:hr_leave_types,id',
-            'leaves.*.assigned_quota' => 'required|integer|min:0',
-            'leaves.*.valid_from' => 'required|date',
-            'leaves.*.valid_to' => 'required|date'
+            'leaves.*.leave_type_id'  => $leavesOff ? 'nullable' : 'required|exists:hr_leave_types,id',
+            'leaves.*.assigned_quota' => $leavesOff ? 'nullable|integer|min:0' : 'required|integer|min:0',
+            'leaves.*.valid_from'     => $leavesOff ? 'nullable|date' : 'required|date',
+            'leaves.*.valid_to'       => $leavesOff ? 'nullable|date' : 'required|date',
 
         ]);
 
@@ -792,16 +799,20 @@ class AdminEmployeeController extends Controller
             'designation_id'        => 'nullable|integer|max:255',
             'father_name'           => 'nullable|string|max:255',
             'mother_name'           => 'nullable|string|max:255',
-            'cnic' => 'required|string|size:15|unique:hr_employees,cnic,' . $id,
+            // CNIC: accept both the 13-digit form captured at signup and the dashed
+            // XXXXX-XXXXXXX-X (15-char) form, so synced subcontractors don't have to be re-typed.
+            'cnic' => 'required|string|regex:/^(\d{13}|\d{5}-\d{7}-\d)$/|unique:hr_employees,cnic,' . $id,
             'dob'                   => 'nullable|date|before_or_equal:today',
             'gender'                => 'nullable|in:male,female,other',
             'marital_status'        => 'nullable|in:single,married,divorced,widowed',
             'kids_count'            => 'nullable|integer|min:0',
             'skills'                => 'nullable|string',
-            'phone'                 => 'nullable|regex:/^[0-9]{11,}$/',
-            'phone2'                => 'nullable|regex:/^[0-9]{11,}$/',
+            // Phone: accept an optional "+<country code> " prefix (e.g. "+92 3001234567")
+            // as captured by the CrazyRays signup, as well as the plain 11-digit local form.
+            'phone'                 => 'nullable|regex:/^\+?[0-9][0-9\s-]{9,}$/',
+            'phone2'                => 'nullable|regex:/^\+?[0-9][0-9\s-]{9,}$/',
             'contact_person'        => 'nullable|string|max:255',
-            'emergency_contact'     => 'nullable|regex:/^[0-9]{11,}$/',
+            'emergency_contact'     => 'nullable|regex:/^\+?[0-9][0-9\s-]{9,}$/',
             'address'               => 'nullable|string|max:255',
             'city'                  => 'nullable|string|max:255',
             'state'                 => 'nullable|string|max:255',
@@ -817,11 +828,14 @@ class AdminEmployeeController extends Controller
             'working_days'          => 'required|array|min:1',
             'working_days.*'        => 'in:0,1',
 
+            // #21: when leaves are OFF (subcontractor / WFH shift 6 / toggle off) the per-item
+            // rules must ALSO relax — otherwise any stray leaves[] row still submitted by the
+            // form (e.g. the hidden leave_type_id) fails "…field is required".
             'leaves' => $leavesOff ? 'nullable|array' : 'required|array',
-            'leaves.*.leave_type_id' => 'required|exists:hr_leave_types,id',
-            'leaves.*.assigned_quota' => 'required|integer|min:0',
-            'leaves.*.valid_from' => 'required|date',
-            'leaves.*.valid_to' => 'required|date',
+            'leaves.*.leave_type_id'  => $leavesOff ? 'nullable' : 'required|exists:hr_leave_types,id',
+            'leaves.*.assigned_quota' => $leavesOff ? 'nullable|integer|min:0' : 'required|integer|min:0',
+            'leaves.*.valid_from'     => $leavesOff ? 'nullable|date' : 'required|date',
+            'leaves.*.valid_to'       => $leavesOff ? 'nullable|date' : 'required|date',
 
         ]);
 
