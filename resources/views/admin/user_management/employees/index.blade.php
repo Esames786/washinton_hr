@@ -68,7 +68,8 @@
     <div class="card h-100 p-0 radius-12">
         <div class="card-header border-bottom bg-base py-16 px-24 d-flex flex-wrap align-items-end gap-3">
                     <div class="col-md-12 col-12 d-flex justify-content-between align-items-center">
-                        <h6 class="mb-0">{{ $isSub ? 'Subcontractors (Work From Home)' : 'On-Site Process' }}</h6>
+                        {{-- HR#2: subcontractor (campaign/WFH) vs employee (on-site/in-house) --}}
+                        <h6 class="mb-0">{{ $isSub ? 'Subcontractors' : 'Employees' }}</h6>
                         <div class="d-flex gap-2 justify-content-end">
                             {{-- Add is only for the standalone Subcontractor listing; On-Site/In-House records come from applications. --}}
                             @if($isSub)
