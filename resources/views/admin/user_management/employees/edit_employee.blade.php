@@ -645,6 +645,21 @@
 
                             </div>
 
+                            {{-- #5: House ownership — drives which conditional documents (Rental
+                                 Agreement vs owned-house Bill) are requested on the profile. --}}
+                            <div class="col-4">
+                                <label class="form-label">House Ownership</label>
+                                <div class="position-relative">
+                                    <select name="house_ownership" class="form-control">
+                                        @php $ho = old('house_ownership', $employee->house_ownership); @endphp
+                                        <option value="">-- Not specified --</option>
+                                        <option value="own"  {{ $ho === 'own'  ? 'selected' : '' }}>Own</option>
+                                        <option value="rent" {{ $ho === 'rent' ? 'selected' : '' }}>Rent</option>
+                                    </select>
+                                    <div class="wizard-form-error"></div>
+                                </div>
+                            </div>
+
                             <div class="col-4">
                                 <label class="form-label">City</label>
                                 <div class="position-relative">

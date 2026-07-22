@@ -225,7 +225,13 @@
             <div class="col-md-12">
                 <div class="card shadow-sm border-0 h-100">
                     <div class="card-header bg-light fw-bold d-flex align-items-center justify-content-between">
-                        <span>📄 Documents</span>
+                        <span>📄 Documents
+                            {{-- #6: at-a-glance verified / total count --}}
+                            @if($employee->documents && $employee->documents->count())
+                                @php $docVerified = $employee->documents->where('status', 1)->count(); $docTotal = $employee->documents->count(); @endphp
+                                <span class="badge {{ $docVerified === $docTotal ? 'bg-success' : 'bg-secondary' }} text-white ms-2">{{ $docVerified }}/{{ $docTotal }} verified</span>
+                            @endif
+                        </span>
                         @if($employee->documents && $employee->documents->count())
                             <button type="button" class="btn btn-sm btn-success" id="bulkVerifyBtn"
                                     data-employee-id="{{ $employee->id }}">
@@ -290,10 +296,26 @@
                                 @endif
                             </div>
                         @elseif($employee->nda_required)
-                            <span class="badge bg-warning text-dark">Pending Signature</span>
-                            <span class="text-muted small ms-2">The employee has been asked to sign and has not signed yet.</span>
+                            <div class="d-flex flex-wrap align-items-center gap-2">
+                                <span class="badge bg-warning text-dark">Pending Signature</span>
+                                <span class="text-muted small">The subcontractor has been asked to sign and has not signed yet.</span>
+                                {{-- HR admin can remove the requirement if it was set in error --}}
+                                <form method="POST" action="{{ route('admin.employees.set-nda', $employee->id) }}" class="ms-auto">
+                                    @csrf
+                                    <input type="hidden" name="require" value="0">
+                                    <button type="submit" class="btn btn-sm btn-outline-secondary">Remove NDA Requirement</button>
+                                </form>
+                            </div>
                         @else
-                            <span class="badge bg-secondary text-white">Not Required</span>
+                            <div class="d-flex flex-wrap align-items-center gap-2">
+                                <span class="badge bg-secondary text-white">Not Required</span>
+                                {{-- HR admin assigns the NDA (same control the Hello manager has) --}}
+                                <form method="POST" action="{{ route('admin.employees.set-nda', $employee->id) }}" class="ms-auto">
+                                    @csrf
+                                    <input type="hidden" name="require" value="1">
+                                    <button type="submit" class="btn btn-sm btn-primary">📝 Require NDA</button>
+                                </form>
+                            </div>
                         @endif
                     </div>
                 </div>

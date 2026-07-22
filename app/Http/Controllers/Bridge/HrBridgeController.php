@@ -124,8 +124,11 @@ class HrBridgeController extends Controller
             return redirect()->route('employee.login')->withErrors(['SSO link has expired. Please try again.']);
         }
 
-        // Delete token immediately — single use
-        \Illuminate\Support\Facades\DB::table('hr_sso_tokens')->where('token', $token)->delete();
+        // #7: do NOT delete on first use. Deleting immediately meant a reload, a browser
+        // back, or re-clicking the "upload documents" link failed with "invalid or already
+        // used" and dumped the agent on the subcontractor login. The token stays valid until
+        // its expires_at (short TTL) and is purged by the expiry branch above, so re-entry
+        // within the window works smoothly.
 
         $employee = Employee::find($record->employee_id);
 

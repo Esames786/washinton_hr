@@ -338,6 +338,11 @@
                             @auth('employee')
                                 <li>
                                     <a class="dropdown-item text-black px-0 py-8 hover-bg-transparent hover-text-primary d-flex align-items-center gap-3"
+                                       href="{{route('employee.dashboard')}}">
+                                        <iconify-icon icon="solar:home-2-linear" class="icon text-xl"></iconify-icon> Dashboard</a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item text-black px-0 py-8 hover-bg-transparent hover-text-primary d-flex align-items-center gap-3"
                                        href="{{route('employee.profile')}}">
                                         <iconify-icon icon="solar:user-linear" class="icon text-xl"></iconify-icon> My Profile</a>
                                 </li>

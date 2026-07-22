@@ -337,8 +337,9 @@
                 let employee_ids = $('#employee_ids').val();
                 let account_type_id = $('#account_type_id').val();
                 let employment_type_id = $('#employment_type_id').val();
+                let employee_status_id = $('#employee_status_id').val(); // #3: status counts as a filter
 
-                if ((!employee_ids || employee_ids.length === 0) && !account_type_id && !employment_type_id) {
+                if ((!employee_ids || employee_ids.length === 0) && !account_type_id && !employment_type_id && !employee_status_id) {
                     Swal.fire({
                         icon: 'warning',
                         title: 'Warning!',

@@ -426,6 +426,7 @@ class AdminEmployeeController extends Controller
             'role_id'               => 'required|integer',
             'shift_id'              => 'required|integer',
             'worker_type'           => 'required|in:inhouse,subcontractor',
+            'house_ownership'       => 'nullable|in:own,rent', // #5: drives conditional documents
             // #7/#8: Work From Home (shift 6) does NOT require Gratuity or Leaves detail.
             'gratuity_id'           => $gratuityOff ? 'nullable|integer' : 'nullable|required_if:account_type_id,1,3|integer',
             'valid_gratuity_date'   => $gratuityOff ? 'nullable|date' : 'nullable|required_if:account_type_id,1,3|date',
@@ -539,6 +540,7 @@ class AdminEmployeeController extends Controller
             $employee->country                = $request->country;
             $employee->employee_status_id     = 7;
             $employee->worker_type            = $isSub ? 'subcontractor' : 'inhouse';
+            $employee->house_ownership        = $request->house_ownership ?: null; // #5
             $employee->created_by             = auth('admin')->id();
             $employee->updated_by             = auth('admin')->id();
 
@@ -789,6 +791,7 @@ class AdminEmployeeController extends Controller
             'role_id'               => 'required|integer',
             'shift_id'              => 'required|integer',
             'worker_type'           => 'required|in:inhouse,subcontractor',
+            'house_ownership'       => 'nullable|in:own,rent', // #5: drives conditional documents
             // #7/#8/#21: WFH (shift 6) and subcontractors do NOT require Gratuity or Leaves.
             'gratuity_id'           => $gratuityOff ? 'nullable|integer' : 'nullable|required_if:account_type_id,1,3|integer',
             'valid_gratuity_date'   => $gratuityOff ? 'nullable|date' : 'nullable|required_if:account_type_id,1,3|date',
@@ -900,6 +903,7 @@ class AdminEmployeeController extends Controller
             $employee->state            = $request->state;
             $employee->country          = $request->country;
             $employee->worker_type      = $isSub ? 'subcontractor' : 'inhouse';
+            $employee->house_ownership  = $request->house_ownership ?: null; // #5
             $employee->updated_by       = auth('admin')->id();
             // #21: subcontractor / WFH is never taxable; otherwise honor the selected slab.
             if (!$taxOff && $request->filled('tax_slab_setting_id') && $request->tax_slab_setting_id > 0) {
@@ -1126,6 +1130,26 @@ class AdminEmployeeController extends Controller
     public function destroy($id)
     {
         //
+    }
+
+    /**
+     * HR admin requires (or removes the requirement for) the subcontractor's NDA.
+     * Gives HR admin the same NDA-assignment control the Hello manager has.
+     */
+    public function setNda(Request $request, $employee)
+    {
+        $emp = Employee::findOrFail($employee);
+
+        if ($emp->nda_signed_at) {
+            return back()->with('error', 'NDA has already been signed — the requirement cannot be changed.');
+        }
+
+        $emp->nda_required = $request->boolean('require') ? 1 : 0;
+        $emp->save();
+
+        return back()->with('success', $emp->nda_required
+            ? 'NDA requested — the subcontractor will be asked to sign.'
+            : 'NDA requirement removed.');
     }
 
     public function changeStatus(Request $request)

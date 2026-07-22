@@ -93,6 +93,8 @@ use App\Http\Controllers\Employee\EmployeeTicketMessageController;
 
                 Route::post('subcontractors/change-status', [AdminEmployeeController::class, 'changeStatus'])->name('employees.change-status');
                 Route::post('subcontractors/{employee}/contract', [AdminEmployeeController::class, 'saveContract'])->name('employees.save-contract');
+                // HR admin can require / remove the NDA for a subcontractor (previously only the Hello manager could).
+                Route::post('subcontractors/{employee}/nda', [AdminEmployeeController::class, 'setNda'])->name('employees.set-nda');
                 Route::get('subcontractors/{employee}/documents', [AdminEmployeeController::class, 'getDocuments'])->name('employees.documents');
                 Route::post('subcontractors/documents/{document}/verify', [AdminEmployeeController::class, 'verify'])->name('employees.documents.verify');
                 Route::post('subcontractors/documents/bulk-verify', [AdminEmployeeController::class, 'bulkVerify'])->name('employees.documents.bulk-verify');
