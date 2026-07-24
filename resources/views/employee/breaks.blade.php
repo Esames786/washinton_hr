@@ -26,6 +26,7 @@
                 <thead>
                 <tr>
                     <th>Subcontractor Name</th>
+                    <th>Date</th>
                     <th>Break Start</th>
                     <th>Break End</th>
                     <th>Break Duration</th>
@@ -52,6 +53,7 @@
                 },
                 columns: [
                     { data: 'employee_name', name: 'employee_name', orderable: true },
+                    { data: 'break_date', name: 'created_at', orderable: true },
                     { data: 'break_start', name: 'break_start', orderable: true },
                     { data: 'break_end', name: 'break_end', orderable: true },
                     { data: 'break_duration', name: 'break_duration', orderable: false },

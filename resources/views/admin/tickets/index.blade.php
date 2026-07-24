@@ -34,6 +34,49 @@
 
 {{--        </div>--}}
         <div class="card-body p-24">
+            {{-- #3: tickets filters (status / subcontractor / type / date range) --}}
+            <div class="row g-3 mb-3">
+                <div class="col-md-3">
+                    <label class="form-label small fw-semibold">Status</label>
+                    <select id="f_status" class="form-select form-select-sm">
+                        <option value="">All</option>
+                        <option value="1">Pending</option>
+                        <option value="2">Approved</option>
+                        <option value="3">Rejected</option>
+                        <option value="4">Closed</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small fw-semibold">Subcontractor</label>
+                    <select id="f_employee" class="form-select form-select-sm">
+                        <option value="">All</option>
+                        @foreach($employees as $emp)
+                            <option value="{{ $emp->id }}">{{ $emp->full_name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label small fw-semibold">Type</label>
+                    <select id="f_type" class="form-select form-select-sm">
+                        <option value="">All</option>
+                        @foreach($ticketTypes as $tt)
+                            <option value="{{ $tt->id }}">{{ $tt->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label small fw-semibold">From</label>
+                    <input type="date" id="f_date_from" class="form-control form-control-sm">
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label small fw-semibold">To</label>
+                    <input type="date" id="f_date_to" class="form-control form-control-sm">
+                </div>
+                <div class="col-12 d-flex gap-2">
+                    <button type="button" id="ticketFilterBtn" class="btn btn-primary btn-sm">Filter</button>
+                    <button type="button" id="ticketFilterClear" class="btn btn-outline-secondary btn-sm">Clear</button>
+                </div>
+            </div>
             <div class="table-responsive">
                 <table class="table bordered-table sm-table mb-0 table-text-center" id="ticketTable">
                     <thead>
@@ -109,7 +152,16 @@
                 serverSide: true,
                 searching: true,
                 rowId: 'id',
-                ajax: "{{ route('admin.tickets.index') }}",
+                ajax: {
+                    url: "{{ route('admin.tickets.index') }}",
+                    data: function (d) { // #3: send filter values
+                        d.f_status    = $('#f_status').val();
+                        d.f_employee  = $('#f_employee').val();
+                        d.f_type      = $('#f_type').val();
+                        d.f_date_from = $('#f_date_from').val();
+                        d.f_date_to   = $('#f_date_to').val();
+                    }
+                },
                 columns: [
                     { data: 'id', name: 'id' },
                     { data: 'employee_name', name: 'employee_name' },
@@ -123,6 +175,14 @@
                 ],
                 pageLength: 10,
                 lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]],
+            });
+
+            // #3: filter controls
+            $('#ticketFilterBtn').on('click', function () { datatable.ajax.reload(); });
+            $('#f_status, #f_employee, #f_type, #f_date_from, #f_date_to').on('change', function () { datatable.ajax.reload(); });
+            $('#ticketFilterClear').on('click', function () {
+                $('#f_status, #f_employee, #f_type, #f_date_from, #f_date_to').val('');
+                datatable.ajax.reload();
             });
 
             // Approve Ticket

@@ -39,15 +39,17 @@
     <div class="dashboard-main-body">
         <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-24">
             <h6 class="fw-semibold mb-0">@yield('pageName')</h6>
+            {{-- #4/#5: removed the broken "Dashboard - AI" theme placeholder (its link pointed at
+                 index.html and errored). Agents get a "Back to Hello Dashboard" link instead; admin gets nothing. --}}
             <ul class="d-flex align-items-center gap-2">
-                <li class="fw-medium">
-                    <a href="index.html" class="d-flex align-items-center gap-1 hover-text-primary">
-                        <iconify-icon icon="solar:home-smile-angle-outline" class="icon text-lg"></iconify-icon>
-                        Dashboard
-                    </a>
-                </li>
-                <li>-</li>
-                <li class="fw-medium">AI</li>
+                @auth('employee')
+                    <li class="fw-medium">
+                        <a href="{{ config('bridge.agent_portal.dashboard_url', url('/subcontractor/dashboard')) }}" class="d-flex align-items-center gap-1 hover-text-primary">
+                            <iconify-icon icon="solar:arrow-left-linear" class="icon text-lg"></iconify-icon>
+                            Back to Hello Dashboard
+                        </a>
+                    </li>
+                @endauth
             </ul>
         </div>
 

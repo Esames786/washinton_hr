@@ -115,9 +115,11 @@ class EmployeeDailyActivityController extends Controller
 
                 // Custom directory & filename
                 $directory = public_path('Uploads/employee_activity/' . $employee->id);
-//                if (!file_exists($directory)) {
-//                    mkdir($directory, 0755, true);
-//                }
+                // #8: create the upload folder before moving — without this, file-type daily
+                // activity uploads failed because the directory did not exist.
+                if (!file_exists($directory)) {
+                    mkdir($directory, 0755, true);
+                }
 
                 $filename = 'activity_' . $field->id . '_' . time() . '.' . $file->extension();
                 $file->move($directory, $filename);
@@ -251,9 +253,11 @@ class EmployeeDailyActivityController extends Controller
 
                 $file = $request->file('field_'.$field->id);
                 $directory = public_path('Uploads/employee_activity/' . $employee->id);
-//                if (!file_exists($directory)) {
-//                    mkdir($directory, 0755, true);
-//                }
+                // #8: create the upload folder before moving — without this, file-type daily
+                // activity uploads failed because the directory did not exist.
+                if (!file_exists($directory)) {
+                    mkdir($directory, 0755, true);
+                }
 
                 $filename = 'activity_' . $field->id . '_' . time() . '.' . $file->extension();
                 $file->move($directory, $filename);

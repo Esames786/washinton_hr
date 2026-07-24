@@ -27,6 +27,23 @@ class AdminTicketController extends Controller
             $tickets = EmployeeTicket::with(['ticket_type', 'employee', 'approvedByAdmin'])
                 ->select('id', 'ticket_type_id', 'employee_id', 'status_id', 'subject', 'description', 'approved_by', 'created_at');
 
+            // #3: server-side filters — status, subcontractor, type, and date range.
+            if ($request->filled('f_status')) {
+                $tickets->where('status_id', $request->f_status);
+            }
+            if ($request->filled('f_employee')) {
+                $tickets->where('employee_id', $request->f_employee);
+            }
+            if ($request->filled('f_type')) {
+                $tickets->where('ticket_type_id', $request->f_type);
+            }
+            if ($request->filled('f_date_from')) {
+                $tickets->whereDate('created_at', '>=', $request->f_date_from);
+            }
+            if ($request->filled('f_date_to')) {
+                $tickets->whereDate('created_at', '<=', $request->f_date_to);
+            }
+
             return DataTables::of($tickets)
                 ->addColumn('ticket_type', fn($row) => $row->ticket_type?->name ?? '')
                 ->addColumn('employee_name', fn($row) => $row->employee?->full_name ?? '')

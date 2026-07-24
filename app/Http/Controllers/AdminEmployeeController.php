@@ -667,7 +667,8 @@ class AdminEmployeeController extends Controller
 
 
             DB::commit();
-            return redirect()->route('admin.employees.index')
+            // #2: land on the matching list (subcontractor vs inhouse).
+            return redirect()->route('admin.employees.index', ['type' => $isSub ? 'subcontractor' : 'inhouse'])
                 ->with('success', 'Subcontractor created successfully.');
 
         } catch (\Throwable $th) {
@@ -702,7 +703,8 @@ class AdminEmployeeController extends Controller
             'gratuity',
             'role.activityFields',
             'shift',
-            'tax_slab'
+            'tax_slab',
+            'workEquipment', // #1: the agent's self-reported working equipment
 
         ])->findOrFail($id);
 
@@ -1105,7 +1107,9 @@ class AdminEmployeeController extends Controller
 
 
             DB::commit();
-            return redirect()->route('admin.employees.index')
+            // #2: keep the admin on the correct list (subcontractor vs inhouse) instead of
+            // always falling back to the inhouse default.
+            return redirect()->route('admin.employees.index', ['type' => $isSub ? 'subcontractor' : 'inhouse'])
                 ->with('success', 'Subcontractor updated successfully.');
 
         } catch (\Throwable $th) {

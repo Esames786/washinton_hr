@@ -471,6 +471,32 @@
                 @endif
             </div>
         </div>
+
+        {{-- #1: the subcontractor's OWN self-reported working equipment (separate from admin-assigned above). --}}
+        <div class="card border-0 shadow-sm mt-3">
+            <div class="card-header bg-light fw-bold">🧰 Working Equipment <small class="text-muted fw-normal">(reported by subcontractor)</small></div>
+            <div class="card-body p-0">
+                @if(!$employee->workEquipment || $employee->workEquipment->isEmpty())
+                    <p class="text-muted p-3 mb-0">No working equipment reported by the subcontractor.</p>
+                @else
+                    <div class="table-responsive">
+                        <table class="table sm-table mb-0">
+                            <thead class="table-light">
+                                <tr><th>Equipment</th><th>Details</th></tr>
+                            </thead>
+                            <tbody>
+                                @foreach($employee->workEquipment as $we)
+                                <tr>
+                                    <td>{{ $we->name }}</td>
+                                    <td>{{ $we->details ?: '—' }}</td>
+                                </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                @endif
+            </div>
+        </div>
     </div>
 
 @push('scripts')
