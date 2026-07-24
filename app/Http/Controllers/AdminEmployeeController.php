@@ -1147,9 +1147,42 @@ class AdminEmployeeController extends Controller
         $emp->nda_required = $request->boolean('require') ? 1 : 0;
         $emp->save();
 
+        // #3: when the NDA is requested, notify the agent (portal notification + email).
+        if ($emp->nda_required) {
+            if ($emp->agent_id) {
+                DB::table('notifications')->insert([
+                    'issueId'    => $emp->id,
+                    'userId'     => $emp->agent_id,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
+            $this->notifyAgentByEmail(
+                $emp,
+                'Action Required: NDA Signature',
+                "An NDA has been assigned to you and requires your signature. Please log in to your portal to review and sign it."
+            );
+        }
+
         return back()->with('success', $emp->nda_required
             ? 'NDA requested — the subcontractor will be asked to sign.'
             : 'NDA requirement removed.');
+    }
+
+    /** #3: best-effort plain-text email notification to the agent; never blocks the action. */
+    private function notifyAgentByEmail(Employee $emp, string $subject, string $body): void
+    {
+        if (empty($emp->email)) return;
+        try {
+            \Illuminate\Support\Facades\Mail::raw(
+                "Dear {$emp->full_name},\n\n{$body}\n\nThank you.",
+                function ($m) use ($emp, $subject) {
+                    $m->to($emp->email)->subject($subject);
+                }
+            );
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('notifyAgentByEmail failed: ' . $e->getMessage(), ['employee_id' => $emp->id]);
+        }
     }
 
     public function changeStatus(Request $request)
@@ -1266,6 +1299,13 @@ class AdminEmployeeController extends Controller
                 'updated_at' => now(),
             ]);
         }
+
+        // #3: also email the agent that a new contract has been assigned.
+        $this->notifyAgentByEmail(
+            $employee,
+            'Action Required: New Contract Assigned',
+            "A new contract has been assigned to you and requires your review and acceptance. Please log in to your portal to review and accept it."
+        );
 
         return response()->json(['success' => true, 'message' => 'Contract saved successfully']);
     }

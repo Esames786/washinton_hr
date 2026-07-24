@@ -307,6 +307,13 @@ class EmployeeDashboardController extends Controller
     {
         $request->validate(['house_ownership' => 'required|in:own,rent']);
         $employee = auth('employee')->user();
+
+        // #4: once the agent has chosen own/rent it is locked — they cannot change it again.
+        // (HR admin can still adjust it from the admin edit form.)
+        if ($employee->house_ownership) {
+            return back()->with('error', 'Your house ownership is already set and cannot be changed. Please contact HR if it needs correcting.');
+        }
+
         $employee->house_ownership = $request->house_ownership;
         $employee->save();
 

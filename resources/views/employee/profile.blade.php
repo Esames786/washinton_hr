@@ -246,20 +246,30 @@
 
                             {{-- P3 (#3/#7): house ownership drives the conditional documents shown below --}}
                             <div class="alert alert-light border mb-3">
+                                @php $ownershipLocked = !empty($employee->house_ownership); @endphp
                                 <form method="POST" action="{{ route('employee.profile.house_ownership') }}" class="row g-2 align-items-end">
                                     @csrf
                                     <div class="col-md-6">
                                         <label class="form-label small fw-semibold">Do you own or rent your house? <span class="text-danger">*</span></label>
-                                        <select name="house_ownership" class="form-select form-select-sm" required>
+                                        {{-- #4: once selected, the agent cannot change it (locked). --}}
+                                        <select name="house_ownership" class="form-select form-select-sm" required @disabled($ownershipLocked)>
                                             <option value="">-- Select --</option>
                                             <option value="own"  @selected($employee->house_ownership === 'own')>I own my house</option>
                                             <option value="rent" @selected($employee->house_ownership === 'rent')>I live in a rented house</option>
                                         </select>
                                     </div>
+                                    @unless($ownershipLocked)
                                     <div class="col-md-3">
                                         <button type="submit" class="btn btn-outline-primary btn-sm w-100">Save</button>
                                     </div>
-                                    <div class="col-12"><small class="text-muted">Rented → upload <strong>Rental Agreement</strong> + <strong>Landlord CNIC</strong>. Owned → upload a <strong>Bill</strong> if your CNIC address is different.</small></div>
+                                    @endunless
+                                    <div class="col-12">
+                                        @if($ownershipLocked)
+                                            <small class="text-success">✓ House ownership set to <strong>{{ ucfirst($employee->house_ownership) }}</strong>. This can't be changed — contact HR if it needs correcting.</small>
+                                        @else
+                                            <small class="text-muted">Rented → upload <strong>Rental Agreement</strong> + <strong>Landlord CNIC</strong>. Owned → upload a <strong>Bill</strong> if your CNIC address is different. <strong>Note: once saved this cannot be changed.</strong></small>
+                                        @endif
+                                    </div>
                                 </form>
                             </div>
 
