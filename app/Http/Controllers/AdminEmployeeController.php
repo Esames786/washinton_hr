@@ -708,7 +708,16 @@ class AdminEmployeeController extends Controller
 
         ])->findOrFail($id);
 
-        return view('admin.user_management.employees.profile', compact('employee'));
+        // #4: default contract — reuse the last contract saved for any other agent, so the
+        // admin doesn't have to re-type it for every subcontractor. Used only when this
+        // employee has no contract of its own yet.
+        $defaultContract = Employee::whereNotNull('contract')
+            ->where('contract', '!=', '')
+            ->where('id', '!=', $employee->id)
+            ->latest('contract_updated_at')
+            ->value('contract');
+
+        return view('admin.user_management.employees.profile', compact('employee', 'defaultContract'));
     }
 
     /**
@@ -744,7 +753,16 @@ class AdminEmployeeController extends Controller
         $employment_types = EmploymentType::whereIn('id',[1,3])->get();
         $roles = Role::where('guard_name', 'employee')->where('status',1)->get();
         $shift_types = ShiftType::where('status',1)->get();
-        $document_types = DocumentSetting::where('status',1)->get();
+        // #2: only show documents matching the employee's house ownership — unconditional docs
+        // always show; own/rent docs only for the matching selection (same rule as the agent portal).
+        $ownership = $employee->house_ownership;
+        $document_types = DocumentSetting::where('status',1)
+            ->where(function ($q) use ($ownership) {
+                $q->whereNull('condition');
+                if ($ownership) {
+                    $q->orWhere('condition', $ownership);
+                }
+            })->get();
         $employee_statuses = EmployeeStatus::all();
         $holidays = Holiday::where('status',1)->get();
         $departments = Department::where('status',1)->get();

@@ -64,12 +64,18 @@ class EmployeeNdaController extends Controller
                 $pdfOutput = $dompdf->output();
             }
 
-            $dir      = 'nda_documents';
+            // #3: store under public/Uploads (same as every other document) so it is web-served
+            // directly and does NOT depend on the `storage:link` symlink — the previous
+            // storage/app/public path 404'd wherever the symlink was missing.
+            $dir      = 'Uploads/nda_documents';
             $filename = 'nda_emp_' . $employee->id . '_' . $signedAt->format('YmdHis') . '.pdf';
             $relPath  = $dir . '/' . $filename;
 
-            Storage::disk('public')->makeDirectory($dir);
-            Storage::disk('public')->put($relPath, $pdfOutput);
+            $fullDir = public_path($dir);
+            if (!file_exists($fullDir)) {
+                mkdir($fullDir, 0755, true);
+            }
+            file_put_contents(public_path($relPath), $pdfOutput);
 
         } catch (\Throwable $e) {
             Log::error('HR NDA PDF generation failed (signature still recorded)', [
@@ -86,7 +92,7 @@ class EmployeeNdaController extends Controller
                 ->update([
                     'nda_required'     => 0,
                     'nda_signed_at'    => $signedAt,
-                    'nda_document_url' => $relPath ? url('storage/' . $relPath) : null,
+                    'nda_document_url' => $relPath ? url($relPath) : null,
                 ]);
 
             if ($employee->agent_id) {

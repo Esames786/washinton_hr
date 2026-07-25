@@ -137,6 +137,14 @@
                             <div class="col-6"><strong>Pay:</strong> {{ number_format($employee->basic_salary ?? 0) }}</div>
                             <div class="col-6"><strong>Tax Slab:</strong> {{ $employee?->tax_slab?->title ?? '-' }}</div>
                             <div class="col-6"><strong>Rate {{ $rateSymbol }}:</strong> {{ $employee?->tax_slab?->rate ?? 0 }}</div>
+                            {{-- #1: show which house-ownership option the agent selected --}}
+                            <div class="col-6"><strong>House Ownership:</strong>
+                                @if($employee->house_ownership)
+                                    <span class="badge bg-info text-white">{{ ucfirst($employee->house_ownership) }}</span>
+                                @else
+                                    <span class="text-muted">Not selected</span>
+                                @endif
+                            </div>
                             <div class="col-6"><strong>Shift:</strong> {{ $employee?->shift->name ?? '—' }}</div>
                             <div class="col-6">
                                 <strong>Shift Start:</strong> {{ $employee?->shift?->shift_start ? \Carbon\Carbon::parse($employee->shift->shift_start)->format('h:i A') : '-' }}
@@ -398,7 +406,11 @@
                     </div>
                     <div class="card-body">
                         <link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
-                        <div id="contractEditor" style="min-height:200px;">{!! $employee->contract ?? '' !!}</div>
+                        {{-- #4: pre-fill with this employee's contract, else the last-used default so the admin doesn't retype it. --}}
+                        <div id="contractEditor" style="min-height:200px;">{!! $employee->contract ?: ($defaultContract ?? '') !!}</div>
+                        @if(empty($employee->contract) && !empty($defaultContract))
+                            <small class="text-muted d-block mt-1">Loaded the last-used contract as a default — review and click <strong>Save Contract</strong>.</small>
+                        @endif
                         <input type="hidden" id="contractContent" value="">
                         <div class="d-flex justify-content-end mt-3 gap-2">
                             <button type="button" id="saveContractBtn"
