@@ -155,20 +155,18 @@ class EmployeeDailyActivityController extends Controller
             return response()->json(['message' => 'Activity not found.'], 404);
         }
 
-        // Get the related field info
+        // Get the related field info. #5: fall back to the activity's own denormalized columns if
+        // the field definition was removed / activity_field_id is null, so the edit modal still
+        // opens for the row instead of failing with a 404 (which made the button look dead).
         $field = DailyActivityField::find($activity->activity_field_id);
-
-        if (!$field) {
-            return response()->json(['message' => 'Field not found.'], 404);
-        }
 
         $response = [
             [
-                'id' => $field->id,
-                'label' => $field->name,
-                'type' => $field->field_type,
-                'required' => $field->is_required,
-                'value' => $activity->field_value
+                'id'       => $field->id ?? $activity->activity_field_id,
+                'label'    => $field->name ?? $activity->field_name,
+                'type'     => $field->field_type ?? $activity->field_type,
+                'required' => $field->is_required ?? false,
+                'value'    => $activity->field_value,
             ]
         ];
 
@@ -213,68 +211,51 @@ class EmployeeDailyActivityController extends Controller
 
     public function update(Request $request, $id)
     {
-
         $employee = auth('employee')->user();
 
-        $fields = DailyActivityField::whereIn('id', function($q) use ($employee, $id) {
-            $q->select('activity_field_id')
-                ->from('hr_role_activity_fields')
-                ->where('role_id', $employee->role_id)
-                ->where('activity_field_id', $id);
-        })->get();
+        // #5: $id is the ACTIVITY row id (the edit button's data-id), NOT a field id. The old code
+        // queried hr_role_activity_fields WHERE activity_field_id = $id, which matched nothing, so
+        // the update loop never ran yet still returned "updated successfully" — the value never
+        // actually changed. Load the specific activity row and update it directly.
+        $activity = EmployeeDailyActivity::where('employee_id', $employee->id)
+            ->where('id', $id)
+            ->first();
 
-        $rules = [];
-        $attributes=[];
-        foreach ($fields as $field) {
-            $rules['field_'.$field->id] = $field->is_required ? 'required' : 'nullable';
-            $attributes['field_'.$field->id] = $field->name;
-
-            if ($field->field_type === 'file') {
-                $rules['field_'.$field->id] .= '|file';
-            }
+        if (!$activity) {
+            return redirect()->route('employee.activities.index')->with('error', 'Activity not found.');
         }
 
-        $validated = $request->validate($rules,[],$attributes);
+        // The field definition drives type/required; fall back to the activity's own denormalized
+        // columns if the field was deleted so editing an old row still works.
+        $field      = DailyActivityField::find($activity->activity_field_id);
+        $fieldId    = $field->id ?? $activity->activity_field_id;
+        $fieldType  = $field->field_type ?? $activity->field_type;
+        $isRequired = $field->is_required ?? false;
+        $inputKey   = 'field_' . $fieldId;
 
-        foreach ($fields as $field) {
-            $value = null;
+        $rule = ($isRequired ? 'required' : 'nullable') . ($fieldType === 'file' ? '|file' : '');
+        $request->validate([$inputKey => $rule], [], [$inputKey => $field->name ?? $activity->field_name]);
 
-            $activity = EmployeeDailyActivity::firstOrNew([
-                'employee_id' => $employee->id,
-                'activity_date' => now()->toDateString(),
-                'activity_field_id' => $field->id,
-            ]);
-
-            if ($field->field_type === 'file' && $request->hasFile('field_'.$field->id)) {
-                // Remove old file
-                if ($activity->field_value && file_exists(public_path($activity->field_value))) {
-                    unlink(public_path($activity->field_value));
-                }
-
-                $file = $request->file('field_'.$field->id);
-                $directory = public_path('Uploads/employee_activity/' . $employee->id);
-                // #8: create the upload folder before moving — without this, file-type daily
-                // activity uploads failed because the directory did not exist.
-                if (!file_exists($directory)) {
-                    mkdir($directory, 0755, true);
-                }
-
-                $filename = 'activity_' . $field->id . '_' . time() . '.' . $file->extension();
-                $file->move($directory, $filename);
-                $value = 'Uploads/employee_activity/' . $employee->id . '/' . $filename;
-            } else {
-                $value = $request->input('field_'.$field->id);
+        if ($fieldType === 'file' && $request->hasFile($inputKey)) {
+            if ($activity->field_value && file_exists(public_path($activity->field_value))) {
+                unlink(public_path($activity->field_value));
             }
 
-            $activity->field_value = $value;
-            $activity->updated_by = $employee->id;
-
-            if (!$activity->exists) {
-                $activity->created_by = $employee->id;
+            $file      = $request->file($inputKey);
+            $directory = public_path('Uploads/employee_activity/' . $employee->id);
+            if (!file_exists($directory)) {
+                mkdir($directory, 0755, true);
             }
 
-            $activity->save();
+            $filename = 'activity_' . $fieldId . '_' . time() . '.' . $file->extension();
+            $file->move($directory, $filename);
+            $activity->field_value = 'Uploads/employee_activity/' . $employee->id . '/' . $filename;
+        } else {
+            $activity->field_value = $request->input($inputKey);
         }
+
+        $activity->updated_by = $employee->id;
+        $activity->save();
 
         return redirect()->route('employee.activities.index')->with('success', 'Activity updated successfully.');
     }
