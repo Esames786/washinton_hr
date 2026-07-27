@@ -199,11 +199,24 @@
             {{-- Documents --}}
             <div class="col-md-12">
                 <div class="card shadow-sm border-0 h-100">
-                    <div class="card-header bg-light fw-bold d-flex justify-content-between align-items-center">
+                    <div class="card-header bg-light fw-bold d-flex justify-content-between align-items-center flex-wrap gap-2">
                         <span>📄 Documents</span>
-                        @if($employee->employee_status_id == 7)
-                            <span class="badge bg-warning text-dark">⚠️ Pending Verification — Please upload required documents</span>
-                        @endif
+                        @php
+                            // #3: always-visible required-document progress count.
+                            $reqTotalHdr    = $documentSettings ? $documentSettings->where('is_required', 1)->count() : 0;
+                            $uploadedIdsHdr = $employee->documents ? $employee->documents->pluck('document_setting_id')->all() : [];
+                            $reqDoneHdr     = $documentSettings ? $documentSettings->where('is_required', 1)->whereIn('id', $uploadedIdsHdr)->count() : 0;
+                        @endphp
+                        <span class="d-flex align-items-center gap-2">
+                            @if($reqTotalHdr > 0)
+                                <span class="badge {{ $reqDoneHdr >= $reqTotalHdr ? 'bg-success' : 'bg-info' }}">
+                                    {{ $reqDoneHdr }}/{{ $reqTotalHdr }} required uploaded
+                                </span>
+                            @endif
+                            @if($employee->employee_status_id == 7)
+                                <span class="badge bg-warning text-dark">⚠️ Pending Verification — Please upload required documents</span>
+                            @endif
+                        </span>
                     </div>
                     <div class="card-body">
 

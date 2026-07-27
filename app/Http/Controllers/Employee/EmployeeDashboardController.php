@@ -238,11 +238,14 @@ class EmployeeDashboardController extends Controller
         $docSetting = \App\Models\DocumentSetting::findOrFail($request->document_setting_id);
 
         // P3: per-document limits (max_files) + allowed kind (image | video | any).
+        // #4: broadened the image formats — phone selfies are often .jfif / .heic and CNIC scans
+        // come as .jfif, all of which the old jpg/jpeg/png/webp list rejected ("unable to submit
+        // Selfie"). Also raised the image size cap (phone photos routinely exceed 10 MB).
         $maxFiles = max(1, (int) ($docSetting->max_files ?? 1));
         $kind     = $docSetting->file_kind ?? 'any';
-        $mimeRule = $kind === 'image' ? 'mimes:jpg,jpeg,png,webp'
+        $mimeRule = $kind === 'image' ? 'mimes:jpg,jpeg,jpe,png,webp,jfif,heic,heif,gif,bmp,avif,tiff'
                   : ($kind === 'video' ? 'mimes:mp4,mov,webm,avi,mkv,3gp' : '');
-        $maxKb    = $kind === 'video' ? 61440 : 10240; // 60MB video, 10MB otherwise
+        $maxKb    = $kind === 'video' ? 61440 : ($kind === 'image' ? 25600 : 10240); // 60MB video, 25MB image, 10MB other
 
         $request->validate([
             'file' => trim('required|file|max:' . $maxKb . ($mimeRule ? '|' . $mimeRule : '')),
