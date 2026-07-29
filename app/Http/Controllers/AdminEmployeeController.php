@@ -721,6 +721,20 @@ class AdminEmployeeController extends Controller
     }
 
     /**
+     * #12: printable full summary of a subcontractor — profile info, bank, working days,
+     * documents (with verification status), contract and NDA — in one print-friendly page.
+     */
+    public function printSummary($id)
+    {
+        $employee = Employee::with([
+            'bankDetail', 'documents', 'working_days', 'employment_type',
+            'employee_status', 'shift', 'role', 'workEquipment',
+        ])->findOrFail($id);
+
+        return view('admin.user_management.employees.print_summary', compact('employee'));
+    }
+
+    /**
      * Show the form for editing the specified resource.
      *
      * @param  int  $id
@@ -1196,9 +1210,14 @@ class AdminEmployeeController extends Controller
     {
         if (empty($emp->email)) return;
         try {
+            // #13: brand the sender by the subcontractor's origin so CrazyRays agents get
+            // "CrazyRays Solutions HR" (not "Hello Transport HR") on NDA / contract emails.
+            $fromName = $emp->brandName() . ' HR';
+            $fromAddr = config('mail.from.address');
             \Illuminate\Support\Facades\Mail::raw(
                 "Dear {$emp->full_name},\n\n{$body}\n\nThank you.",
-                function ($m) use ($emp, $subject) {
+                function ($m) use ($emp, $subject, $fromName, $fromAddr) {
+                    if ($fromAddr) { $m->from($fromAddr, $fromName); }
                     $m->to($emp->email)->subject($subject);
                 }
             );

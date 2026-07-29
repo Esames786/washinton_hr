@@ -19,9 +19,9 @@
     </button>
     <div>
         <a href="#" class="sidebar-logo justify-content-center">
-            <img src="{{asset('assets/images/logo/hello_transport.png')}}" alt="site logo" class="light-logo">
-            <img src="{{asset('assets/images/logo/hello_transport.png')}}" alt="site logo" class="dark-logo">
-            <img src="{{asset('assets/images/logo/hello_transport.png')}}" alt="site logo" class="logo-icon">
+            <img src="{{asset('assets/images/logo/crazyrays.svg')}}" alt="site logo" class="light-logo">
+            <img src="{{asset('assets/images/logo/crazyrays.svg')}}" alt="site logo" class="dark-logo">
+            <img src="{{asset('assets/images/logo/crazyrays.svg')}}" alt="site logo" class="logo-icon">
         </a>
     </div>
     <div class="sidebar-menu-area">

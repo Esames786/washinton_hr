@@ -351,7 +351,7 @@
                                     <li>
                                         <a class="dropdown-item text-black px-0 py-8 hover-bg-transparent hover-text-primary d-flex align-items-center gap-3"
                                            href="{{ config('bridge.agent_portal.dashboard_url') }}">
-                                            <iconify-icon icon="solar:arrow-left-linear" class="icon text-xl"></iconify-icon> Back to Hello Dashboard</a>
+                                            <iconify-icon icon="solar:arrow-left-linear" class="icon text-xl"></iconify-icon> Back to CrazyRays Dashboard</a>
                                     </li>
                                 @endif
                             @endauth

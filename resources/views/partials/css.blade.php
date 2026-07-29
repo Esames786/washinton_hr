@@ -1,4 +1,4 @@
-<link rel="icon" type="image/png" href="{{ asset('assets/images/logo/hello_transport.png') }}" sizes="16x16">
+<link rel="icon" type="image/png" href="{{ asset('assets/images/logo/crazyrays.svg') }}" sizes="16x16">
 
 <!-- remix icon font css  -->
 <link rel="stylesheet" href="{{ asset('assets/css/remixicon.css') }}">

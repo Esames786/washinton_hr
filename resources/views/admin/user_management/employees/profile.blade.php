@@ -84,6 +84,10 @@
                             <a href="{{ route('admin.employees.edit', $employee->id) }}" class="btn btn-sm btn-outline-secondary">
                                 Edit
                             </a>
+                            {{-- #12: print full subcontractor summary (info + documents + contract + NDA) --}}
+                            <a href="{{ route('admin.employees.print_summary', $employee->id) }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                🖨️ Print Summary
+                            </a>
                         </div>
                     </div>
                     <p class="text-muted mb-2">{{ $employee->designation->name ?? '-' }} | {{ $employee->department->name ?? '-' }}</p>

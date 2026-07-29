@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Subcontractor Login</title>
-    <link rel="icon" type="image/png" href="{{ asset('assets/images/logo/hello_transport.png') }}" sizes="16x16">
+    <link rel="icon" type="image/svg+xml" href="{{ asset('assets/images/logo/crazyrays.svg') }}">
     <!-- remix icon font css  -->
     <link rel="stylesheet" href="{{ asset('assets/css/remixicon.css') }}">
     <!-- BootStrap css -->
@@ -58,7 +58,7 @@
         <div class="login-container max-w-464-px mx-auto w-100">
             <div>
                 <a href="{{route('admin.login')}}" class="mb-40" style="margin-left: 35%">
-                    <img src="{{asset('assets/images/logo/hello_transport.png')}}" alt="" class="logo-width-100">
+                    <img src="{{asset('assets/images/logo/crazyrays.svg')}}" alt="CrazyRays Solutions" class="logo-width-100">
                 </a>
                 <h4 class="mb-12 text-center">Subcontractor Sign In</h4>
                 <p class="mb-32 text-secondary-light text-lg text-center">Welcome back! please enter your detail</p>

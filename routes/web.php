@@ -101,6 +101,8 @@ use App\Http\Controllers\Employee\EmployeeTicketMessageController;
                 Route::post('subcontractors/attach_agent', [AdminEmployeeController::class, 'attach_agent'])->name('employees.attach_agent');
                 Route::resource('subcontractors', AdminEmployeeController::class)->except(['show'])->names('employees');
                 Route::get('subcontractors/show/{id}', [AdminEmployeeController::class, 'show'])->name('employees.show');
+                // #12: printable full subcontractor summary (info + documents + contract + NDA)
+                Route::get('subcontractors/{id}/print-summary', [AdminEmployeeController::class, 'printSummary'])->name('employees.print_summary');
 
                 // Employee Equipment Assignment (URI -> subcontractor-equipment, names kept)
                 Route::get('subcontractor-equipment/{employeeId}/list', [EmployeeEquipmentController::class, 'list'])->name('employee_equipment.list');
