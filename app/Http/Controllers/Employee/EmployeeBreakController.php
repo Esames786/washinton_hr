@@ -34,13 +34,13 @@ class EmployeeBreakController extends Controller
                         return '-';
                     }
 
-                    // break_duration DB me minutes (decimal) hai
-                    $minutes = (float) $row->break_duration;
+                    // break_duration is decimal MINUTES (e.g. 0.83). CarbonInterval::minutes() can't
+                    // represent a fractional minute and collapsed to ~"1 second" — convert to whole
+                    // seconds first so short breaks show correctly (0.83 min -> "50 seconds").
+                    $seconds  = (int) round(((float) $row->break_duration) * 60);
+                    $interval = CarbonInterval::seconds($seconds)->cascade();
 
-                    // CarbonInterval banake human readable
-                    $interval = CarbonInterval::minutes($minutes)->cascade();
-
-                    // Example: "1 hour 12 minutes (72 mins)"
+                    // Example: "1 hour 12 minutes" / "50 seconds"
                     return $interval->forHumans();
                 })
                 ->filter(function ($query) {
