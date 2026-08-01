@@ -58,7 +58,9 @@
 
 <div class="sign-block">
     <div class="label">Subcontractor Acknowledgment &amp; Signature</div>
-    <div class="sign-row"><span class="field-label">Name:</span> <span class="field-value">{{ $employeeName }}</span></div>
+    <div class="sign-row"><span class="field-label">Agent Full Name:</span> <span class="field-value">{{ $employeeName }}</span></div>
+    <div class="sign-row"><span class="field-label">Father's Name:</span> <span class="field-value">{{ $fatherName ?? '' }}</span></div>
+    <div class="sign-row"><span class="field-label">Address:</span> <span class="field-value">{{ $address ?? '' }}</span></div>
     <div class="sign-row"><span class="field-label">CNIC Number:</span> <span class="field-value">{{ $cnic }}</span></div>
     <div class="sign-row"><span class="field-label">Date Signed:</span> <span class="field-value">{{ $signedDate }}</span></div>
     @if($signedIp)

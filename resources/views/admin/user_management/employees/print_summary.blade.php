@@ -112,6 +112,18 @@
     @if($employee->nda_signed_at)
         <p><span class="badge b-ok">Signed</span> on {{ \Carbon\Carbon::parse($employee->nda_signed_at)->format('d M Y H:i') }}
         @if(!empty($employee->nda_document_url))— <a href="{{ $employee->nda_document_url }}" target="_blank">View signed NDA</a>@endif</p>
+        @if(!empty($employee->nda_content))
+            <div style="border:1px solid #ccc;padding:10px;margin-top:6px;font-size:12px;">
+                {!! $employee->nda_content !!}
+                <hr>
+                <div><strong>Agent Full Name:</strong> {{ $employee->full_name ?? '-' }} &nbsp; <strong>Father's Name:</strong> {{ $employee->nda_father_name ?? '-' }}</div>
+                <div><strong>CNIC:</strong> {{ $employee->cnic ?? '-' }} &nbsp; <strong>Address:</strong> {{ $employee->nda_address ?? '-' }}</div>
+                <div><strong>Signed:</strong> {{ \Carbon\Carbon::parse($employee->nda_signed_at)->format('d M Y, h:i A') }} &nbsp; <strong>IP:</strong> {{ $employee->nda_signed_ip ?? '-' }}</div>
+                @if(!empty($employee->nda_signature))
+                    <div style="margin-top:6px;"><strong>Signature:</strong><br><img src="{{ $employee->nda_signature }}" style="max-height:70px;border:1px solid #ccc;"></div>
+                @endif
+            </div>
+        @endif
     @elseif($employee->nda_required)
         <p><span class="badge b-req">Required — not signed yet</span></p>
     @else

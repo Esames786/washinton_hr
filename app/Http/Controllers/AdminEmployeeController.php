@@ -1351,6 +1351,51 @@ class AdminEmployeeController extends Controller
         return response()->json(['success' => true, 'message' => 'Contract saved successfully']);
     }
 
+    /**
+     * Save the admin's NDA copy for this subcontractor and (re)require signing — mirrors
+     * saveContract(), so HR admins can assign/edit the NDA the same way the Hello manager can.
+     */
+    public function saveNda(Employee $employee, Request $request)
+    {
+        $request->validate(['nda' => 'required|string']);
+
+        $employee->nda_content   = $request->nda;
+        $employee->nda_required  = 1;
+        $employee->nda_signed_at = null;
+        // Clear any prior signature so the subcontractor re-signs the new copy.
+        foreach (['nda_signature', 'nda_signed_ip', 'nda_document_url', 'nda_cnic_front', 'nda_cnic_back'] as $col) {
+            if (\Illuminate\Support\Facades\Schema::hasColumn('hr_employees', $col)) {
+                $employee->{$col} = null;
+            }
+        }
+        $employee->save();
+
+        // Mirror the requirement onto the linked agent-portal user.
+        if ($employee->agent_id) {
+            DB::table('user')->where('id', $employee->agent_id)->update([
+                'nda_required'      => 1,
+                'nda_signed_at'     => null,
+                'nda_document_path' => null,
+            ]);
+        }
+
+        $this->notifyAgentByEmail(
+            $employee,
+            'Action Required: Sign your NDA',
+            "An NDA has been assigned to you and requires your review and signature. Please log in to your portal to read and sign it."
+        );
+
+        return response()->json(['success' => true, 'message' => 'NDA saved. The subcontractor has been asked to review and sign it.']);
+    }
+
+    /** Return the default NDA template (from the shared table) for the HR editor. */
+    public function defaultNda()
+    {
+        $tpl = DB::table('nda_templates')->where('is_default', 1)->value('content');
+        $content = $tpl ? str_ireplace(['{{COMPANY_NAME}}', '{{COMPANY_LEGAL}}'], 'Crazy Rays Solutions', $tpl) : '';
+        return response()->json(['content' => $content]);
+    }
+
 
     /** Shift length in seconds (overnight-safe); defaults to 8h when unknown. */
     private function shiftLengthSeconds($shift): int

@@ -15,6 +15,8 @@ class EmployeeNdaController extends Controller
     {
         $request->validate([
             'employee_name'  => 'required|string|max:255',
+            'father_name'    => 'required|string|max:255',
+            'address'        => 'required|string|max:500',
             'cnic'           => 'required|string|max:20',
             'signature_data' => 'required|string',
             'agreed'         => 'required|in:1',
@@ -59,6 +61,8 @@ class EmployeeNdaController extends Controller
                 'ndaContent'    => $ndaContent,
                 'brand'         => [],
                 'employeeName'  => $request->employee_name,
+                'fatherName'    => $request->father_name,
+                'address'       => $request->address,
                 'cnic'          => $request->cnic,
                 'signedDate'    => $signedAt->format('d M Y H:i'),
                 'signedIp'      => $ip,
@@ -99,6 +103,8 @@ class EmployeeNdaController extends Controller
                     'nda_signed_ip'    => $ip,
                     'nda_cnic_front'   => $cnicFrontPath,
                     'nda_cnic_back'    => $cnicBackPath,
+                    'nda_father_name'  => $request->father_name,
+                    'nda_address'      => $request->address,
                 ]);
 
             if ($employee->agent_id) {

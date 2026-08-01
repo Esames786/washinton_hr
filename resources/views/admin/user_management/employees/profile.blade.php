@@ -307,6 +307,27 @@
                                     <span class="text-muted small ms-auto">(PDF unavailable)</span>
                                 @endif
                             </div>
+
+                            {{-- Signed NDA shown inline (like the Contract) — full text + the details the agent signed with. --}}
+                            @if(!empty($employee->nda_content))
+                                <div class="border rounded p-3 mt-3 bg-light" style="max-height:340px;overflow-y:auto;font-size:13px;">
+                                    {!! $employee->nda_content !!}
+                                    <hr>
+                                    <div class="row small">
+                                        <div class="col-md-6"><strong>Agent Full Name:</strong> {{ $employee->full_name ?? '-' }}</div>
+                                        <div class="col-md-6"><strong>Father's Name:</strong> {{ $employee->nda_father_name ?? '-' }}</div>
+                                        <div class="col-md-6"><strong>CNIC:</strong> {{ $employee->cnic ?? '-' }}</div>
+                                        <div class="col-md-6"><strong>Address:</strong> {{ $employee->nda_address ?? '-' }}</div>
+                                        <div class="col-md-6"><strong>Date &amp; Time:</strong> {{ \Carbon\Carbon::parse($employee->nda_signed_at)->format('d M Y, h:i A') }}</div>
+                                        <div class="col-md-6"><strong>IP at Signing:</strong> {{ $employee->nda_signed_ip ?? '-' }}</div>
+                                    </div>
+                                    @if(!empty($employee->nda_signature))
+                                        <div class="mt-2"><strong class="small d-block mb-1">Signature:</strong>
+                                            <img src="{{ $employee->nda_signature }}" alt="Signature" style="max-height:80px;border:1px solid #ccc;background:#fff;">
+                                        </div>
+                                    @endif
+                                </div>
+                            @endif
                         @elseif($employee->nda_required)
                             <div class="d-flex flex-wrap align-items-center gap-2">
                                 <span class="badge bg-warning text-dark">Pending Signature</span>
@@ -327,6 +348,22 @@
                                     <input type="hidden" name="require" value="1">
                                     <button type="submit" class="btn btn-sm btn-primary">📝 Require NDA</button>
                                 </form>
+                            </div>
+                        @endif
+
+                        {{-- NDA rich-text editor (like the Contract) — HR admin can write/edit + assign the NDA. --}}
+                        @if(!$employee->nda_signed_at)
+                            <div class="mt-3">
+                                <p class="small text-muted mb-1">Write or edit the NDA below, then <strong>Save NDA</strong> to assign it — the subcontractor will be asked to read &amp; sign this exact copy.</p>
+                                <div id="ndaEditor" style="min-height:200px;">{!! $employee->nda_content ?: '' !!}</div>
+                                <div class="mt-2 d-flex align-items-center">
+                                    <button type="button" id="saveNdaBtn"
+                                            data-url="{{ route('admin.employees.save-nda', $employee->id) }}"
+                                            data-default-url="{{ route('admin.employees.default-nda') }}"
+                                            data-has-content="{{ !empty($employee->nda_content) ? '1' : '0' }}"
+                                            class="btn btn-sm btn-primary">💾 Save NDA</button>
+                                    <span id="ndaSaveMsg" class="small ms-2" style="display:none;"></span>
+                                </div>
                             </div>
                         @endif
                     </div>
@@ -621,6 +658,54 @@ document.querySelectorAll('.verify-doc-toggle').forEach(function(toggle) {
         });
     };
     document.head.appendChild(quillScript);
+})();
+
+// ── NDA editor (Quill) — HR admin writes/edits + assigns the NDA (mirrors the Contract) ──
+(function() {
+    var host = document.getElementById('ndaEditor');
+    if (!host) return; // only present when the NDA isn't signed yet
+
+    function boot() {
+        var quill = new Quill('#ndaEditor', { theme: 'snow', placeholder: 'Write the NDA the subcontractor will sign…' });
+        var saveBtn = document.getElementById('saveNdaBtn');
+
+        // If no NDA saved yet, preload the default template (front-end only, until "Save NDA").
+        if (saveBtn.dataset.hasContent !== '1') {
+            fetch(saveBtn.dataset.defaultUrl)
+                .then(function(r) { return r.json(); })
+                .then(function(d) { if (d.content) quill.root.innerHTML = d.content; })
+                .catch(function() {});
+        }
+
+        saveBtn.addEventListener('click', function() {
+            var content = quill.root.innerHTML;
+            var btn = this;
+            btn.disabled = true; btn.textContent = 'Saving…';
+            fetch(btn.dataset.url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+                body: JSON.stringify({ nda: content })
+            })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                btn.disabled = false; btn.textContent = '💾 Save NDA';
+                var msg = document.getElementById('ndaSaveMsg');
+                msg.textContent = (data.success ? '✔ ' : '✘ ') + (data.message || (data.success ? 'Saved.' : 'Save failed.'));
+                msg.className = 'small ms-2 ' + (data.success ? 'text-success' : 'text-danger');
+                msg.style.display = 'inline';
+            })
+            .catch(function() { btn.disabled = false; btn.textContent = '💾 Save NDA'; alert('Request failed. Please try again.'); });
+        });
+    }
+
+    if (window.Quill) { boot(); }
+    else {
+        // Reuse the Contract editor's Quill load; poll briefly until it's available.
+        var tries = 0, t = setInterval(function() {
+            if (window.Quill) { clearInterval(t); boot(); }
+            else if (++tries > 100) { clearInterval(t); }
+        }, 100);
+    }
 })();
 
 // ── Bulk approve all documents ─────────────────────────────────────────────
