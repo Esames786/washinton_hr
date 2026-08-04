@@ -213,12 +213,23 @@ class EmployeeDashboardController extends Controller
         // P3 (#3/#7): conditional documents only show for the matching house ownership.
         // Unconditional docs always show; own/rent docs only when the employee has chosen that.
         $ownership = $employee->house_ownership;
+
+        // Documents also belong to a BRAND — a Hello subcontractor must only be asked for the
+        // Hello set (Resume / Experience / State ID), never the Pakistan-specific CrazyRays set.
+        $brandKey    = \App\Support\Brand::for($employee)['key'] ?? 'hellotransport';
+        $hasBrandCol = \Illuminate\Support\Facades\Schema::hasColumn('hr_document_settings', 'brand');
+
         $documentSettings = \App\Models\DocumentSetting::where('status', 1)
             ->where(function ($q) use ($ownership) {
                 $q->whereNull('condition');
                 if ($ownership) {
                     $q->orWhere('condition', $ownership);
                 }
+            })
+            ->when($hasBrandCol, function ($query) use ($brandKey) {
+                $query->where(function ($q) use ($brandKey) {
+                    $q->whereNull('brand')->orWhere('brand', $brandKey);
+                });
             })
             ->get();
 

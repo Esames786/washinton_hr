@@ -770,13 +770,23 @@ class AdminEmployeeController extends Controller
         // #2: only show documents matching the employee's house ownership — unconditional docs
         // always show; own/rent docs only for the matching selection (same rule as the agent portal).
         $ownership = $employee->house_ownership;
+        // Brand also scopes the list — a Hello subcontractor's edit screen must not offer the
+        // Pakistan-specific CrazyRays documents (and vice-versa).
+        $brandKey    = \App\Support\Brand::for($employee)['key'] ?? 'hellotransport';
+        $hasBrandCol = \Illuminate\Support\Facades\Schema::hasColumn('hr_document_settings', 'brand');
         $document_types = DocumentSetting::where('status',1)
             ->where(function ($q) use ($ownership) {
                 $q->whereNull('condition');
                 if ($ownership) {
                     $q->orWhere('condition', $ownership);
                 }
-            })->get();
+            })
+            ->when($hasBrandCol, function ($query) use ($brandKey) {
+                $query->where(function ($q) use ($brandKey) {
+                    $q->whereNull('brand')->orWhere('brand', $brandKey);
+                });
+            })
+            ->get();
         $employee_statuses = EmployeeStatus::all();
         $holidays = Holiday::where('status',1)->get();
         $departments = Department::where('status',1)->get();
