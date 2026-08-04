@@ -185,6 +185,10 @@ class HrBridgeController extends Controller
             'shift_type_id'  => ['nullable', 'integer'],   // from signup form
             'account_type_id'=> ['nullable', 'integer'],   // 1=Salary, 2=Commission, 3=Salary+Commission
             'employment_type'=> ['nullable', 'in:work_from_home,in_house'], // employment-split
+            // Hello onboarding additions
+            'mother_name'    => ['nullable', 'string', 'max:100'],
+            'zip'            => ['nullable', 'string', 'max:20'],
+            'timezone'       => ['nullable', 'string', 'max:64'],
         ]);
 
         if ($validator->fails()) {
@@ -275,6 +279,19 @@ class HrBridgeController extends Controller
             $employee->marital_status     = $request->input('marital_status');
             $employee->city               = $request->input('city');
             $employee->state              = $request->input('state');
+            $employee->mother_name        = $request->input('mother_name');
+            // Columns added for Hello onboarding — guarded so this endpoint still works on a
+            // database where the 2026_08_02 migration has not been run yet.
+            if (\Illuminate\Support\Facades\Schema::hasColumn('hr_employees', 'zip')) {
+                $employee->zip = $request->input('zip');
+            }
+            if (\Illuminate\Support\Facades\Schema::hasColumn('hr_employees', 'timezone')) {
+                $employee->timezone = $request->input('timezone') ?: config('app.timezone', 'Asia/Karachi');
+            }
+            // Terms accepted at signup — prevents the blocking contract modal on first login.
+            if ($request->filled('contract_accepted_at')) {
+                $employee->contract_accepted_at = $request->input('contract_accepted_at');
+            }
             $employee->created_by         = null;
             $employee->updated_by         = null;
             $employee->save();
