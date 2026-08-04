@@ -46,7 +46,8 @@
                     <li class="fw-medium">
                         <a href="{{ config('bridge.agent_portal.dashboard_url', url('/subcontractor/dashboard')) }}" class="d-flex align-items-center gap-1 hover-text-primary">
                             <iconify-icon icon="solar:arrow-left-linear" class="icon text-lg"></iconify-icon>
-                            Back to CrazyRays Dashboard
+                            {{-- Names the agent portal this person actually belongs to. --}}
+                            Back to {{ \App\Support\Brand::for(auth('employee')->user())['name'] ?? 'Agent' }} Dashboard
                         </a>
                     </li>
                 @endauth

@@ -17,11 +17,16 @@
     <button type="button" class="sidebar-close-btn">
         <iconify-icon icon="radix-icons:cross-2"></iconify-icon>
     </button>
+    @php
+        // Admin chrome follows the DOMAIN (PORTAL_BRAND): hr.hellotransport.com renders Hello,
+        // hr.crazyrayssolutions.com.pk renders CrazyRays. Was hardcoded to the CrazyRays logo.
+        $__brand = \App\Support\Brand::current();
+    @endphp
     <div>
         <a href="#" class="sidebar-logo justify-content-center">
-            <img src="{{asset('assets/images/logo/crazyrays.svg')}}" alt="site logo" class="light-logo">
-            <img src="{{asset('assets/images/logo/crazyrays.svg')}}" alt="site logo" class="dark-logo">
-            <img src="{{asset('assets/images/logo/crazyrays.svg')}}" alt="site logo" class="logo-icon">
+            <img src="{{ asset($__brand['logo'] ?? 'assets/images/logo/hello_transport.png') }}" alt="{{ $__brand['name'] ?? 'site logo' }}" class="light-logo">
+            <img src="{{ asset($__brand['logo'] ?? 'assets/images/logo/hello_transport.png') }}" alt="{{ $__brand['name'] ?? 'site logo' }}" class="dark-logo">
+            <img src="{{ asset($__brand['logo'] ?? 'assets/images/logo/hello_transport.png') }}" alt="{{ $__brand['name'] ?? 'site logo' }}" class="logo-icon">
         </a>
     </div>
     <div class="sidebar-menu-area">

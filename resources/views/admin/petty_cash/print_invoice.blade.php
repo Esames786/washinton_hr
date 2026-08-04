@@ -15,7 +15,7 @@
 <body onload="window.print()">
 <div class="invoice-box">
     <div class="logo">
-        <img src="{{ asset('assets/images/logo/crazyrays.svg') }}" alt="Company Logo" style="max-height:80px; display:block; margin:0 auto;">
+        <img src="{{ public_path(\App\Support\Brand::current()['logo'] ?? 'assets/images/logo/hello_transport.png') }}" alt="Company Logo" style="max-height:80px; display:block; margin:0 auto;">
     </div>
     <h2>Petty Cash Transaction Invoice</h2>
     <p><strong>Transaction ID:</strong> {{ $txn->id }}</p>

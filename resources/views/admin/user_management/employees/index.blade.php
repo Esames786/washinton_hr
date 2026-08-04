@@ -350,8 +350,9 @@
                 let account_type_id = $('#account_type_id').val();
                 let employment_type_id = $('#employment_type_id').val();
                 let employee_status_id = $('#employee_status_id').val(); // #3: status counts as a filter
+                let brand_filter = $('#brand_filter').val();             // Company (Hello / Crazy Rays)
 
-                if ((!employee_ids || employee_ids.length === 0) && !account_type_id && !employment_type_id && !employee_status_id) {
+                if ((!employee_ids || employee_ids.length === 0) && !account_type_id && !employment_type_id && !employee_status_id && !brand_filter) {
                     Swal.fire({
                         icon: 'warning',
                         title: 'Warning!',

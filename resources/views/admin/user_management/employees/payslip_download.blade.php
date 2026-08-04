@@ -77,7 +77,7 @@
 
     <div class="header">
         <!-- Left: Company logo -->
-        <img src="{{ public_path('assets/images/logo/crazyrays.svg') }}" alt="Company Logo" style="max-height:80px; display:block; margin:0 auto;">
+        <img src="{{ public_path(\App\Support\Brand::current()['logo'] ?? 'assets/images/logo/hello_transport.png') }}" alt="Company Logo" style="max-height:80px; display:block; margin:0 auto;">
 
         <!-- Center: Company name and payslip title -->
         <div class="header-text">

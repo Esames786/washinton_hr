@@ -1,4 +1,5 @@
-<link rel="icon" type="image/png" href="{{ asset('assets/images/logo/crazyrays.svg') }}" sizes="16x16">
+{{-- Favicon follows the domain's brand (Hello on hr.hellotransport.com, CrazyRays on hr.crazyrays…). --}}
+<link rel="icon" type="image/png" href="{{ asset(\App\Support\Brand::current()['logo'] ?? 'assets/images/logo/hello_transport.png') }}" sizes="16x16">
 
 <!-- remix icon font css  -->
 <link rel="stylesheet" href="{{ asset('assets/css/remixicon.css') }}">
