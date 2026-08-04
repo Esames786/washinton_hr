@@ -42,9 +42,10 @@ class MarkDailyAttendance extends Command
      */
     public function handle()
     {
-        // HR portal operates on Pakistan Standard Time (Asia/Karachi). Pin explicitly so the
-        // daily finalization + overnight (<6 AM) logic stays correct regardless of app/server tz.
-        $now = Carbon::now('Asia/Karachi');
+        // Default/reference clock. Individual employees are finalized in THEIR OWN timezone
+        // (resolved inside the loop) — this outer value is only the fallback/reference and keeps
+        // behaviour identical for everyone on Asia/Karachi, which is every CrazyRays staff member.
+        $now = Carbon::now(config('app.timezone', 'Asia/Karachi'));
         $today = $now->toDateString();
 
         try {
@@ -61,9 +62,18 @@ class MarkDailyAttendance extends Command
 
                 if (!$shift) continue;
 
-                // Parse shift start & end with date
-                $shiftStart = Carbon::parse($today . ' ' . $shift->shift_start);
-                $shiftEnd   = Carbon::parse($today . ' ' . $shift->shift_end);
+                // ── Per-employee timezone ────────────────────────────────────────────────
+                // Shift times are stored as plain wall-clock values, so "has the shift ended?",
+                // which calendar day the shift belongs to, and the productivity window must all be
+                // judged where the person actually works. CrazyRays staff resolve to Asia/Karachi
+                // (the column default), so their finalization is byte-for-byte unchanged; a US
+                // Hello agent is finalized against their own day instead of Pakistan's.
+                $tz  = $employee->tz();
+                $now = Carbon::now($tz);
+
+                // Parse shift start & end with date (re-derived below for the overnight case)
+                $shiftStart = Carbon::parse($now->toDateString() . ' ' . $shift->shift_start, $tz);
+                $shiftEnd   = Carbon::parse($now->toDateString() . ' ' . $shift->shift_end, $tz);
 
 //                // Overnight shift handling
 //                if ($shift->shift_start > $shift->shift_end) {
@@ -81,13 +91,13 @@ class MarkDailyAttendance extends Command
                     $shiftBaseDate = $now->toDateString();
                 }
 
-                $shiftStart = Carbon::parse($shiftBaseDate . ' ' . $shift->shift_start);
+                $shiftStart = Carbon::parse($shiftBaseDate . ' ' . $shift->shift_start, $tz);
 
                 if ($shift->shift_start > $shift->shift_end) {
                     // Overnight shift
-                    $shiftEnd = Carbon::parse($shiftBaseDate . ' ' . $shift->shift_end)->addDay();
+                    $shiftEnd = Carbon::parse($shiftBaseDate . ' ' . $shift->shift_end, $tz)->addDay();
                 } else {
-                    $shiftEnd = Carbon::parse($shiftBaseDate . ' ' . $shift->shift_end);
+                    $shiftEnd = Carbon::parse($shiftBaseDate . ' ' . $shift->shift_end, $tz);
                 }
 
                 $current       = $now->format('Y-m-d H:i');

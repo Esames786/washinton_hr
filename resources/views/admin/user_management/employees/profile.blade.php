@@ -50,7 +50,15 @@
                 {{-- Details --}}
                 <div class="details flex-grow-1">
                     <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-1">
-                        <h4 class="fw-bold mb-0">{{ $employee->full_name ?? '-' }}</h4>
+                        <h4 class="fw-bold mb-0">
+                            {{ $employee->full_name ?? '-' }}
+                            {{-- Which company this subcontractor belongs to. --}}
+                            @php $__b = \App\Support\Brand::for($employee); @endphp
+                            <span class="badge align-middle ms-2"
+                                  style="font-size:12px;font-weight:600;{{ ($__b['key'] ?? '') === 'crazyrays' ? 'background:#f0e6cf;color:#8a6116;' : 'background:#e6edf8;color:#1a4ca0;' }}">
+                                {{ $__b['name'] ?? 'Hello Transport' }}
+                            </span>
+                        </h4>
 
                         {{-- Change Status Dropdown --}}
                         @php

@@ -69,7 +69,10 @@ class EmployeeBreakController extends Controller
             ], 422);
         }
         $employee = auth('employee')->user();
-        $today = now('Asia/Karachi')->toDateString();
+        // Breaks are recorded in the employee's OWN timezone (CrazyRays staff default to
+        // Asia/Karachi, so their behaviour is unchanged).
+        $tz    = $employee->tz();
+        $today = now($tz)->toDateString();
 
         $lastBreak = EmployeeBreak::where('employee_id', $employee->id)
             ->whereDate('created_at', $today)
@@ -82,7 +85,7 @@ class EmployeeBreakController extends Controller
 
         $break = new EmployeeBreak();
         $break->employee_id = $employee->id;
-        $break->break_start = now('Asia/Karachi')->format('H:i:s'); // ✅ second include
+        $break->break_start = now($tz)->format('H:i:s'); // ✅ second include
         $break->created_by  = $employee->id;
         $break->reason = $request->reason;
         $break->save();
@@ -93,7 +96,8 @@ class EmployeeBreakController extends Controller
     public function endBreak()
     {
         $employee = auth('employee')->user();
-        $today = now('Asia/Karachi')->toDateString();
+        $tz    = $employee->tz();
+        $today = now($tz)->toDateString();
 
         $lastBreak = EmployeeBreak::where('employee_id', $employee->id)
             ->whereDate('created_at', $today)
@@ -105,11 +109,11 @@ class EmployeeBreakController extends Controller
             return response()->json(['error' => 'No active break found.'], 400);
         }
 
-        $lastBreak->break_end = now('Asia/Karachi')->format('H:i:s'); // save time
+        $lastBreak->break_end = now($tz)->format('H:i:s'); // save time
 
-        // ✅ Combine date + time for proper diff
-        $start = Carbon::parse($lastBreak->created_at->toDateString() . ' ' . $lastBreak->break_start, 'Asia/Karachi');
-        $end   = Carbon::parse($lastBreak->created_at->toDateString() . ' ' . $lastBreak->break_end, 'Asia/Karachi');
+        // ✅ Combine date + time for proper diff (both ends in the employee's own zone)
+        $start = Carbon::parse($lastBreak->created_at->toDateString() . ' ' . $lastBreak->break_start, $tz);
+        $end   = Carbon::parse($lastBreak->created_at->toDateString() . ' ' . $lastBreak->break_end, $tz);
 
         $diffInSeconds = $start->diffInSeconds($end);
         $lastBreak->break_duration = round($diffInSeconds / 60, 2); // duration in minutes
@@ -149,7 +153,7 @@ class EmployeeBreakController extends Controller
     public static function getBreakStatus()
     {
         $employee = auth('employee')->user();
-        $today = now('Asia/Karachi')->toDateString();
+        $today = now($employee->tz())->toDateString();
 
         $lastBreak = EmployeeBreak::where('employee_id', $employee->id)
             ->whereDate('created_at', $today)

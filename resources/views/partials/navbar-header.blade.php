@@ -21,16 +21,36 @@
                 {{-- Live Pakistan (server) time — small running clock --}}
                 <span class="d-flex align-items-center gap-1 text-secondary-light" title="Pakistan Standard Time" style="font-variant-numeric:tabular-nums;">
                     <iconify-icon icon="solar:clock-circle-outline"></iconify-icon>
+                @php
+                    // The clock shows the VIEWER'S own timezone (Asia/Karachi for CrazyRays staff,
+                    // so nothing changes for them). The label is derived from the zone rather than
+                    // hardcoded to "PKT", which would be wrong for a US-based agent.
+                    $__clockEmp = auth('employee')->user();
+                    $__clockTz  = ($__clockEmp && method_exists($__clockEmp, 'tz'))
+                        ? $__clockEmp->tz()
+                        : config('app.timezone', 'Asia/Karachi');
+                @endphp
                     <span id="pkClock" class="fw-semibold">--:--:--</span>
-                    <span class="text-xs">PKT</span>
+                    <span class="text-xs" id="pkClockZone"></span>
                 </span>
                 <script>
                 (function () {
-                    var el = document.getElementById('pkClock');
+                    var el   = document.getElementById('pkClock');
+                    var zEl  = document.getElementById('pkClockZone');
+                    var zone = @json($__clockTz);
                     function tick() {
                         if (el) el.textContent = new Intl.DateTimeFormat('en-GB', {
-                            timeZone: 'Asia/Karachi', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true
+                            timeZone: zone, hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true
                         }).format(new Date());
+                    }
+                    // Short zone label (PKT / EDT / PST …) straight from the zone itself.
+                    if (zEl) {
+                        try {
+                            var parts = new Intl.DateTimeFormat('en-US', { timeZone: zone, timeZoneName: 'short' })
+                                .formatToParts(new Date());
+                            var tzn = parts.find(function (p) { return p.type === 'timeZoneName'; });
+                            zEl.textContent = tzn ? tzn.value : zone;
+                        } catch (e) { zEl.textContent = zone; }
                     }
                     tick(); setInterval(tick, 1000);
                 })();

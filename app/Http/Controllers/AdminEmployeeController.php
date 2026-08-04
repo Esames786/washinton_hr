@@ -86,6 +86,9 @@ class AdminEmployeeController extends Controller
                 'hr_employees.employee_status_id',
                 'hr_employees.agent_id',
                 'user.name as agent_name',
+                // Brand marker — the `user` table is already joined below, so this costs no
+                // extra queries and lets us badge/filter Hello vs CrazyRays in the listing.
+                'user.is_crazyrays as agent_is_crazyrays',
                 'hr_employees.account_type_id',
                 'hr_employees.employment_type_id',
             )
@@ -98,6 +101,17 @@ class AdminEmployeeController extends Controller
                     'employment_type:id,name'
                 ])
                 ->leftJoin('user', 'hr_employees.agent_id', '=', 'user.id');
+
+            // Brand filter — lets admins list only Hello or only CrazyRays people.
+            // Anyone without a linked agent account counts as Hello (the default brand).
+            $brandFilter = $request->get('brand');
+            if ($brandFilter === 'crazyrays') {
+                $employees->where('user.is_crazyrays', 1);
+            } elseif ($brandFilter === 'hellotransport') {
+                $employees->where(function ($q) {
+                    $q->where('user.is_crazyrays', '!=', 1)->orWhereNull('user.is_crazyrays');
+                });
+            }
 
             // Fetch all statuses once
             $allStatuses = EmployeeStatus::all()->keyBy('id');
@@ -195,6 +209,13 @@ class AdminEmployeeController extends Controller
                 ->addColumn('designation_name', fn($row) => $row->designation->name ?? '-')
                 ->addColumn('account_type_name', fn($row) => $row->account_type->name ?? '-')
                 ->addColumn('employment_type_name', fn($row) => $row->employment_type->name ?? '-')
+                // Which company this person belongs to — read straight off the joined user row.
+                ->addColumn('brand_badge', function ($row) {
+                    $isCr = (int) ($row->agent_is_crazyrays ?? 0) === 1;
+                    return $isCr
+                        ? '<span class="badge" style="background:#f0e6cf;color:#8a6116;font-weight:600;">Crazy Rays</span>'
+                        : '<span class="badge" style="background:#e6edf8;color:#1a4ca0;font-weight:600;">Hello</span>';
+                })
 //                ->editColumn('employee_status_id', function ($row) use ($allStatuses) {
 //                    $status = $allStatuses->get($row->employee_status_id);
 //                    if (!$status) return '-';
@@ -271,7 +292,7 @@ class AdminEmployeeController extends Controller
                     }
                 })
 
-                ->rawColumns(['action','employee_status_id'])
+                ->rawColumns(['action','employee_status_id','brand_badge'])
                 ->make(true);
         }
 

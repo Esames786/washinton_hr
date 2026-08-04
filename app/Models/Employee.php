@@ -87,6 +87,29 @@ class Employee extends Authenticatable
         return $this->isCrazyrays() ? 'CrazyRays Solutions' : 'Hello Transport';
     }
 
+    /**
+     * The timezone this person works in.
+     *
+     * Everything time-related for them — check-in / check-out, breaks, the shift window and the
+     * clock shown in the portal — is evaluated in this zone. CrazyRays staff are in Pakistan, so
+     * the column defaults to Asia/Karachi and their behaviour is unchanged; Hello agents pick
+     * their own zone at signup.
+     *
+     * Falls back to the app default if the value is missing or not a real timezone, so a bad
+     * value can never throw inside attendance code.
+     */
+    public function tz(): string
+    {
+        $fallback = config('app.timezone', 'Asia/Karachi');
+        $tz = $this->timezone ?? null;
+
+        if (!$tz || !in_array($tz, \DateTimeZone::listIdentifiers(), true)) {
+            return $fallback;
+        }
+
+        return $tz;
+    }
+
     /** P3 (#9): subcontractor's self-reported working equipment. */
     public function workEquipment()
     {

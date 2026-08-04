@@ -38,12 +38,17 @@
         var banners = document.querySelectorAll('.js-shift-banner');
         if (!banners.length) return;
 
-        // HR portal runs on Pakistan Standard Time (Asia/Karachi). The shift times are stored
-        // in PST, so the countdown must be evaluated in PST too — NOT the viewer's browser
-        // timezone. This returns "now" as a Date whose wall-clock fields (getHours etc.) reflect
-        // Karachi time regardless of where the user's computer is set.
+        // Shift times are stored as plain wall-clock times in the EMPLOYEE'S timezone, so the
+        // countdown must be evaluated in that same zone — NOT the viewer's browser timezone.
+        // For CrazyRays staff this resolves to Asia/Karachi exactly as before; a US-based Hello
+        // agent gets their own zone. Returns "now" as a Date whose getHours() etc. read as that zone.
+        var SHIFT_TZ = @json(
+            (auth('employee')->user() && method_exists(auth('employee')->user(), 'tz'))
+                ? auth('employee')->user()->tz()
+                : config('app.timezone', 'Asia/Karachi')
+        );
         function karachiNow() {
-            return new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Karachi' }));
+            return new Date(new Date().toLocaleString('en-US', { timeZone: SHIFT_TZ }));
         }
         function parseToday(hhmm) {
             var p = (hhmm || '00:00').split(':');

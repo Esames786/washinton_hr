@@ -114,6 +114,15 @@
                             @endforeach
                         </select>
                     </div>
+                    {{-- Tell Hello and CrazyRays people apart in the listing. --}}
+                    <div class="col-md-2 col-6">
+                        <label class="form-label fw-semibold">Company</label>
+                        <select name="brand_filter" id="brand_filter" class="form-select">
+                            <option value="">All Companies</option>
+                            <option value="hellotransport">Hello Transport</option>
+                            <option value="crazyrays">Crazy Rays</option>
+                        </select>
+                    </div>
                     <div class="col-md-1 d-grid">
                         <button type="button" id="search_btn" class="btn btn-primary d-flex">
                             <i class="bi bi-search"></i>  Search
@@ -135,6 +144,7 @@
                         {{--                            </div>--}}
                         {{--                        </th>--}}
                         <th>Subcontractor ID</th>
+                        <th>Company</th>
                         <th>Name</th>
                         <th>Email</th>
                         <th>Subcontractor Code</th>
@@ -286,6 +296,7 @@
                         d.account_type_id = $('#account_type_id').val();    // single select
                         d.employment_type_id = $('#employment_type_id').val(); // single select
                         d.employee_status_id = $('#employee_status_id').val(); // #13 status filter
+                        d.brand = $('#brand_filter').val();                 // Hello vs Crazy Rays
                         // if (d.search && d.search.value) {
                         //     d.columns[1].search.value = d.search.value; // title column
                         //     d.search.value = ''; // clear global search
@@ -310,6 +321,7 @@
                     //     }
                     // },
                     { data: 'id', name: 'id' },
+                    { data: 'brand_badge', name: 'brand_badge', orderable: false, searchable: false },
                     { data: 'full_name', name: 'full_name',orderable: false },
                     { data: 'email', name: 'email' },
                     { data: 'employee_code', name: 'employee_code' },

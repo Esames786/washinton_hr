@@ -141,7 +141,9 @@ class EmployeeAttendanceController extends Controller
 
         try {
             $employee_id = auth('employee')->id();
-            $now = now('Asia/Karachi');
+            // Check-in / check-out is stamped in the employee's OWN timezone. CrazyRays staff
+            // default to Asia/Karachi, so this is identical to the previous hardcoded behaviour.
+            $now = now(auth('employee')->user()->tz());
             // Overnight shift fix: before 06:00 AM means we're still in yesterday's shift window
             $today       = $now->hour < 6
                 ? $now->copy()->subDay()->toDateString()
@@ -318,7 +320,10 @@ class EmployeeAttendanceController extends Controller
 
     public static function getAttendanceForCard($employee)
     {
-        $now = now('Asia/Karachi');
+        // The card shows THIS employee's day, so evaluate it in their own timezone
+        // (Asia/Karachi for CrazyRays staff — unchanged behaviour).
+        $tz    = $employee->tz();
+        $now   = now($tz);
         $today = $now->toDateString();
 
         $shift = ShiftType::find($employee->shift_id);
@@ -360,8 +365,8 @@ class EmployeeAttendanceController extends Controller
         $baseDate = $attendanceToday ? $attendanceToday->attendance_date : $today;
 
         // Shift start/end based on base date
-        $shiftStart = Carbon::parse($baseDate . ' ' . $shift->shift_start, 'Asia/Karachi');
-        $shiftEnd   = Carbon::parse($baseDate . ' ' . $shift->shift_end, 'Asia/Karachi');
+        $shiftStart = Carbon::parse($baseDate . ' ' . $shift->shift_start, $tz);
+        $shiftEnd   = Carbon::parse($baseDate . ' ' . $shift->shift_end, $tz);
 
         // Overnight adjust
         if ($shiftEnd->lessThanOrEqualTo($shiftStart)) {
