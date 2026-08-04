@@ -41,14 +41,51 @@ class Brand
      */
     public static function current(): array
     {
+        // 1. Explicit deployment brand wins (PORTAL_BRAND).
         $force = config('brands.force');
         if ($force) {
             return self::byKey($force);
         }
 
+        // 2. Otherwise infer it from the HOST being visited, so each domain brands itself even
+        //    when PORTAL_BRAND was never set: hr.crazyrayssolutions.com.pk → CrazyRays,
+        //    hr.hellotransport.com → Hello. This is what makes the branding follow the domain.
+        $host = self::hostBrandKey();
+        if ($host) {
+            return self::byKey($host);
+        }
+
+        // 3. Fall back to the signed-in person's own brand.
         $employee = Auth::guard('employee')->user();
 
         return self::for($employee instanceof Employee ? $employee : null);
+    }
+
+    /**
+     * Brand implied by the current request's hostname, or null when it matches neither domain
+     * (e.g. a local/staging host) so the caller can fall back.
+     */
+    public static function hostBrandKey(): ?string
+    {
+        try {
+            $host = strtolower((string) request()->getHost());
+        } catch (\Throwable $e) {
+            return null;   // console/queue context — no request
+        }
+
+        if ($host === '') {
+            return null;
+        }
+
+        if (str_contains($host, 'crazyrays')) {
+            return 'crazyrays';
+        }
+
+        if (str_contains($host, 'hellotransport')) {
+            return 'hellotransport';
+        }
+
+        return null;
     }
 
     /**
