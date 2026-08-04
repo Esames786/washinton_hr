@@ -108,7 +108,9 @@
     $empPendingContract = null;
     $empAuth = auth('employee')->user();
     if ($empAuth && $empAuth->contract && $empAuth->contract_updated_at && !$empAuth->contract_accepted_at) {
-        $empPendingContract = $empAuth->contract;
+        // Re-brand at display time for the PERSON accepting, so a Hello subcontractor never sees
+        // CrazyRays wording (and vice-versa) regardless of which portal the copy was saved from.
+        $empPendingContract = \App\Support\Brand::applyTokens($empAuth->contract, \App\Support\Brand::for($empAuth));
     }
 @endphp
 @if($empPendingContract)

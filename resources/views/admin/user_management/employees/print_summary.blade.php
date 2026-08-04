@@ -11,7 +11,13 @@
         .hdr { display:flex; align-items:center; justify-content:space-between; border-bottom:3px solid #d4a72c; padding-bottom:12px; margin-bottom:18px; }
         .hdr h1 { margin:0; font-size:20px; }
         .hdr .brand { font-size:16px; font-weight:800; color:#b8860b; }
-        h2 { font-size:14px; margin:18px 0 8px; padding:6px 10px; background:#f3f4f6; border-left:4px solid #d4a72c; }
+        /* Section titles sit above long embedded documents (Contract / NDA) that carry their own
+           large headings — keep these clearly bigger so they still read as section titles. */
+        h2 { font-size:19px; font-weight:800; letter-spacing:.2px; margin:22px 0 10px; padding:9px 12px; background:#f3f4f6; border-left:5px solid #d4a72c; }
+        /* Keep the embedded agreement's own headings below the section title in the hierarchy. */
+        .doc-embed h1 { font-size:17px; margin:6px 0; }
+        .doc-embed h2 { font-size:15px; font-weight:700; background:none; border-left:0; padding:0; margin:10px 0 4px; }
+        .doc-embed h3, .doc-embed h4 { font-size:14px; margin:8px 0 4px; }
         table { width:100%; border-collapse:collapse; margin-bottom:10px; }
         td, th { border:1px solid #dee2e6; padding:6px 9px; text-align:left; vertical-align:top; }
         th { background:#fafafa; width:32%; font-weight:600; }
@@ -103,7 +109,7 @@
                 <span class="badge b-req">Not accepted yet</span>
             @endif
         </p>
-        <div class="contract-box">{!! $employee->contract !!}</div>
+        <div class="contract-box doc-embed">{!! \App\Support\Brand::applyTokens($employee->contract, \App\Support\Brand::for($employee)) !!}</div>
     @else
         <p class="muted">No contract assigned.</p>
     @endif
@@ -113,8 +119,8 @@
         <p><span class="badge b-ok">Signed</span> on {{ \Carbon\Carbon::parse($employee->nda_signed_at)->format('d M Y H:i') }}
         @if(!empty($employee->nda_document_url))— <a href="{{ $employee->nda_document_url }}" target="_blank">View signed NDA</a>@endif</p>
         @if(!empty($employee->nda_content))
-            <div style="border:1px solid #ccc;padding:10px;margin-top:6px;font-size:12px;">
-                {!! $employee->nda_content !!}
+            <div class="doc-embed" style="border:1px solid #ccc;padding:10px;margin-top:6px;font-size:12px;">
+                {!! \App\Support\Brand::applyTokens($employee->nda_content, \App\Support\Brand::for($employee)) !!}
                 <hr>
                 <div><strong>Agent Full Name:</strong> {{ $employee->full_name ?? '-' }} &nbsp; <strong>Father's Name:</strong> {{ $employee->nda_father_name ?? '-' }}</div>
                 <div><strong>CNIC:</strong> {{ $employee->cnic ?? '-' }} &nbsp; <strong>Address:</strong> {{ $employee->nda_address ?? '-' }}</div>

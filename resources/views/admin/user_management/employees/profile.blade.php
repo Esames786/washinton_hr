@@ -311,7 +311,7 @@
                             {{-- Signed NDA shown inline (like the Contract) — full text + the details the agent signed with. --}}
                             @if(!empty($employee->nda_content))
                                 <div class="border rounded p-3 mt-3 bg-light" style="max-height:340px;overflow-y:auto;font-size:13px;">
-                                    {!! $employee->nda_content !!}
+                                    {!! \App\Support\Brand::applyTokens($employee->nda_content, \App\Support\Brand::for($employee)) !!}
                                     <hr>
                                     <div class="row small">
                                         <div class="col-md-6"><strong>Agent Full Name:</strong> {{ $employee->full_name ?? '-' }}</div>
@@ -359,7 +359,7 @@
                                 <div class="mt-2 d-flex align-items-center">
                                     <button type="button" id="saveNdaBtn"
                                             data-url="{{ route('admin.employees.save-nda', $employee->id) }}"
-                                            data-default-url="{{ route('admin.employees.default-nda') }}"
+                                            data-default-url="{{ route('admin.employees.default-nda', ['employee' => $employee->id]) }}"
                                             data-has-content="{{ !empty($employee->nda_content) ? '1' : '0' }}"
                                             class="btn btn-sm btn-primary">💾 Save NDA</button>
                                     <span id="ndaSaveMsg" class="small ms-2" style="display:none;"></span>
@@ -448,7 +448,9 @@
                     <div class="card-body">
                         <link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
                         {{-- #4: pre-fill with this employee's contract, else the last-used default so the admin doesn't retype it. --}}
-                        <div id="contractEditor" style="min-height:200px;">{!! $employee->contract ?: ($defaultContract ?? '') !!}</div>
+                        {{-- Branded for the subcontractor being edited, so a Hello subcontractor's
+                             contract never renders CrazyRays wording (and vice-versa). --}}
+                        <div id="contractEditor" style="min-height:200px;">{!! \App\Support\Brand::applyTokens($employee->contract ?: ($defaultContract ?? ''), \App\Support\Brand::for($employee)) !!}</div>
                         @if(empty($employee->contract) && !empty($defaultContract))
                             <small class="text-muted d-block mt-1">Loaded the last-used contract as a default — review and click <strong>Save Contract</strong>.</small>
                         @endif

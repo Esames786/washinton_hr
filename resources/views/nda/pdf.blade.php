@@ -3,11 +3,13 @@
 <head>
 <meta charset="UTF-8">
 @php
-    $brand        = $brand        ?? [];
-    $companyName  = $brand['name']  ?? 'Crazy Rays Solutions';
-    $companyPhone = $brand['phone'] ?? '0313-8432343';
-    $companyMail  = $brand['contact_email'] ?? ($brand['email'] ?? 'info@crazyrayssolutions.com.pk');
-    $companySite  = $brand['site']  ?? 'https://crazyrayssolutions.com.pk';
+    // Never hardcode a company here — fall back to the configured default brand so a Hello
+    // subcontractor's NDA can never render CrazyRays details.
+    $brand        = (is_array($brand ?? null) && $brand) ? $brand : \App\Support\Brand::byKey(config('brands.default', 'hellotransport'));
+    $companyName  = $brand['name']  ?? 'Hello Transport';
+    $companyPhone = $brand['phone'] ?? '';
+    $companyMail  = $brand['contact_email'] ?? ($brand['email'] ?? '');
+    $companySite  = $brand['site']  ?? '';
     $ndaContent   = $ndaContent   ?? '';
     $signedIp     = $signedIp     ?? '';
     $cnicFrontPath = $cnicFrontPath ?? null;

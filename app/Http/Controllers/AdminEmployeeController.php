@@ -1388,11 +1388,20 @@ class AdminEmployeeController extends Controller
         return response()->json(['success' => true, 'message' => 'NDA saved. The subcontractor has been asked to review and sign it.']);
     }
 
-    /** Return the default NDA template (from the shared table) for the HR editor. */
-    public function defaultNda()
+    /**
+     * Return the default NDA template (from the shared table) for the HR editor, branded for the
+     * subcontractor being edited — a Hello subcontractor gets Hello wording even on the CrazyRays
+     * HR domain. Pass ?employee={id}; without it we fall back to the deployment brand.
+     */
+    public function defaultNda(Request $request)
     {
-        $tpl = DB::table('nda_templates')->where('is_default', 1)->value('content');
-        $content = $tpl ? str_ireplace(['{{COMPANY_NAME}}', '{{COMPANY_LEGAL}}'], 'Crazy Rays Solutions', $tpl) : '';
+        $employee = $request->filled('employee')
+            ? Employee::find($request->input('employee'))
+            : null;
+
+        $tpl     = DB::table('nda_templates')->where('is_default', 1)->value('content');
+        $content = $tpl ? \App\Support\Brand::applyTokens($tpl, \App\Support\Brand::for($employee)) : '';
+
         return response()->json(['content' => $content]);
     }
 

@@ -460,7 +460,7 @@
                         @endif
 
                         <div class="border rounded p-3 mb-3 bg-light" style="max-height:400px;overflow-y:auto;">
-                            {!! $employee->contract !!}
+                            {!! \App\Support\Brand::applyTokens($employee->contract, \App\Support\Brand::for($employee)) !!}
                         </div>
 
                         @if(!$employee->contract_accepted_at)

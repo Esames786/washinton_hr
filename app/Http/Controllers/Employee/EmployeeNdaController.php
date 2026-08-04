@@ -39,12 +39,18 @@ class EmployeeNdaController extends Controller
         $signedAt = now();
         $ip       = $request->ip();
 
+        // Brand of the PERSON signing — a Hello subcontractor must get a Hello-worded NDA even
+        // when the HR portal itself is running under the CrazyRays brand.
+        $brand = \App\Support\Brand::for($employee);
+
         // The NDA copy being signed = the admin's prepared copy, or the shared default template.
+        // Either way it is re-branded for THIS person, so a Hello subcontractor can never sign a
+        // copy that names CrazyRays (e.g. saved while the CrazyRays portal brand was forced).
         $ndaContent = $employee->nda_content ?? null;
         if (!$ndaContent || trim(strip_tags($ndaContent)) === '') {
-            $tpl = DB::table('nda_templates')->where('is_default', 1)->value('content');
-            $ndaContent = $tpl ? str_ireplace(['{{COMPANY_NAME}}', '{{COMPANY_LEGAL}}'], 'Crazy Rays Solutions', $tpl) : '';
+            $ndaContent = DB::table('nda_templates')->where('is_default', 1)->value('content') ?: '';
         }
+        $ndaContent = $ndaContent ? \App\Support\Brand::applyTokens($ndaContent, $brand) : '';
 
         // Store CNIC front/back if provided (public/Uploads — web-served, no symlink needed).
         $cnicFrontPath = $this->storeUpload($request, 'cnic_front', $employee->id, $signedAt);
@@ -59,7 +65,7 @@ class EmployeeNdaController extends Controller
         try {
             $html = view('nda.pdf', [
                 'ndaContent'    => $ndaContent,
-                'brand'         => [],
+                'brand'         => $brand,
                 'employeeName'  => $request->employee_name,
                 'fatherName'    => $request->father_name,
                 'address'       => $request->address,

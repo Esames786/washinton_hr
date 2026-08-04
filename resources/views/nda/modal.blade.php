@@ -5,13 +5,16 @@
     $__emp = auth('employee')->user();
     $__empId = $__emp->id ?? null;
 
+    // Brand of the PERSON signing (Hello subcontractor => Hello wording, even on the CR domain).
+    $__brand = \App\Support\Brand::for($__emp);
+
     // The exact NDA the admin prepared for this subcontractor (falls back to the default template
     // from the shared nda_templates table, then to a built-in message).
     $__ndaContent = $__emp->nda_content ?? null;
     if (!$__ndaContent || trim(strip_tags($__ndaContent)) === '') {
-        $__tpl = \Illuminate\Support\Facades\DB::table('nda_templates')->where('is_default', 1)->value('content');
-        $__ndaContent = $__tpl ? str_ireplace(['{{COMPANY_NAME}}', '{{COMPANY_LEGAL}}'], 'Crazy Rays Solutions', $__tpl) : '';
+        $__ndaContent = \Illuminate\Support\Facades\DB::table('nda_templates')->where('is_default', 1)->value('content') ?: '';
     }
+    $__ndaContent = $__ndaContent ? \App\Support\Brand::applyTokens($__ndaContent, $__brand) : '';
 
     // CNIC front/back already on file? (hr_document_settings #10 = Front, #11 = Back).
     $__cnicHave = [];
@@ -58,7 +61,7 @@
         <div style="padding:28px 30px 16px; border-bottom:1px solid #e0e0e0;">
 
             <div style="text-align:center; margin-bottom:22px;">
-                <img src="/Uploads/Settings/logo.png" alt="Crazy Rays Solutions" style="height:64px;" onerror="this.style.display='none'">
+                <img src="/Uploads/Settings/logo.png" alt="{{ $__brand['name'] ?? 'Company' }}" style="height:64px;" onerror="this.style.display='none'">
             </div>
 
             <h2 style="text-align:center; color:#1a4ca0; font-size:16px; font-weight:700; text-transform:uppercase; letter-spacing:.4px; margin-bottom:18px; line-height:1.4;">
@@ -73,9 +76,10 @@
             <hr style="border:none; border-top:1px solid #ddd; margin:18px 0;">
 
             <div style="background:#f8f9ff; border:1px solid #dce3f5; border-radius:6px; padding:16px 18px; font-size:12.5px; color:#444;">
-                <strong style="color:#1a4ca0;">CRAZY RAYS SOLUTIONS</strong><br>
-                Phone: 0313-8432343 &nbsp;|&nbsp; Email: info@crazyrayssolutions.com.pk &nbsp;|&nbsp;
-                Website: <a href="https://crazyrayssolutions.com.pk" target="_blank" style="color:#1a4ca0;">crazyrayssolutions.com.pk</a>
+                <strong style="color:#1a4ca0;">{{ strtoupper($__brand['name'] ?? 'Company') }}</strong><br>
+                @if(!empty($__brand['phone']))Phone: {{ $__brand['phone'] }} &nbsp;|&nbsp; @endif
+                @if(!empty($__brand['contact_email']))Email: {{ $__brand['contact_email'] }} &nbsp;|&nbsp; @endif
+                @if(!empty($__brand['site']))Website: <a href="{{ $__brand['site'] }}" target="_blank" style="color:#1a4ca0;">{{ preg_replace('#^https?://#', '', $__brand['site']) }}</a>@endif
             </div>
         </div>
 
