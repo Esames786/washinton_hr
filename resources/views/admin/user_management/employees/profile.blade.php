@@ -378,6 +378,76 @@
                 </div>
             </div>
 
+            {{-- Round-2 #5: W-9 (Hello subcontractors only) — HR admin can send / cancel the
+                 request, same as the florida button; the agent completes it in their portal. --}}
+            @php
+                $__w9IsHello = $employee->agent_id && !$employee->isCrazyrays();
+                $__w9Form = $__w9IsHello
+                    ? \Illuminate\Support\Facades\DB::table('w9_forms')->where('user_id', $employee->agent_id)->orderByDesc('id')->first()
+                    : null;
+                $__w9Required = ($__w9IsHello && \Illuminate\Support\Facades\Schema::hasColumn('user', 'w9_required'))
+                    ? (int) \Illuminate\Support\Facades\DB::table('user')->where('id', $employee->agent_id)->value('w9_required')
+                    : 0;
+            @endphp
+            @if($__w9IsHello)
+            <div class="col-md-12">
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-header bg-light fw-bold">🧾 W-9 Form</div>
+                    <div class="card-body p-3">
+                        @if($__w9Form)
+                            <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+                                <span class="badge bg-success text-white">✓ Submitted</span>
+                                <span class="text-muted small">{{ $__w9Form->signed_at ? \Carbon\Carbon::parse($__w9Form->signed_at)->format('d M Y, h:i A') : '' }}</span>
+                                @php
+                                    // Absolute URL stored at generation time (works whichever portal
+                                    // produced the file); fall back to the Hello domain for old rows.
+                                    $__w9Url = $__w9Form->document_url
+                                        ?? (!empty($__w9Form->document_path)
+                                            ? rtrim(preg_replace('#/loginn$#', '', \App\Support\Brand::byKey('hellotransport')['login_url'] ?? 'https://hellotransport.com'), '/') . '/' . ltrim($__w9Form->document_path, '/')
+                                            : null);
+                                @endphp
+                                @if($__w9Url)
+                                    <a href="{{ $__w9Url }}" target="_blank" class="btn btn-sm btn-outline-success ms-auto">⬇ Download W-9 PDF</a>
+                                @endif
+                            </div>
+                            <div class="row small">
+                                <div class="col-md-6"><strong>Name:</strong> {{ $__w9Form->legal_name }}</div>
+                                <div class="col-md-6"><strong>TIN:</strong>
+                                    {{ $__w9Form->tin_last4 ? (($__w9Form->tin_type === 'ein' ? '**-*******' : '***-**-') . $__w9Form->tin_last4) : '—' }}
+                                    <small class="text-muted">(full number visible on the agent-portal admin only)</small>
+                                </div>
+                                <div class="col-md-6"><strong>Address:</strong> {{ $__w9Form->address }}, {{ $__w9Form->city }}, {{ $__w9Form->state }} {{ $__w9Form->zip }}</div>
+                                <div class="col-md-6"><strong>Signed from IP:</strong> {{ $__w9Form->signed_ip ?? '—' }}</div>
+                            </div>
+                            @if(!empty($__w9Form->signature))
+                                <div class="mt-2"><strong class="small d-block mb-1">Signature:</strong>
+                                    <img src="{{ $__w9Form->signature }}" alt="Signature" style="max-height:60px;border:1px solid #ccc;background:#fff;border-radius:4px;">
+                                </div>
+                            @endif
+                        @elseif($__w9Required)
+                            <div class="d-flex flex-wrap align-items-center gap-2">
+                                <span class="badge bg-warning text-dark">Sent — awaiting subcontractor</span>
+                                <form method="POST" action="{{ route('admin.employees.set-w9', $employee->id) }}" class="ms-auto">
+                                    @csrf
+                                    <input type="hidden" name="require" value="0">
+                                    <button type="submit" class="btn btn-sm btn-outline-secondary">Cancel W-9 Request</button>
+                                </form>
+                            </div>
+                        @else
+                            <div class="d-flex flex-wrap align-items-center gap-2">
+                                <span class="badge bg-secondary text-white">Not submitted</span>
+                                <form method="POST" action="{{ route('admin.employees.set-w9', $employee->id) }}" class="ms-auto">
+                                    @csrf
+                                    <input type="hidden" name="require" value="1">
+                                    <button type="submit" class="btn btn-sm btn-primary">🧾 Send W-9 to Subcontractor</button>
+                                </form>
+                            </div>
+                        @endif
+                    </div>
+                </div>
+            </div>
+            @endif
+
             {{-- Daily Activities Master Info --}}
             <div class="col-md-12">
                 <div class="card shadow-sm border-0 h-100">

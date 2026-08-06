@@ -97,6 +97,8 @@ use App\Http\Controllers\Employee\EmployeeTicketMessageController;
                 Route::post('subcontractors/{employee}/nda', [AdminEmployeeController::class, 'setNda'])->name('employees.set-nda');
                 // HR admin can also write/edit + assign the NDA copy (mirrors the Contract editor).
                 Route::post('subcontractors/{employee}/save-nda', [AdminEmployeeController::class, 'saveNda'])->name('employees.save-nda');
+                // HR admin can also send / cancel the W-9 request (Hello subcontractors only).
+                Route::post('subcontractors/{employee}/w9', [AdminEmployeeController::class, 'setW9'])->name('employees.set-w9');
                 Route::get('subcontractors/nda/default', [AdminEmployeeController::class, 'defaultNda'])->name('employees.default-nda');
                 Route::get('subcontractors/{employee}/documents', [AdminEmployeeController::class, 'getDocuments'])->name('employees.documents');
                 Route::post('subcontractors/documents/{document}/verify', [AdminEmployeeController::class, 'verify'])->name('employees.documents.verify');
