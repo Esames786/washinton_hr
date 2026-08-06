@@ -507,12 +507,17 @@
 
                     {{-- Step 4: Personal Information (Edit Mode) --}}
                     <fieldset class="wizard-fieldset">
+                        @php
+                            // Round-3 #4: Hello (US) staff get State-ID wording and relaxed
+                            // requirements; CrazyRays keeps the exact CNIC/phone rules it had.
+                            $__isCrStaff = $employee->isCrazyrays();
+                        @endphp
                         <h6 class="text-md text-neutral-500">Personal Information</h6>
                         <div class="row gy-3">
                             <div class="col-6">
-                                <label class="form-label">Father Name</label>
+                                <label class="form-label">Father Name @if(!$__isCrStaff)<span class="text-muted small">(optional)</span>@endif</label>
                                 <div class="position-relative">
-                                    <input type="text" name="father_name" class="form-control  wizard-required"
+                                    <input type="text" name="father_name" class="form-control {{ $__isCrStaff ? 'wizard-required' : '' }}"
                                            value="{{ old('father_name', $employee->father_name) }}">
                                     <div class="wizard-form-error"></div>
                                 </div>
@@ -530,11 +535,11 @@
                             </div>
 
                             <div class="col-6">
-                                <label class="form-label">CNIC</label>
+                                <label class="form-label">{{ $__isCrStaff ? 'CNIC' : 'State ID' }}</label>
                                 <div class="position-relative">
                                     <input type="text" name="cnic" id="cnic" class="form-control wizard-required"
                                            value="{{ old('cnic', $employee->cnic) }}"
-                                           placeholder="XXXXX-XXXXXXX-X" required>
+                                           placeholder="{{ $__isCrStaff ? 'XXXXX-XXXXXXX-X' : 'State ID number' }}" required>
                                     <div class="wizard-form-error"></div>
                                 </div>
 
@@ -552,9 +557,9 @@
                             </div>
 
                             <div class="col-6">
-                                <label class="form-label">Gender</label>
+                                <label class="form-label">Gender @if(!$__isCrStaff)<span class="text-muted small">(optional)</span>@endif</label>
                                 <div class="position-relative">
-                                    <select name="gender" class="form-control wizard-required" required>
+                                    <select name="gender" class="form-control {{ $__isCrStaff ? 'wizard-required' : '' }}" @if($__isCrStaff) required @endif>
                                         <option value="">Select Gender</option>
                                         <option value="male" {{ old('gender', $employee->gender) == 'male' ? 'selected' : '' }}>Male</option>
                                         <option value="female" {{ old('gender', $employee->gender) == 'female' ? 'selected' : '' }}>Female</option>
@@ -565,9 +570,9 @@
                             </div>
 
                             <div class="col-6">
-                                <label class="form-label">Marital Status</label>
+                                <label class="form-label">Marital Status @if(!$__isCrStaff)<span class="text-muted small">(optional)</span>@endif</label>
                                 <div class="position-relative">
-                                    <select name="marital_status" class="form-control wizard-required" required>
+                                    <select name="marital_status" id="marital_status" class="form-control {{ $__isCrStaff ? 'wizard-required' : '' }}" @if($__isCrStaff) required @endif>
                                         <option value="">Select Marital Status</option>
                                         <option value="single" {{ old('marital_status', $employee->marital_status) == 'single' ? 'selected' : '' }}>Single</option>
                                         <option value="married" {{ old('marital_status', $employee->marital_status) == 'married' ? 'selected' : '' }}>Married</option>
@@ -602,7 +607,7 @@
                                 <label class="form-label">Phone</label>
                                 <div class="position-relative">
                                     <input type="text" name="phone" id="phone" class="form-control wizard-required"
-                                           value="{{ old('phone', $employee->phone) }}" placeholder="e.g. 03XXXXXXXXX" required>
+                                           value="{{ old('phone', $employee->phone) }}" placeholder="{{ $__isCrStaff ? 'e.g. 03XXXXXXXXX' : 'e.g. 4104174032' }}" required>
                                     <div class="wizard-form-error"></div>
                                 </div>
                             </div>
@@ -611,7 +616,7 @@
                                 <label class="form-label">Phone2</label>
 {{--                                <div class="position-relative">--}}
                                     <input type="text" name="phone2" id="phone2" class="form-control"
-                                           value="{{ old('phone2', $employee->phone2) }}" placeholder="e.g. 03XXXXXXXXX">
+                                           value="{{ old('phone2', $employee->phone2) }}" placeholder="{{ $__isCrStaff ? 'e.g. 03XXXXXXXXX' : 'e.g. 4104174032' }}">
 {{--                                    <div class="wizard-form-error"></div>--}}
 {{--                                </div>--}}
                             </div>
@@ -630,7 +635,7 @@
                                 <div class="position-relative">
                                     <input type="text" name="emergency_contact"  id="emergency_contact" class="form-control wizard-required"
                                            value="{{ old('emergency_contact', $employee->emergency_contact) }}"
-                                           placeholder="e.g. 03XXXXXXXXX" required>
+                                           placeholder="{{ $__isCrStaff ? 'e.g. 03XXXXXXXXX' : 'e.g. 4104174032' }}" required>
                                     <div class="wizard-form-error"></div>
                                 </div>
                             </div>
@@ -963,9 +968,17 @@
 
             $("#marital_status").on("change", toggleKids);
 
+            // Round-3 #4: Hello (US) staff keep free-form phones (+country code, 10-15 digits)
+            // and a free-form State ID; the PK masks/lengths below stay CrazyRays-only.
+            const IS_CR_STAFF = {{ $employee->isCrazyrays() ? 'true' : 'false' }};
+
             function digitMask(selector) {
                 $(selector).on("input", function () {
-                    this.value = this.value.replace(/[^0-9]/g, '').slice(0, 11);
+                    if (IS_CR_STAFF) {
+                        this.value = this.value.replace(/[^0-9]/g, '').slice(0, 11);
+                    } else {
+                        this.value = this.value.replace(/[^0-9+\s-]/g, '').slice(0, 17);
+                    }
                 });
             }
             digitMask("#phone");
@@ -987,7 +1000,9 @@
                 });
             }
 
-            cnicMask("#cnic");
+            if (IS_CR_STAFF) {
+                cnicMask("#cnic");
+            }
 
 
             $('#excluded_holiday_id').select2({
@@ -1095,16 +1110,21 @@
                         $(this).siblings(".wizard-form-error").hide();
                     }
                     if($(this).is("#phone,#emergency_contact")) {
-
-                        if(thisValue.length !== 11) {
+                        // CrazyRays: exactly 11 local digits. Hello (US): 10-15 digits, "+" allowed.
+                        var phoneDigits = thisValue.replace(/\D/g, '');
+                        var badPhone = IS_CR_STAFF ? (thisValue.length !== 11)
+                                                   : (phoneDigits.length < 10 || phoneDigits.length > 15);
+                        if(badPhone) {
                             $(this).siblings(".wizard-form-error").show();
-                            // $(this).siblings(".wizard-form-error").text("Must be 13 digits").show();
                             nextWizardStep = false;
                         }
                     }
 
                     if($(this).is("#cnic")) {
-                        if(thisValue.length !== 15) {
+                        // CrazyRays: dashed CNIC is exactly 15 chars. Hello: State ID, 3-20 chars.
+                        var badId = IS_CR_STAFF ? (thisValue.length !== 15)
+                                                : (thisValue.length < 3 || thisValue.length > 20);
+                        if(badId) {
                             $(this).siblings(".wizard-form-error").show();
                             nextWizardStep = false;
                         }

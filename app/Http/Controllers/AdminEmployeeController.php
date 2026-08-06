@@ -460,11 +460,13 @@ class AdminEmployeeController extends Controller
             'designation_id'        => 'nullable|integer|max:255',
             'father_name'           => 'nullable|string|max:255',
             'mother_name'           => 'nullable|string|max:255',
-            // CNIC: accept both the 13-digit form captured at signup and the dashed
-            // XXXXX-XXXXXXX-X (15-char) form, so synced subcontractors don't have to be re-typed.
+            // CNIC / State ID: CrazyRays staff enter the Pakistani CNIC (13 digits or dashed
+            // XXXXX-XXXXXXX-X); Hello (US) staff enter a state-issued ID, whose format varies by
+            // state — accept 3-20 letters/digits (dashes/spaces allowed). The loose branch never
+            // rejects a value the old CNIC-only rule accepted, so CrazyRays is unaffected.
             // MUST be an array — the regex contains '|', which Laravel would otherwise treat as a
             // rule separator (splitting the pattern → "No ending delimiter '/' found").
-            'cnic'                  => ['required', 'string', 'regex:/^(\d{13}|\d{5}-\d{7}-\d)$/', 'unique:hr_employees,cnic'],
+            'cnic'                  => ['required', 'string', 'regex:/^(\d{5}-\d{7}-\d|[A-Za-z0-9][A-Za-z0-9\- ]{2,19})$/', 'unique:hr_employees,cnic'],
             'dob'                   => 'nullable|date|before_or_equal:today',
             'gender'                => 'nullable|in:male,female,other',
             'marital_status'        => 'nullable|in:single,married,divorced,widowed',
@@ -869,11 +871,10 @@ class AdminEmployeeController extends Controller
             'designation_id'        => 'nullable|integer|max:255',
             'father_name'           => 'nullable|string|max:255',
             'mother_name'           => 'nullable|string|max:255',
-            // CNIC: accept both the 13-digit form captured at signup and the dashed
-            // XXXXX-XXXXXXX-X (15-char) form, so synced subcontractors don't have to be re-typed.
-            // MUST be an array — the regex contains '|', which Laravel would otherwise treat as a
-            // rule separator (splitting the pattern → "No ending delimiter '/' found").
-            'cnic' => ['required', 'string', 'regex:/^(\d{13}|\d{5}-\d{7}-\d)$/', 'unique:hr_employees,cnic,' . $id],
+            // CNIC / State ID: same brand-tolerant rule as store() — PK CNIC (13-digit/dashed)
+            // or a 3-20 char alphanumeric US State ID. Loose branch subsumes the old rule, so
+            // CrazyRays records validate exactly as before.
+            'cnic' => ['required', 'string', 'regex:/^(\d{5}-\d{7}-\d|[A-Za-z0-9][A-Za-z0-9\- ]{2,19})$/', 'unique:hr_employees,cnic,' . $id],
             'dob'                   => 'nullable|date|before_or_equal:today',
             'gender'                => 'nullable|in:male,female,other',
             'marital_status'        => 'nullable|in:single,married,divorced,widowed',
@@ -1341,6 +1342,20 @@ class AdminEmployeeController extends Controller
             'success' => true,
             'message' => 'Document status updated'
         ]);
+    }
+
+    /**
+     * Round-4: subcontractors can no longer remove their own documents — HR removes on request.
+     * Deletes the row AND the file on disk (this is the deliberate, admin-initiated removal).
+     */
+    public function deleteDocument(EmployeeDocument $document)
+    {
+        if ($document->file_path && file_exists(public_path($document->file_path))) {
+            @unlink(public_path($document->file_path));
+        }
+        $document->delete();
+
+        return back()->with('success', 'Document removed.');
     }
 
     public function bulkVerify(Request $request)

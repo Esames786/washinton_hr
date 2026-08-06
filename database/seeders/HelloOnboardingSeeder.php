@@ -73,6 +73,40 @@ class HelloOnboardingSeeder extends Seeder
         );
         $this->command?->info('✔ Shift "Morning (10am - 5pm)" ready.');
 
+        // ── 1b. Attendance rules for that shift ──────────────────────────────
+        // Check-in hard-fails ("Shift Attendance rule not found for employee.") for any shift
+        // without rows in hr_shift_attendance_rules — the admin shift screen does not create
+        // them automatically. Mirrors shift 1 (Morning 09-17) shifted +1h for the 10:00 start.
+        $shiftId = DB::table('hr_shift_types')->where('name', 'Morning (10am - 5pm)')->value('id');
+        if ($shiftId && !DB::table('hr_shift_attendance_rules')->where('shift_type_id', $shiftId)->exists()) {
+            $rules = [
+                // [attendance_status_id, entry_time, entry_weight(deduct %)]
+                [2,  '10:00:00', 0],   // on time
+                [1,  '10:10:00', 80],
+                [11, '11:55:00', 25],
+                [9,  '12:00:00', 25],
+                [10, '13:30:00', 25],
+                [3,  '14:00:00', 50],
+                [4,  '16:00:00', 75],
+                [5,  null, 100],       // absent
+                [6,  null, 0],
+                [7,  null, 0],
+                [8,  null, 0],
+            ];
+            foreach ($rules as [$statusId, $time, $weight]) {
+                DB::table('hr_shift_attendance_rules')->insert([
+                    'shift_type_id'        => $shiftId,
+                    'attendance_status_id' => $statusId,
+                    'entry_time'           => $time,
+                    'entry_weight'         => $weight,
+                    'status'               => 1,
+                    'created_at'           => $now,
+                    'updated_at'           => $now,
+                ]);
+            }
+            $this->command?->info('✔ Attendance rules created for shift "Morning (10am - 5pm)".');
+        }
+
         if (!Schema::hasColumn('hr_document_settings', 'brand')) {
             $this->command?->warn('! hr_document_settings.brand missing — run migrations first; skipping document brand setup.');
             return;

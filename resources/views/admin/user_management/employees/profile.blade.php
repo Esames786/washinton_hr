@@ -246,9 +246,14 @@
                 <div class="card shadow-sm border-0 h-100">
                     <div class="card-header bg-light fw-bold d-flex align-items-center justify-content-between">
                         <span>📄 Documents
-                            {{-- #6: at-a-glance verified / total count --}}
+                            {{-- #6: at-a-glance verified / total count. Round-4: count the CURRENT
+                                 version per document type only, so old kept versions don't inflate it. --}}
                             @if($employee->documents && $employee->documents->count())
-                                @php $docVerified = $employee->documents->where('status', 1)->count(); $docTotal = $employee->documents->count(); @endphp
+                                @php
+                                    $__hdrCurrent = $employee->documents->sortByDesc('id')->groupBy('document_setting_id')->map(fn ($g) => $g->first());
+                                    $docVerified = $__hdrCurrent->where('status', 1)->count();
+                                    $docTotal    = $__hdrCurrent->count();
+                                @endphp
                                 <span class="badge {{ $docVerified === $docTotal ? 'bg-success' : 'bg-secondary' }} text-white ms-2">{{ $docVerified }}/{{ $docTotal }} verified</span>
                             @endif
                         </span>
@@ -260,11 +265,18 @@
                         @endif
                     </div>
                     <div class="card-body" id="documentsContainer">
-                        @if($employee->documents && $employee->documents->count())
+                        @php
+                            // Round-4: uploads are versioned (subcontractors re-upload, never delete).
+                            // Newest row per document type = Current; older rows stay downloadable.
+                            $__profDocs = ($employee->documents ?? collect())->sortByDesc('id')->values();
+                            $__profLatest = $__profDocs->groupBy('document_setting_id')->map(fn ($g) => $g->first()->id);
+                        @endphp
+                        @if($__profDocs->count())
                             <div class="row g-3">
-                                @foreach($employee->documents as $doc)
+                                @foreach($__profDocs as $doc)
+                                    @php $__isCurrent = ((int) $__profLatest->get($doc->document_setting_id) === (int) $doc->id); @endphp
                                     <div class="col-sm-6 col-md-4 col-lg-3" id="doc-card-{{ $doc->id }}">
-                                        <div class="card doc-card h-100 text-center p-3 {{ $doc->status ? 'border-success' : 'border-warning' }}" style="border-width:2px!important;">
+                                        <div class="card doc-card h-100 text-center p-3 {{ $doc->status ? 'border-success' : 'border-warning' }} {{ $__isCurrent ? '' : 'opacity-75' }}" style="border-width:2px!important;">
                                             @php $ext = strtolower(pathinfo($doc->file_path, PATHINFO_EXTENSION)); @endphp
                                             @if(in_array($ext, ['jpg','jpeg','png','gif','bmp','webp']))
                                                 <img src="{{ asset($doc->file_path) }}" class="doc-img rounded mb-2" alt="{{ $doc->file_name }}">
@@ -275,6 +287,14 @@
                                             @endif
                                             @php $docTitle = optional($doc->documentSetting)->title ?? $doc->file_name; @endphp
                                             <p class="small fw-medium mb-1 text-truncate">{{ $docTitle }}</p>
+                                            <p class="mb-1">
+                                                @if($__isCurrent)
+                                                    <span class="badge bg-primary-subtle text-primary">Current</span>
+                                                @else
+                                                    <span class="badge bg-secondary-subtle text-secondary">Older version</span>
+                                                @endif
+                                                <span class="text-muted" style="font-size:11px;">{{ optional($doc->created_at)->format('d M Y H:i') }}</span>
+                                            </p>
                                             <a href="{{ asset($doc->file_path) }}" target="_blank" class="btn btn-sm btn-outline-primary mb-2 w-100">View</a>
                                             <div class="form-switch switch-primary mt-1">
                                                 <input class="form-check-input verify-doc-toggle" type="checkbox"
@@ -287,6 +307,13 @@
                                                     {{ $doc->status ? 'Verified' : 'Pending' }}
                                                 </label>
                                             </div>
+                                            {{-- Round-4: removal is HR-only — subcontractors can no longer delete. --}}
+                                            <form method="POST" action="{{ route('admin.employees.documents.delete', $doc->id) }}"
+                                                  class="mt-2" onsubmit="return confirm('Permanently remove this document file?')">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="btn btn-sm btn-outline-danger w-100">Remove</button>
+                                            </form>
                                         </div>
                                     </div>
                                 @endforeach
@@ -400,10 +427,12 @@
                                 <span class="text-muted small">{{ $__w9Form->signed_at ? \Carbon\Carbon::parse($__w9Form->signed_at)->format('d M Y, h:i A') : '' }}</span>
                                 @php
                                     // Absolute URL stored at generation time (works whichever portal
-                                    // produced the file); fall back to the Hello domain for old rows.
+                                    // produced the file). For old rows fall back to the AGENT portal
+                                    // domain — the PDF lives on hellotransport.com, never on this HR
+                                    // deployment (whose brand login_url is an hr.* URL).
                                     $__w9Url = $__w9Form->document_url
                                         ?? (!empty($__w9Form->document_path)
-                                            ? rtrim(preg_replace('#/loginn$#', '', \App\Support\Brand::byKey('hellotransport')['login_url'] ?? 'https://hellotransport.com'), '/') . '/' . ltrim($__w9Form->document_path, '/')
+                                            ? 'https://hellotransport.com/' . ltrim($__w9Form->document_path, '/')
                                             : null);
                                 @endphp
                                 @if($__w9Url)

@@ -317,9 +317,28 @@
                         @endif
 
                         {{-- Uploaded Documents --}}
-                        @if($employee->documents && $employee->documents->count())
+                        @php
+                            // Round-4: uploads are versioned (re-upload adds a new file, nothing is
+                            // overwritten). The subcontractor sees only the CURRENT set — the latest
+                            // max_files per document type; older versions stay on record with HR.
+                            $__dsById = ($documentSettings ?? collect())->keyBy('id');
+                            $__allDocs = $employee->documents ?? collect();
+                            $__currentDocs = $__allDocs->sortByDesc('id')
+                                ->groupBy('document_setting_id')
+                                ->flatMap(function ($group, $sid) use ($__dsById) {
+                                    $max = max(1, (int) (optional($__dsById->get($sid))->max_files ?? 1));
+                                    return $group->take($max);
+                                })
+                                ->sortBy('id')->values();
+                        @endphp
+                        @if($__currentDocs->count())
+                            <div class="alert alert-light border small mb-3">
+                                🔒 Uploaded documents cannot be removed. If you need to replace one, simply upload it
+                                again (the newest file becomes your current copy). To have a document removed, please
+                                contact HR.
+                            </div>
                             <div class="row g-3">
-                                @foreach($employee->documents as $doc)
+                                @foreach($__currentDocs as $doc)
                                     <div class="col-sm-6 col-md-4 col-lg-3">
                                         <div class="card doc-card h-100 text-center p-3">
                                             @php
@@ -345,18 +364,11 @@
                                                 <span class="badge bg-warning text-dark mb-2">⏳ Pending</span>
                                             @endif
 
+                                            {{-- Round-4: no Remove button — documents can only be
+                                                 removed by HR; re-uploading adds a newer version. --}}
                                             <div class="d-flex gap-1 justify-content-center">
                                                 <a href="{{ asset($doc->file_path) }}" target="_blank"
                                                    class="btn btn-sm btn-outline-primary">View</a>
-                                                @if($doc->status != 1)
-                                                <form method="POST"
-                                                      action="{{ route('employee.profile.delete_document', $doc->id) }}"
-                                                      onsubmit="return confirm('Remove this document?')">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <button type="submit" class="btn btn-sm btn-outline-danger">Remove</button>
-                                                </form>
-                                                @endif
                                             </div>
                                         </div>
                                     </div>

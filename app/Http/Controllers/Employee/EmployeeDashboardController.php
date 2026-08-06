@@ -262,12 +262,10 @@ class EmployeeDashboardController extends Controller
             'file' => trim('required|file|max:' . $maxKb . ($mimeRule ? '|' . $mimeRule : '')),
         ]);
 
-        // Enforce the per-document file cap (multi-file types like Selfie accumulate up to max_files).
-        $existingCount = \App\Models\EmployeeDocument::where('employee_id', $employee->id)
-            ->where('document_setting_id', $docSetting->id)->count();
-        if ($maxFiles > 1 && $existingCount >= $maxFiles) {
-            return back()->with('error', 'You can upload at most ' . $maxFiles . ' file(s) for "' . $docSetting->title . '". Remove one to add another.');
-        }
+        // Round-4: no per-type cap anymore — subcontractors can't remove documents themselves,
+        // so a hard cap would lock them out of ever correcting an upload. Every upload is kept
+        // as a new version; only the latest max_files count as "current" (older versions stay
+        // on record and remain downloadable by HR).
 
         $path = 'Uploads/employees/' . $employee->id . '/';
         if (!file_exists(public_path($path))) {
@@ -285,19 +283,13 @@ class EmployeeDashboardController extends Controller
             'status'    => 0, // pending verification
         ];
 
-        if ($maxFiles > 1) {
-            // Multi-file: each upload is a new row (up to max_files).
-            \App\Models\EmployeeDocument::create(array_merge($payload, [
-                'employee_id'         => $employee->id,
-                'document_setting_id' => $docSetting->id,
-            ]));
-        } else {
-            // Single-file: replace the existing one (unchanged behaviour).
-            \App\Models\EmployeeDocument::updateOrCreate(
-                ['employee_id' => $employee->id, 'document_setting_id' => $docSetting->id],
-                $payload
-            );
-        }
+        // Round-4: EVERY upload is a new row — re-uploading never overwrites or deletes the
+        // previous file. The old versions stay in the table (and on disk) so HR can still
+        // open and download them; the profile screens treat the latest max_files as current.
+        \App\Models\EmployeeDocument::create(array_merge($payload, [
+            'employee_id'         => $employee->id,
+            'document_setting_id' => $docSetting->id,
+        ]));
 
         return back()->with('success', 'Document "' . $docSetting->title . '" uploaded successfully. Awaiting verification.');
     }
@@ -377,20 +369,10 @@ class EmployeeDashboardController extends Controller
 
     public function deleteDocument($id)
     {
-        $employee = auth('employee')->user();
-
-        $doc = \App\Models\EmployeeDocument::where('employee_id', $employee->id)
-            ->where('id', $id)
-            ->firstOrFail();
-
-        // Delete file from disk
-        if ($doc->file_path && file_exists(public_path($doc->file_path))) {
-            unlink(public_path($doc->file_path));
-        }
-
-        $doc->delete();
-
-        return back()->with('success', 'Document removed.');
+        // Round-4: subcontractors can NO LONGER remove uploaded documents themselves — every
+        // upload stays on record. They can still re-upload (a new version is stored alongside
+        // the old one); removal is HR-only, via the admin profile screen.
+        return back()->with('error', 'Uploaded documents cannot be removed from here. Please contact HR if a document needs to be removed.');
     }
 
     // ─────────────────────────────────────────────────────────────────────

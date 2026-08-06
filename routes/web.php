@@ -103,6 +103,8 @@ use App\Http\Controllers\Employee\EmployeeTicketMessageController;
                 Route::get('subcontractors/{employee}/documents', [AdminEmployeeController::class, 'getDocuments'])->name('employees.documents');
                 Route::post('subcontractors/documents/{document}/verify', [AdminEmployeeController::class, 'verify'])->name('employees.documents.verify');
                 Route::post('subcontractors/documents/bulk-verify', [AdminEmployeeController::class, 'bulkVerify'])->name('employees.documents.bulk-verify');
+                // Round-4: subcontractors can't remove their own documents any more — removal is HR-only.
+                Route::delete('subcontractors/documents/{document}', [AdminEmployeeController::class, 'deleteDocument'])->name('employees.documents.delete');
                 Route::post('subcontractors/attach_agent', [AdminEmployeeController::class, 'attach_agent'])->name('employees.attach_agent');
                 Route::resource('subcontractors', AdminEmployeeController::class)->except(['show'])->names('employees');
                 Route::get('subcontractors/show/{id}', [AdminEmployeeController::class, 'show'])->name('employees.show');
