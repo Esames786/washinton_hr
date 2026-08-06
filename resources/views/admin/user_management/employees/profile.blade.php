@@ -449,6 +449,12 @@
                         <span>📃 Subcontractor Contract</span>
                         @if($employee->contract_accepted_at)
                             <span class="badge bg-success text-white">✔ Accepted by employee on {{ \Carbon\Carbon::parse($employee->contract_accepted_at)->format('d M Y H:i') }}</span>
+                            @if(!empty($employee->contract_signature))
+                                <span class="d-inline-flex align-items-center gap-2 ms-2">
+                                    <img src="{{ $employee->contract_signature }}" alt="Signature" style="max-height:44px;border:1px solid #ccc;background:#fff;border-radius:4px;">
+                                    @if(!empty($employee->contract_signed_ip))<small class="text-muted">IP {{ $employee->contract_signed_ip }}</small>@endif
+                                </span>
+                            @endif
                         @elseif($employee->contract_updated_at)
                             <span class="badge bg-warning text-dark">⏳ Pending employee acceptance</span>
                         @endif

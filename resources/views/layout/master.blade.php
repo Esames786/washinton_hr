@@ -118,7 +118,8 @@
 <div id="contractBlockOverlay" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.88);z-index:999999;display:flex;align-items:center;justify-content:center;">
     <div style="background:#fff;border-radius:8px;max-width:820px;width:96%;max-height:90vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,0.6);overflow:hidden;">
         <div style="padding:14px 20px;background:#1a1a2e;color:#d4af37;flex-shrink:0;">
-            <h5 style="margin:0;font-weight:700;font-size:16px;">📝 Action Required — Subcontractor Contract</h5>
+            {{-- #3: name the company the contract is with (the subcontractor's own brand). --}}
+            <h5 style="margin:0;font-weight:700;font-size:16px;">📝 {{ \App\Support\Brand::for($empAuth)['name'] ?? 'Hello Transport' }} — Subcontractor Contract</h5>
         </div>
         <div style="padding:12px 20px;background:#fff8e1;border-bottom:1px solid #ffe082;flex-shrink:0;">
             <p style="margin:0;color:#795548;font-size:13px;"><strong>You have a new or updated contract awaiting your acceptance.</strong> Please read the full contract below and click <em>"I Accept"</em> to continue. This dialog cannot be dismissed until you accept.</p>
@@ -126,20 +127,53 @@
         <div style="flex:1;overflow-y:auto;padding:20px 24px;font-size:14px;line-height:1.7;">
             {!! $empPendingContract !!}
         </div>
+        {{-- #4: e-signature (like the NDA) — draw, then accept. --}}
+        <div style="padding:12px 20px;border-top:1px solid #e0e0e0;background:#fafafa;flex-shrink:0;">
+            <label style="font-size:12px;font-weight:600;color:#444;display:block;margin-bottom:6px;">
+                Draw Your Signature <span style="color:red;">*</span>
+                <span style="font-weight:400;color:#888;margin-left:8px;font-size:11px;">(mouse or touch)</span>
+            </label>
+            <div style="position:relative;border:2px dashed #aab4cc;border-radius:6px;background:#fff;display:inline-block;">
+                <canvas id="hrContractSigCanvas" width="440" height="100" style="display:block;cursor:crosshair;touch-action:none;"></canvas>
+                <button type="button" onclick="hrContractSigClear()" style="position:absolute;top:6px;right:6px;font-size:11px;padding:2px 8px;background:#eee;border:1px solid #ccc;border-radius:4px;cursor:pointer;">Clear</button>
+            </div>
+        </div>
         <div style="padding:14px 20px;border-top:1px solid #e0e0e0;background:#f5f5f5;display:flex;align-items:center;justify-content:flex-end;gap:12px;flex-shrink:0;">
             <span id="hrContractAcceptMsg" style="font-size:13px;display:none;"></span>
             <button id="hrContractAcceptBtn"
                     onclick="hrAcceptPendingContract()"
                     style="background:#28a745;color:#fff;border:none;padding:10px 32px;font-size:15px;font-weight:600;border-radius:5px;cursor:pointer;">
-                ✓ I Accept this Contract
+                ✓ Sign &amp; Accept this Contract
             </button>
         </div>
     </div>
 </div>
 <script>
+// #4: signature pad (same pattern as the NDA)
+var _hcsCanvas = document.getElementById('hrContractSigCanvas');
+var _hcsCtx = _hcsCanvas ? _hcsCanvas.getContext('2d') : null;
+var _hcsDrawing = false, _hcsLX = 0, _hcsLY = 0, _hcsHasDraw = false;
+function _hcsPos(e){var r=_hcsCanvas.getBoundingClientRect(),s=e.touches?e.touches[0]:e;return{x:s.clientX-r.left,y:s.clientY-r.top};}
+if (_hcsCanvas) {
+    var _hs=function(e){e.preventDefault();_hcsDrawing=true;var p=_hcsPos(e);_hcsLX=p.x;_hcsLY=p.y;};
+    var _he=function(){_hcsDrawing=false;};
+    var _hd=function(e){if(!_hcsDrawing)return;e.preventDefault();var p=_hcsPos(e);_hcsCtx.strokeStyle='#1a1a2e';_hcsCtx.lineWidth=2;_hcsCtx.lineCap='round';_hcsCtx.lineJoin='round';_hcsCtx.beginPath();_hcsCtx.moveTo(_hcsLX,_hcsLY);_hcsCtx.lineTo(p.x,p.y);_hcsCtx.stroke();_hcsLX=p.x;_hcsLY=p.y;_hcsHasDraw=true;};
+    _hcsCanvas.addEventListener('mousedown',_hs);_hcsCanvas.addEventListener('mouseup',_he);_hcsCanvas.addEventListener('mouseleave',_he);_hcsCanvas.addEventListener('mousemove',_hd);
+    _hcsCanvas.addEventListener('touchstart',_hs,{passive:false});_hcsCanvas.addEventListener('touchend',_he);_hcsCanvas.addEventListener('touchmove',_hd,{passive:false});
+}
+function hrContractSigClear(){if(_hcsCtx){_hcsCtx.clearRect(0,0,_hcsCanvas.width,_hcsCanvas.height);_hcsHasDraw=false;}}
+
 function hrAcceptPendingContract() {
     var btn = document.getElementById('hrContractAcceptBtn');
     var msg = document.getElementById('hrContractAcceptMsg');
+
+    if (!_hcsHasDraw) {
+        msg.style.color = '#dc3545';
+        msg.textContent = 'Please draw your signature before accepting.';
+        msg.style.display = 'inline';
+        return;
+    }
+
     btn.disabled = true;
     btn.textContent = 'Saving...';
     fetch('{{ route("employee.contract.accept") }}', {
@@ -148,7 +182,7 @@ function hrAcceptPendingContract() {
             'Content-Type': 'application/json',
             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
         },
-        body: JSON.stringify({})
+        body: JSON.stringify({ signature_data: _hcsCanvas.toDataURL('image/png') })
     })
     .then(function(r) { return r.json(); })
     .then(function(res) {
@@ -156,7 +190,7 @@ function hrAcceptPendingContract() {
             document.getElementById('contractBlockOverlay').style.display = 'none';
         } else {
             btn.disabled = false;
-            btn.textContent = '✓ I Accept this Contract';
+            btn.textContent = '✓ Sign & Accept this Contract';
             msg.style.color = '#dc3545';
             msg.textContent = 'Could not record acceptance. Please try again.';
             msg.style.display = 'inline';
@@ -164,7 +198,7 @@ function hrAcceptPendingContract() {
     })
     .catch(function() {
         btn.disabled = false;
-        btn.textContent = '✓ I Accept this Contract';
+        btn.textContent = '✓ Sign & Accept this Contract';
         msg.style.color = '#dc3545';
         msg.textContent = 'Network error. Please try again.';
         msg.style.display = 'inline';

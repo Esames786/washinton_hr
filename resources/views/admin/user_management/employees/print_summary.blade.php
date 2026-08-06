@@ -39,6 +39,12 @@
         <div class="brand">{{ $brand }} HR</div>
     </div>
 
+    {{-- #5: state at the very top who this agreement is between. --}}
+    <p style="text-align:center;font-size:14px;font-weight:700;margin:0 0 16px;color:#1a1a2e;">
+        This contract is between <u>{{ $employee->full_name ?? '-' }}</u> and
+        <u>{{ \App\Support\Brand::for($employee)['name'] ?? 'Hello Transport' }}</u>.
+    </p>
+
     <h2>Profile Information</h2>
     <div class="grid2">
         <table>
@@ -105,6 +111,10 @@
             Status:
             @if($employee->contract_accepted_at)
                 <span class="badge b-ok">Accepted</span> on {{ \Carbon\Carbon::parse($employee->contract_accepted_at)->format('d M Y H:i') }}
+                @if(!empty($employee->contract_signature))
+                    — Signature: <img src="{{ $employee->contract_signature }}" alt="Signature" style="max-height:40px;border:1px solid #ccc;vertical-align:middle;">
+                    @if(!empty($employee->contract_signed_ip)) <span class="muted">(IP {{ $employee->contract_signed_ip }})</span>@endif
+                @endif
             @else
                 <span class="badge b-req">Not accepted yet</span>
             @endif

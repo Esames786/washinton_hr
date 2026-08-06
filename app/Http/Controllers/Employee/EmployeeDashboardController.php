@@ -309,6 +309,21 @@ class EmployeeDashboardController extends Controller
     {
         $employee = auth('employee')->user();
         $employee->contract_accepted_at = now();
+
+        // #4: contract is e-signed like the NDA — store the drawn signature + the IP it was
+        // signed from. Guarded so a pre-migration DB (or an old cached modal) still accepts.
+        if ($request->filled('signature_data')) {
+            $sigBinary = base64_decode(preg_replace('/^data:image\/\w+;base64,/', '', $request->input('signature_data')));
+            if ($sigBinary && strlen($sigBinary) >= 100) {
+                if (\Illuminate\Support\Facades\Schema::hasColumn('hr_employees', 'contract_signature')) {
+                    $employee->contract_signature = $request->input('signature_data');
+                }
+                if (\Illuminate\Support\Facades\Schema::hasColumn('hr_employees', 'contract_signed_ip')) {
+                    $employee->contract_signed_ip = $request->ip();
+                }
+            }
+        }
+
         $employee->save();
 
         return response()->json(['success' => true, 'message' => 'Contract accepted']);

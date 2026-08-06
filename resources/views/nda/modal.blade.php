@@ -64,6 +64,10 @@
                 <img src="/Uploads/Settings/logo.png" alt="{{ $__brand['name'] ?? 'Company' }}" style="height:64px;" onerror="this.style.display='none'">
             </div>
 
+            {{-- #3: company heading — the signer's own brand (Hello / Crazy Rays). --}}
+            <h1 style="text-align:center; color:#111; font-size:22px; font-weight:800; letter-spacing:.5px; margin-bottom:6px; text-transform:uppercase;">
+                {{ $__brand['name'] ?? 'Hello Transport' }}
+            </h1>
             <h2 style="text-align:center; color:#1a4ca0; font-size:16px; font-weight:700; text-transform:uppercase; letter-spacing:.4px; margin-bottom:18px; line-height:1.4;">
                 Non-Disclosure Agreement (NDA)<br>& Confidentiality Acknowledgment
             </h2>
