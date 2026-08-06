@@ -15,7 +15,7 @@ class EmployeeNdaController extends Controller
     {
         $request->validate([
             'employee_name'  => 'required|string|max:255',
-            'father_name'    => 'required|string|max:255',
+            'father_name'    => 'nullable|string|max:255',   // #7: optional
             'address'        => 'required|string|max:500',
             'cnic'           => 'required|string|max:20',
             'signature_data' => 'required|string',
@@ -57,8 +57,14 @@ class EmployeeNdaController extends Controller
         $cnicBackPath  = $this->storeUpload($request, 'cnic_back', $employee->id, $signedAt);
 
         // Mirror newly-captured CNIC images into the documents list (#10 Front / #11 Back).
-        $this->mirrorCnicDoc($employee->id, 10, $cnicFrontPath, $signedAt);
-        $this->mirrorCnicDoc($employee->id, 11, $cnicBackPath, $signedAt);
+        // #6: Hello subcontractors upload a STATE ID (setting 21, up to 2 files); CrazyRays a CNIC.
+        if (($brand['key'] ?? '') !== 'crazyrays') {
+            $this->mirrorCnicDoc($employee->id, 21, $cnicFrontPath, $signedAt, true);
+            $this->mirrorCnicDoc($employee->id, 21, $cnicBackPath, $signedAt, true);
+        } else {
+            $this->mirrorCnicDoc($employee->id, 10, $cnicFrontPath, $signedAt);
+            $this->mirrorCnicDoc($employee->id, 11, $cnicBackPath, $signedAt);
+        }
 
         // Generate the signed PDF from the admin's HTML + signature block.
         $relPath = null;
@@ -163,18 +169,21 @@ class EmployeeNdaController extends Controller
         return $dir . '/' . $fname;
     }
 
-    private function mirrorCnicDoc(int $employeeId, int $settingId, ?string $relPath, $signedAt): void
+    private function mirrorCnicDoc(int $employeeId, int $settingId, ?string $relPath, $signedAt, bool $allowMultiple = false): void
     {
         if (!$relPath) {
             return;
         }
         try {
-            $exists = DB::table('hr_employee_documents')
-                ->where('employee_id', $employeeId)
-                ->where('document_setting_id', $settingId)
-                ->exists();
-            if ($exists) {
-                return;
+            // Multi-file settings (State ID front+back share setting 21) may hold several rows.
+            if (!$allowMultiple) {
+                $exists = DB::table('hr_employee_documents')
+                    ->where('employee_id', $employeeId)
+                    ->where('document_setting_id', $settingId)
+                    ->exists();
+                if ($exists) {
+                    return;
+                }
             }
             DB::table('hr_employee_documents')->insert([
                 'employee_id'         => $employeeId,

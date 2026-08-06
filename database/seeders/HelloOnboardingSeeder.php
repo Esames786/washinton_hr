@@ -26,18 +26,24 @@ use Illuminate\Support\Facades\Schema;
  */
 class HelloOnboardingSeeder extends Seeder
 {
-    /** Document types that apply to BOTH brands — left with brand = NULL. */
+    /** Document types that apply to BOTH brands — left with brand = NULL. (Round-2: Hello also
+     *  requires bank details, educational certificate, selfie, workplace + laptop pictures and
+     *  current IP, so those moved from the CrazyRays-only list to shared.) */
     private const SHARED_DOCUMENT_IDS = [
+        2,   // Educational Certificate (required)
         3,   // Experience Letter (optional)
+        5,   // Bank Account Details (required)
         12,  // Resume (required)
+        14,  // Selfie Collage (required)
+        16,  // Workplace Pictures (required)
+        19,  // laptop picture (required)
+        20,  // Current Ip (required)
     ];
 
     /** Existing document types that only make sense for CrazyRays (Pakistan) staff. */
     private const CRAZYRAYS_DOCUMENT_IDS = [
         1,  // CNIC (National ID)
-        2,  // Educational Certificate
         4,  // Passport
-        5,  // Bank Account Details
         6,  // Medical Certificate
         7,  // Police Clearance
         8,  // smart card
@@ -45,13 +51,9 @@ class HelloOnboardingSeeder extends Seeder
         10, // CNIC Front
         11, // CNIC Back
         13, // Father/Mother CNIC
-        14, // Selfie Collage
         15, // Address Verification Video
-        16, // Workplace Pictures
         17, // Rental Agreement
         18, // Rental agreement person CNIC (landlord)
-        19, // laptop picture
-        20, // Current Ip
     ];
 
     public function run(): void

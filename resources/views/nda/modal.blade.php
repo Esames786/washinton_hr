@@ -16,16 +16,29 @@
     }
     $__ndaContent = $__ndaContent ? \App\Support\Brand::applyTokens($__ndaContent, $__brand) : '';
 
-    // CNIC front/back already on file? (hr_document_settings #10 = Front, #11 = Back).
-    $__cnicHave = [];
-    if ($__empId) {
-        $__cnicHave = \Illuminate\Support\Facades\DB::table('hr_employee_documents')
-            ->where('employee_id', $__empId)
-            ->whereIn('document_setting_id', [10, 11])
-            ->pluck('document_setting_id')->map(fn($v) => (int) $v)->all();
+    // #6: Hello subcontractors use a US State ID, not a CNIC — labels + doc type follow the brand.
+    $__isHello = (($__brand['key'] ?? '') !== 'crazyrays');
+    $__idLabel = $__isHello ? 'State ID' : 'CNIC';
+
+    // ID images already on file? CNIC = settings #10/#11; State ID = #21 (2 files).
+    if ($__isHello) {
+        $__idCount = $__empId
+            ? \Illuminate\Support\Facades\DB::table('hr_employee_documents')
+                ->where('employee_id', $__empId)->where('document_setting_id', 21)->count()
+            : 0;
+        $__needCnicFront = $__idCount < 1;
+        $__needCnicBack  = $__idCount < 2;
+    } else {
+        $__cnicHave = [];
+        if ($__empId) {
+            $__cnicHave = \Illuminate\Support\Facades\DB::table('hr_employee_documents')
+                ->where('employee_id', $__empId)
+                ->whereIn('document_setting_id', [10, 11])
+                ->pluck('document_setting_id')->map(fn($v) => (int) $v)->all();
+        }
+        $__needCnicFront = !in_array(10, $__cnicHave, true);
+        $__needCnicBack  = !in_array(11, $__cnicHave, true);
     }
-    $__needCnicFront = !in_array(10, $__cnicHave, true);
-    $__needCnicBack  = !in_array(11, $__cnicHave, true);
 
     // Auto-captured signing context + prefill.
     $__signIp  = request()->ip();
@@ -101,16 +114,16 @@
                                style="width:100%; border:1px solid #ccc; border-radius:5px; padding:7px 10px; font-size:13px;" required>
                     </div>
                     <div>
-                        <label style="font-size:12px; font-weight:600; color:#444; display:block; margin-bottom:4px;">Father's Name <span style="color:red;">*</span></label>
+                        <label style="font-size:12px; font-weight:600; color:#444; display:block; margin-bottom:4px;">Father's Name <small style="color:#888;">(optional)</small></label>
                         <input type="text" id="ndaFather" name="father_name"
                                value="{{ $__father }}"
-                               style="width:100%; border:1px solid #ccc; border-radius:5px; padding:7px 10px; font-size:13px;" required>
+                               style="width:100%; border:1px solid #ccc; border-radius:5px; padding:7px 10px; font-size:13px;">
                     </div>
                     <div>
-                        <label style="font-size:12px; font-weight:600; color:#444; display:block; margin-bottom:4px;">CNIC Number <span style="color:red;">*</span></label>
+                        <label style="font-size:12px; font-weight:600; color:#444; display:block; margin-bottom:4px;">{{ $__idLabel ?? 'CNIC' }} Number <span style="color:red;">*</span></label>
                         <input type="text" id="ndaCnic" name="cnic"
                                value="{{ auth('employee')->user()->cnic ?? '' }}"
-                               style="width:100%; border:1px solid #ccc; border-radius:5px; padding:7px 10px; font-size:13px;" required placeholder="e.g. 42101-1234567-1">
+                               style="width:100%; border:1px solid #ccc; border-radius:5px; padding:7px 10px; font-size:13px;" required placeholder="{{ ($__isHello ?? false) ? 'State-issued ID number' : 'e.g. 42101-1234567-1' }}">
                     </div>
                     <div>
                         <label style="font-size:12px; font-weight:600; color:#444; display:block; margin-bottom:4px;">Address <span style="color:red;">*</span></label>
@@ -125,14 +138,14 @@
                 <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:14px;">
                     @if($__needCnicFront)
                     <div>
-                        <label style="font-size:12px; font-weight:600; color:#444; display:block; margin-bottom:4px;">CNIC Front <span style="color:red;">*</span></label>
+                        <label style="font-size:12px; font-weight:600; color:#444; display:block; margin-bottom:4px;">{{ $__idLabel ?? 'CNIC' }} Front <span style="color:red;">*</span></label>
                         <input type="file" name="cnic_front" accept="image/*,.pdf" required
                                style="width:100%; border:1px solid #ccc; border-radius:5px; padding:6px 8px; font-size:12px;">
                     </div>
                     @endif
                     @if($__needCnicBack)
                     <div>
-                        <label style="font-size:12px; font-weight:600; color:#444; display:block; margin-bottom:4px;">CNIC Back <span style="color:red;">*</span></label>
+                        <label style="font-size:12px; font-weight:600; color:#444; display:block; margin-bottom:4px;">{{ $__idLabel ?? 'CNIC' }} Back <span style="color:red;">*</span></label>
                         <input type="file" name="cnic_back" accept="image/*,.pdf" required
                                style="width:100%; border:1px solid #ccc; border-radius:5px; padding:6px 8px; font-size:12px;">
                     </div>

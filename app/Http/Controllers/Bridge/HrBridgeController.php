@@ -189,6 +189,7 @@ class HrBridgeController extends Controller
             'mother_name'    => ['nullable', 'string', 'max:100'],
             'zip'            => ['nullable', 'string', 'max:20'],
             'timezone'       => ['nullable', 'string', 'max:64'],
+            'skills'         => ['nullable', 'string', 'max:2000'],   // optional experience from signup
         ]);
 
         if ($validator->fails()) {
@@ -280,6 +281,7 @@ class HrBridgeController extends Controller
             $employee->city               = $request->input('city');
             $employee->state              = $request->input('state');
             $employee->mother_name        = $request->input('mother_name');
+            $employee->skills             = $request->input('skills');
             // Columns added for Hello onboarding — guarded so this endpoint still works on a
             // database where the 2026_08_02 migration has not been run yet.
             if (\Illuminate\Support\Facades\Schema::hasColumn('hr_employees', 'zip')) {

@@ -63,7 +63,7 @@
     <div class="sign-row"><span class="field-label">Agent Full Name:</span> <span class="field-value">{{ $employeeName }}</span></div>
     <div class="sign-row"><span class="field-label">Father's Name:</span> <span class="field-value">{{ $fatherName ?? '' }}</span></div>
     <div class="sign-row"><span class="field-label">Address:</span> <span class="field-value">{{ $address ?? '' }}</span></div>
-    <div class="sign-row"><span class="field-label">CNIC Number:</span> <span class="field-value">{{ $cnic }}</span></div>
+    <div class="sign-row"><span class="field-label">{{ (($brand['key'] ?? '') !== 'crazyrays') ? 'State ID' : 'CNIC' }} Number:</span> <span class="field-value">{{ $cnic }}</span></div>
     <div class="sign-row"><span class="field-label">Date Signed:</span> <span class="field-value">{{ $signedDate }}</span></div>
     @if($signedIp)
     <div class="sign-row"><span class="field-label">Signed From IP:</span> <span class="field-value">{{ $signedIp }}</span></div>
@@ -79,13 +79,13 @@
     <div class="cnic-imgs">
         @if($cnicFrontPath && @file_exists($cnicFrontPath))
         <div class="cnic-cell">
-            <div class="cnic-cap">CNIC Front</div>
+            <div class="cnic-cap">{{ (($brand['key'] ?? '') !== 'crazyrays') ? 'State ID' : 'CNIC' }} Front</div>
             <img src="{{ $cnicFrontPath }}" alt="CNIC Front">
         </div>
         @endif
         @if($cnicBackPath && @file_exists($cnicBackPath))
         <div class="cnic-cell">
-            <div class="cnic-cap">CNIC Back</div>
+            <div class="cnic-cap">{{ (($brand['key'] ?? '') !== 'crazyrays') ? 'State ID' : 'CNIC' }} Back</div>
             <img src="{{ $cnicBackPath }}" alt="CNIC Back">
         </div>
         @endif
