@@ -143,7 +143,7 @@
                             <div class="col-6"><strong>Joining Date:</strong> {{ $employee->joining_date ?? '-' }}</div>
                             <div class="col-6"><strong>Employment:</strong> {{ optional($employee->employment_type)->name ?? '-' }}</div>
                             <div class="col-6"><strong>Status:</strong> {{ optional($employee->employee_status)->name ?? '-' }}</div>
-                            <div class="col-6"><strong>CNIC / Passport:</strong> {{ $employee->cnic ?? '-' }}</div>
+                            <div class="col-6"><strong>{{ $employee->isCrazyrays() ? 'CNIC / Passport' : 'State ID' }}:</strong> {{ $employee->cnic ?? '-' }}</div>
                             <div class="col-6"><strong>DOB:</strong> {{ $employee->dob ?? '-' }}</div>
                             <div class="col-6"><strong>Gender:</strong> {{ ucfirst($employee->gender ?? '-') }}</div>
                             <div class="col-6"><strong>Pay:</strong> {{ number_format($employee->basic_salary ?? 0) }}</div>
@@ -277,9 +277,14 @@
                                     @php $__isCurrent = ((int) $__profLatest->get($doc->document_setting_id) === (int) $doc->id); @endphp
                                     <div class="col-sm-6 col-md-4 col-lg-3" id="doc-card-{{ $doc->id }}">
                                         <div class="card doc-card h-100 text-center p-3 {{ $doc->status ? 'border-success' : 'border-warning' }} {{ $__isCurrent ? '' : 'opacity-75' }}" style="border-width:2px!important;">
-                                            @php $ext = strtolower(pathinfo($doc->file_path, PATHINFO_EXTENSION)); @endphp
-                                            @if(in_array($ext, ['jpg','jpeg','png','gif','bmp','webp']))
-                                                <img src="{{ asset($doc->file_path) }}" class="doc-img rounded mb-2" alt="{{ $doc->file_name }}">
+                                            @php
+                                                $ext = strtolower(pathinfo($doc->file_path, PATHINFO_EXTENSION));
+                                                // Round-4 #2: serve via the doc-file route — the file may live on
+                                                // another deployment (separate cPanel per domain, shared DB).
+                                                $__docUrl = route('admin.employees.documents.file', $doc->id);
+                                            @endphp
+                                            @if(in_array($ext, ['jpg','jpeg','png','gif','bmp','webp','jfif','heic','heif','avif']))
+                                                <img src="{{ $__docUrl }}" class="doc-img rounded mb-2" alt="{{ $doc->file_name }}">
                                             @elseif($ext === 'pdf')
                                                 <i class="bi bi-file-earmark-pdf text-danger doc-icon mb-2 doc-img"></i>
                                             @else
@@ -295,7 +300,7 @@
                                                 @endif
                                                 <span class="text-muted" style="font-size:11px;">{{ optional($doc->created_at)->format('d M Y H:i') }}</span>
                                             </p>
-                                            <a href="{{ asset($doc->file_path) }}" target="_blank" class="btn btn-sm btn-outline-primary mb-2 w-100">View</a>
+                                            <a href="{{ $__docUrl }}" target="_blank" class="btn btn-sm btn-outline-primary mb-2 w-100">View</a>
                                             <div class="form-switch switch-primary mt-1">
                                                 <input class="form-check-input verify-doc-toggle" type="checkbox"
                                                        data-id="{{ $doc->id }}"

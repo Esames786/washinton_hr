@@ -105,6 +105,10 @@ use App\Http\Controllers\Employee\EmployeeTicketMessageController;
                 Route::post('subcontractors/documents/bulk-verify', [AdminEmployeeController::class, 'bulkVerify'])->name('employees.documents.bulk-verify');
                 // Round-4: subcontractors can't remove their own documents any more — removal is HR-only.
                 Route::delete('subcontractors/documents/{document}', [AdminEmployeeController::class, 'deleteDocument'])->name('employees.documents.delete');
+                // Round-4 #2: document files live on whichever deployment received the upload
+                // (each domain is its own cPanel; only the DB is shared). This route serves the
+                // local file or redirects to the portal that actually has it.
+                Route::get('subcontractors/documents/{document}/file', [AdminEmployeeController::class, 'docFile'])->name('employees.documents.file');
                 Route::post('subcontractors/attach_agent', [AdminEmployeeController::class, 'attach_agent'])->name('employees.attach_agent');
                 Route::resource('subcontractors', AdminEmployeeController::class)->except(['show'])->names('employees');
                 Route::get('subcontractors/show/{id}', [AdminEmployeeController::class, 'show'])->name('employees.show');

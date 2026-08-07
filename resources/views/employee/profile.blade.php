@@ -96,7 +96,7 @@
                             <div class="col-6"><strong>Joining Date:</strong> {{ $employee->joining_date ?? '-' }}</div>
                             <div class="col-6"><strong>Employment:</strong> {{ optional($employee->employment_type)->name ?? '-' }}</div>
                             <div class="col-6"><strong>Status:</strong> {{ optional($employee->employee_status)->name ?? '-' }}</div>
-                            <div class="col-6"><strong>CNIC / Passport:</strong> {{ $employee->cnic ?? '-' }}</div>
+                            <div class="col-6"><strong>{{ $employee->isCrazyrays() ? 'CNIC / Passport' : 'State ID' }}:</strong> {{ $employee->cnic ?? '-' }}</div>
                             <div class="col-6"><strong>DOB:</strong> {{ $employee->dob ?? '-' }}</div>
                             <div class="col-6"><strong>Gender:</strong> {{ ucfirst($employee->gender ?? '-') }}</div>
                             <div class="col-6"><strong>Pay:</strong> {{ number_format($employee->basic_salary ?? 0) }}</div>

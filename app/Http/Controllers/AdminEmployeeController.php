@@ -1345,6 +1345,60 @@ class AdminEmployeeController extends Controller
     }
 
     /**
+     * Round-4 #2: serve a document file wherever it actually lives. Each domain is a separate
+     * cPanel deployment sharing ONE database, so a file uploaded on hr.hellotransport.com does
+     * not exist on hr.crazyrays' disk (and NDA-mirrored images live on the AGENT portals).
+     * Serve the local copy when present; otherwise probe the other portals and redirect to the
+     * first one that has the file.
+     */
+    public function docFile(EmployeeDocument $document)
+    {
+        $path = ltrim((string) $document->file_path, '/');
+        if ($path === '') {
+            abort(404);
+        }
+        if (preg_match('#^https?://#i', $document->file_path)) {
+            return redirect()->away($document->file_path);
+        }
+
+        $local = public_path($path);
+        if (is_file($local)) {
+            return response()->file($local);
+        }
+
+        // The employee's brand tells us which portals could have received the upload:
+        // their HR portal (profile uploads / bridge sync) or their agent portal (NDA mirror).
+        $employee = Employee::find($document->employee_id);
+        $isCr = $employee ? $employee->isCrazyrays() : false;
+        $bases = $isCr
+            ? ['https://hr.crazyrayssolutions.com.pk', 'https://florida.crazyrayssolutions.com.pk']
+            : ['https://hr.hellotransport.com', 'https://hellotransport.com'];
+        // Fall back to the opposite brand's portals too — covers records created before the
+        // brand split or attached by an admin on the other domain.
+        $bases = array_merge($bases, $isCr
+            ? ['https://hr.hellotransport.com', 'https://hellotransport.com']
+            : ['https://hr.crazyrayssolutions.com.pk', 'https://florida.crazyrayssolutions.com.pk']);
+
+        $currentHost = request()->getHost();
+        foreach ($bases as $base) {
+            if (stripos($base, $currentHost) !== false) {
+                continue; // already checked the local disk
+            }
+            $url = $base . '/' . $path;
+            try {
+                $res = \Illuminate\Support\Facades\Http::timeout(4)->withoutVerifying()->head($url);
+                if ($res->successful()) {
+                    return redirect()->away($url);
+                }
+            } catch (\Throwable $e) {
+                // portal unreachable — try the next one
+            }
+        }
+
+        abort(404, 'Document file was not found on any portal.');
+    }
+
+    /**
      * Round-4: subcontractors can no longer remove their own documents — HR removes on request.
      * Deletes the row AND the file on disk (this is the deliberate, admin-initiated removal).
      */

@@ -10,9 +10,13 @@
         @php $__isCurrent = ((int) $__latestIds->get($doc->document_setting_id) === (int) $doc->id); @endphp
         <div class="col-sm-6 col-md-4 col-lg-3">
             <div class="card doc-card h-100 text-center shadow-sm border-0 {{ $__isCurrent ? '' : 'opacity-75' }}">
-                @php $ext = pathinfo($doc->file_path, PATHINFO_EXTENSION); @endphp
-                @if(in_array(strtolower($ext), ['jpg','jpeg','png','gif','bmp','webp']))
-                    <img src="{{ asset($doc->file_path) }}"
+                @php
+                    $ext = pathinfo($doc->file_path, PATHINFO_EXTENSION);
+                    // Round-4 #2: file may live on another deployment — serve via the doc-file route.
+                    $__docUrl = route('admin.employees.documents.file', $doc->id);
+                @endphp
+                @if(in_array(strtolower($ext), ['jpg','jpeg','png','gif','bmp','webp','jfif','heic','heif','avif']))
+                    <img src="{{ $__docUrl }}"
                          class="img-fluid rounded mb-2 doc-img h-200-px"
                          alt="{{ $doc->file_name }}">
                 @elseif(strtolower($ext) === 'pdf')
