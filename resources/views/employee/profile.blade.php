@@ -206,6 +206,15 @@
                             $reqTotalHdr    = $documentSettings ? $documentSettings->where('is_required', 1)->count() : 0;
                             $uploadedIdsHdr = $employee->documents ? $employee->documents->pluck('document_setting_id')->all() : [];
                             $reqDoneHdr     = $documentSettings ? $documentSettings->where('is_required', 1)->whereIn('id', $uploadedIdsHdr)->count() : 0;
+                            // Round-5: the screen must REACT to submission + verification, not just
+                            // employee status. Submitted = every required type uploaded; Verified =
+                            // submitted AND every current-version document approved by HR.
+                            $__allReqSubmitted = $reqTotalHdr > 0 && $reqDoneHdr >= $reqTotalHdr;
+                            $__currentForVerify = ($employee->documents ?? collect())->sortByDesc('id')
+                                ->groupBy('document_setting_id')->map(fn ($g) => $g->first());
+                            $__allDocsVerified = $__allReqSubmitted
+                                && $__currentForVerify->isNotEmpty()
+                                && $__currentForVerify->every(fn ($d) => (int) $d->status === 1);
                         @endphp
                         <span class="d-flex align-items-center gap-2">
                             @if($reqTotalHdr > 0)
@@ -213,7 +222,11 @@
                                     {{ $reqDoneHdr }}/{{ $reqTotalHdr }} required uploaded
                                 </span>
                             @endif
-                            @if($employee->employee_status_id == 7)
+                            @if($__allDocsVerified)
+                                <span class="badge bg-success">✓ Documents verified</span>
+                            @elseif($__allReqSubmitted)
+                                <span class="badge bg-info">📄 Documents submitted — awaiting HR verification</span>
+                            @elseif($employee->employee_status_id == 7)
                                 <span class="badge bg-warning text-dark">⚠️ Pending Verification — Please upload required documents</span>
                             @endif
                         </span>
@@ -251,9 +264,17 @@
                             </div>
                         @endif
 
-                        {{-- Upload Form — only during Document Verification (status 7).
-                             Once HR admin verifies/activates, uploading is admin-only. --}}
-                        @if($employee->employee_status_id == 7 && $documentSettings && $documentSettings->count())
+                        {{-- Upload Form — only during Document Verification (status 7) AND only until
+                             every required document is submitted. Round-5: once submitted (or verified/
+                             activated) the documents are LOCKED — any addition or replacement goes
+                             through HR (admins upload via the edit screen; versioning keeps history). --}}
+                        @if($__allReqSubmitted && $employee->employee_status_id == 7)
+                            <div class="alert alert-light border small mb-4">
+                                🔒 Your documents have been submitted and are locked. To add or replace a
+                                document, please contact HR.
+                            </div>
+                        @endif
+                        @if($employee->employee_status_id == 7 && !$__allReqSubmitted && $documentSettings && $documentSettings->count())
                         <div class="mb-4 p-3 border rounded" style="background:#f8f9fa;">
                             <h6 class="fw-bold mb-3">📤 Required Documents</h6>
 
@@ -333,9 +354,9 @@
                         @endphp
                         @if($__currentDocs->count())
                             <div class="alert alert-light border small mb-3">
-                                🔒 Uploaded documents cannot be removed. If you need to replace one, simply upload it
-                                again (the newest file becomes your current copy). To have a document removed, please
-                                contact HR.
+                                🔒 Uploaded documents cannot be removed. Until you finish submitting your required
+                                documents you may re-upload one to replace it (the newest file becomes your current
+                                copy); once everything is submitted, documents are locked — contact HR for any change.
                             </div>
                             <div class="row g-3">
                                 @foreach($__currentDocs as $doc)

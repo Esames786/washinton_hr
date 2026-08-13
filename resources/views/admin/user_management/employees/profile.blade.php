@@ -257,7 +257,9 @@
                                 <span class="badge {{ $docVerified === $docTotal ? 'bg-success' : 'bg-secondary' }} text-white ms-2">{{ $docVerified }}/{{ $docTotal }} verified</span>
                             @endif
                         </span>
-                        @if($employee->documents && $employee->documents->count())
+                        {{-- Round-5 #4: once every current document is verified there is nothing left
+                             to approve — hide the button instead of showing a dead action. --}}
+                        @if($employee->documents && $employee->documents->count() && (($docVerified ?? 0) < ($docTotal ?? 0)))
                             <button type="button" class="btn btn-sm btn-success" id="bulkVerifyBtn"
                                     data-employee-id="{{ $employee->id }}">
                                 ✔ Approve All Documents

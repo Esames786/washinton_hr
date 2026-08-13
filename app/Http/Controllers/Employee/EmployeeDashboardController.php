@@ -248,6 +248,35 @@ class EmployeeDashboardController extends Controller
         $employee   = auth('employee')->user();
         $docSetting = \App\Models\DocumentSetting::findOrFail($request->document_setting_id);
 
+        // Round-5: documents LOCK once submitted. Uploading is only possible while the account
+        // is still in Documents Verification (status 7) AND at least one required document type
+        // is still missing. After that, any addition/replacement is HR-only (admin edit screen).
+        if ((int) $employee->employee_status_id !== 7) {
+            return back()->with('error', 'Your documents are locked. Please contact HR to add or replace a document.');
+        }
+        $ownership   = $employee->house_ownership;
+        $brandKey    = \App\Support\Brand::for($employee)['key'] ?? 'hellotransport';
+        $hasBrandCol = \Illuminate\Support\Facades\Schema::hasColumn('hr_document_settings', 'brand');
+        $requiredIds = \App\Models\DocumentSetting::where('status', 1)->where('is_required', 1)
+            ->where(function ($q) use ($ownership) {
+                $q->whereNull('condition');
+                if ($ownership) {
+                    $q->orWhere('condition', $ownership);
+                }
+            })
+            ->when($hasBrandCol, function ($query) use ($brandKey) {
+                $query->where(function ($q) use ($brandKey) {
+                    $q->whereNull('brand')->orWhere('brand', $brandKey);
+                });
+            })
+            ->pluck('id');
+        $uploadedIds = \App\Models\EmployeeDocument::where('employee_id', $employee->id)
+            ->pluck('document_setting_id')->unique();
+        $allRequiredSubmitted = $requiredIds->isNotEmpty() && $requiredIds->diff($uploadedIds)->isEmpty();
+        if ($allRequiredSubmitted) {
+            return back()->with('error', 'All required documents are already submitted and locked. Please contact HR to add or replace a document.');
+        }
+
         // P3: per-document limits (max_files) + allowed kind (image | video | any).
         // #4: broadened the image formats — phone selfies are often .jfif / .heic and CNIC scans
         // come as .jfif, all of which the old jpg/jpeg/png/webp list rejected ("unable to submit
