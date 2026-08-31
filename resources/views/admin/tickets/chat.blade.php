@@ -151,7 +151,7 @@
             {{-- Header --}}
             <div class="chat-sidebar-single active">
                 <div class="img">
-                    <img src="{{ asset(auth('admin')->user()?->profile_path ?? 'assets/images/default_images/profile_image.png') }}" alt="admin">
+                    <img src="{{ \App\Support\PortalFile::url(auth('admin')->user()?->profile_path) }}" alt="admin">
                 </div>
                 <div class="info">
                     <h6 class="text-md mb-0">Admin Support</h6>

@@ -323,13 +323,13 @@
                     <button class="d-flex justify-content-center align-items-center rounded-circle" type="button"
                             data-bs-toggle="dropdown">
                         @auth('admin')
-                            <img src="{{ asset(auth('admin')->user()->profile_path ?? 'assets/images/default_images/profile_image.png') }}"
+                            <img src="{{ \App\Support\PortalFile::url(auth('admin')->user()->profile_path) }}"
                                  alt="image"
                                  class="w-40-px h-40-px object-fit-cover rounded-circle">
                         @endauth
 
                         @auth('employee')
-                                <img src="{{ asset(auth('employee')->user()->profile_path ?? 'assets/images/default_images/profile_image.png') }}"
+                                <img src="{{ \App\Support\PortalFile::url(auth('employee')->user()->profile_path) }}"
                                      alt="image"
                                      class="w-40-px h-40-px object-fit-cover rounded-circle">
                         @endauth

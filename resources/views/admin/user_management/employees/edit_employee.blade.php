@@ -168,7 +168,7 @@
                                         </button>
                                         <img id="uploaded-img__preview"
                                              class="w-100 h-100 object-fit-cover"
-                                             src="{{ $employee->profile_path ? asset($employee->profile_path) : asset('assets/images/default_images/profile_image.png') }}"
+                                             src="{{ \App\Support\PortalFile::url($employee->profile_path) }}"
                                              alt="Profile Picture">
                                     </div>
 

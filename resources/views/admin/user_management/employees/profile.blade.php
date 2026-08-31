@@ -43,7 +43,7 @@
         <div class="card border-0 shadow-sm radius-16 mb-4">
             <div class="card-body d-flex align-items-center gap-4 p-3">
                 {{-- Avatar --}}
-                <img src="{{ asset($employee->profile_path ?? 'assets/images/default_images/profile_image.png') }}"
+                <img src="{{ \App\Support\PortalFile::url($employee->profile_path) }}"
                      class="rounded-circle border border-3 border-primary shadow"
                      style="width:120px; height:120px; object-fit:cover;" alt="Profile Image">
 
