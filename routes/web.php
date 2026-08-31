@@ -297,6 +297,7 @@ use App\Http\Controllers\Employee\EmployeeTicketMessageController;
             Route::get('/logout', [EmployeeAuthController::class, 'logout'])->name('logout');
             Route::get('dashboard', [EmployeeDashboardController::class, 'index'])->name('dashboard');
             Route::get('profile',[EmployeeDashboardController::class,'employee_profile'])->name('profile');
+            Route::get('profile/document/{id}/file', [EmployeeDashboardController::class, 'documentFile'])->name('profile.document_file');
             Route::post('profile/upload-document', [EmployeeDashboardController::class, 'uploadDocument'])->name('profile.upload_document');
             Route::post('contract/accept', [EmployeeDashboardController::class, 'acceptContract'])->name('contract.accept');
             Route::post('nda/sign', [\App\Http\Controllers\Employee\EmployeeNdaController::class, 'sign'])->name('nda.sign');

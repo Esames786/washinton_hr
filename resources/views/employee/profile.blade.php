@@ -367,7 +367,7 @@
                                             @endphp
 
                                             @if(in_array($ext, ['jpg','jpeg','png','gif','bmp','webp']))
-                                                <img src="{{ asset($doc->file_path) }}"
+                                                <img src="{{ route('employee.profile.document_file', $doc->id) }}"
                                                      class="doc-img rounded mb-2"
                                                      alt="{{ $doc->file_name }}">
                                             @elseif($ext === 'pdf')
@@ -388,7 +388,7 @@
                                             {{-- Round-4: no Remove button — documents can only be
                                                  removed by HR; re-uploading adds a newer version. --}}
                                             <div class="d-flex gap-1 justify-content-center">
-                                                <a href="{{ asset($doc->file_path) }}" target="_blank"
+                                                <a href="{{ route('employee.profile.document_file', $doc->id) }}" target="_blank"
                                                    class="btn btn-sm btn-outline-primary">View</a>
                                             </div>
                                         </div>

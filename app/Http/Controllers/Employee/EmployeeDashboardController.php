@@ -574,4 +574,18 @@ class EmployeeDashboardController extends Controller
 
         return response()->json($history);
     }
+
+    /**
+     * Serve one of the logged-in subcontractor's own documents. Bridge-transferred CR
+     * application docs live on the sibling HR portal's disk (four portals, one DB), so a
+     * plain asset() link 404s — this resolves local-first, then probes the sibling portals.
+     */
+    public function documentFile($id)
+    {
+        $document = \App\Models\EmployeeDocument::where('id', (int) $id)
+            ->where('employee_id', auth('employee')->id())
+            ->firstOrFail();
+
+        return \App\Support\DocFileServer::respond($document);
+    }
 }
