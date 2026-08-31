@@ -1,7 +1,7 @@
 @foreach($messages as $msg)
     <div class="chat-single-message {{ $msg->sender_type === 'employee' ? 'left' : 'right' }}">
         @if($msg->sender_type === 'employee' )
-            <img src="{{ asset($msg->sender?->profile_path ?? 'assets/images/default_images/profile_image.png') }}"
+            <img src="{{ \App\Support\PortalFile::url($msg->sender?->profile_path) }}"
                  class="avatar-lg object-fit-cover rounded-circle">
         @endif
         <div class="chat-message-content">
