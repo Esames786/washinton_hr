@@ -300,8 +300,12 @@
                                     <div class="col-12">
                                         @if($ownershipLocked)
                                             <small class="text-success">✓ House ownership set to <strong>{{ ucfirst($employee->house_ownership) }}</strong>. This can't be changed — contact HR if it needs correcting.</small>
-                                        @else
+                                        @elseif($employee->isCrazyrays())
+                                            {{-- CNIC / Rental-Agreement docs are CrazyRays-only (brand-filtered in
+                                                 hr_document_settings) — Hello (USA) agents never see this guidance. --}}
                                             <small class="text-muted">Rented → upload <strong>Rental Agreement</strong> + <strong>Landlord CNIC</strong>. Owned → upload a <strong>Bill</strong> if your CNIC address is different. <strong>Note: once saved this cannot be changed.</strong></small>
+                                        @else
+                                            <small class="text-muted"><strong>Note: once saved this cannot be changed.</strong></small>
                                         @endif
                                     </div>
                                 </form>
