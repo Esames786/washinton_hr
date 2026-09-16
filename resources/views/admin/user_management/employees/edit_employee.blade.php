@@ -1395,7 +1395,10 @@
         var LIST_URL    = '{{ route("admin.employee_equipment.list", ["employeeId" => "__ID__"]) }}'.replace('__ID__', EMPLOYEE_ID);
         var STORE_URL   = '{{ route("admin.employee_equipment.store") }}';
         var TYPES_URL   = '{{ route("admin.equipment_types.list") }}';
-        var RETURN_BASE = '{{ url("admin/employee-equipment") }}';
+        // Built from the NAMED routes: the URI was renamed to subcontractor-equipment and the
+        // old hard-coded 'admin/employee-equipment' base made every Return/Delete 404.
+        var RETURN_URL_T = '{{ route("admin.employee_equipment.return", ["equipment" => "__ID__"]) }}';
+        var DELETE_URL_T = '{{ route("admin.employee_equipment.destroy", ["equipment" => "__ID__"]) }}';
 
         function statusBadge(s) {
             return s === 'assigned'
@@ -1490,11 +1493,15 @@
         $('#returnSubmitBtn').on('click', function() {
             var id = $('#returnEquipId').val();
             $.ajax({
-                url: RETURN_BASE + '/' + id + '/return',
+                url: RETURN_URL_T.replace('__ID__', id),
                 type: 'POST',
                 data: { _token: CSRF, return_date: $('#returnDate').val() },
                 success: function(res) {
                     if (res.success) { $('#returnEquipModal').modal('hide'); loadEquipment(); }
+                },
+                error: function(x) {
+                    alert((x.responseJSON && (x.responseJSON.message || x.responseJSON.error))
+                        || 'Could not mark this equipment as returned. Please try again.');
                 }
             });
         });
@@ -1503,10 +1510,14 @@
             if (!confirm('Remove this equipment assignment?')) return;
             var id = $(this).data('id');
             $.ajax({
-                url: RETURN_BASE + '/' + id,
+                url: DELETE_URL_T.replace('__ID__', id),
                 type: 'DELETE',
                 data: { _token: CSRF },
-                success: function(res) { if (res.success) loadEquipment(); }
+                success: function(res) { if (res.success) loadEquipment(); },
+                error: function(x) {
+                    alert((x.responseJSON && (x.responseJSON.message || x.responseJSON.error))
+                        || 'Could not remove this equipment assignment. Please try again.');
+                }
             });
         });
     })();
