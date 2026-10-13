@@ -65,7 +65,8 @@ class AdminSidebarHelper
                 'items' => [
                     ['title' => 'Generate Payroll', 'route' => 'admin.payroll.index', 'iconClass' => 'text-primary-600'],
                     ['title' => 'Paid Payroll List', 'route' => 'admin.payroll.list', 'iconClass' => 'text-warning-main'],
-                    ['title' => 'Subcontractor Payslips', 'route' => 'admin.payroll.payslip.index', 'iconClass' => 'text-info-main'],
+                    // Subcontractor payouts now live under Subcontractor Management, so this
+                    // group covers in-house payroll only and the entry is not duplicated.
                 ]
             ],
 
@@ -79,24 +80,42 @@ class AdminSidebarHelper
             ],
 
             [
+                // ── Employment split (client, 8 Oct) ──────────────────────────────────
+                // In-house staff and subcontractors are managed separately. Both groups
+                // point at the same screens with a `type` filter rather than duplicating
+                // them, so a fix to attendance or breaks lands in both at once.
+                //
+                // Monthly Tax and Gratuity are in-house only; Earning & Payouts is the
+                // subcontractor equivalent, since they are paid commission, not salary.
                 'title' => 'Subcontractor Management',
                 'icon'  => 'bi bi-person-badge',
                 'items' => [
                     // Applications from the public site, before they become subcontractors.
                     // Shortlisting one here creates the HR profile; the CRM account comes later.
                     ['title' => 'Campaign Leads', 'route' => 'admin.campaign_leads.index', 'iconClass' => 'text-danger-main'],
-                    // Employment-split: Work From Home campaign subcontractors.
                     ['title' => 'Subcontractors', 'route' => 'admin.employees.index', 'params' => ['type' => 'subcontractor'], 'iconClass' => 'text-info-main'],
-                    ['title' => 'Attendance List', 'route' => 'admin.employees.attendance_list', 'iconClass' => 'text-primary-600'],
-                    ['title' => 'Break List', 'route' => 'admin.employees.break_list', 'iconClass' => 'text-warning-600'],
-                    [
-                        'title' => 'Tickets',
-                        'route' => 'admin.tickets.index',
-                        'iconClass' => 'text-success-600'
-                    ],
-                    ['title' => 'Daily Activities', 'route' => 'admin.employees.daily_activity_list', 'iconClass' => 'text-primary-600'],
-                    ['title' => 'Order List', 'route' => 'admin.employees.order_list', 'iconClass' => 'text-warning-600'],
+                    ['title' => 'Attendance List', 'route' => 'admin.employees.attendance_list', 'params' => ['type' => 'subcontractor'], 'iconClass' => 'text-primary-600'],
+                    ['title' => 'Break List', 'route' => 'admin.employees.break_list', 'params' => ['type' => 'subcontractor'], 'iconClass' => 'text-warning-600'],
+                    ['title' => 'Tickets', 'route' => 'admin.tickets.index', 'params' => ['type' => 'subcontractor'], 'iconClass' => 'text-success-600'],
+                    ['title' => 'Daily Activities', 'route' => 'admin.employees.daily_activity_list', 'params' => ['type' => 'subcontractor'], 'iconClass' => 'text-primary-600'],
+                    ['title' => 'Order List', 'route' => 'admin.employees.order_list', 'params' => ['type' => 'subcontractor'], 'iconClass' => 'text-warning-600'],
+                    ['title' => 'Earning & Payouts', 'route' => 'admin.payroll.payslip.index', 'iconClass' => 'text-success-main'],
+                ]
+            ],
+
+            [
+                'title' => 'In-House Management',
+                'icon'  => 'bi bi-building',
+                'items' => [
+                    ['title' => 'In-House Staff', 'route' => 'admin.employees.index', 'params' => ['type' => 'inhouse'], 'iconClass' => 'text-info-main'],
+                    ['title' => 'Attendance List', 'route' => 'admin.employees.attendance_list', 'params' => ['type' => 'inhouse'], 'iconClass' => 'text-primary-600'],
+                    ['title' => 'Break List', 'route' => 'admin.employees.break_list', 'params' => ['type' => 'inhouse'], 'iconClass' => 'text-warning-600'],
+                    ['title' => 'Tickets', 'route' => 'admin.tickets.index', 'params' => ['type' => 'inhouse'], 'iconClass' => 'text-success-600'],
+                    ['title' => 'Daily Activities', 'route' => 'admin.employees.daily_activity_list', 'params' => ['type' => 'inhouse'], 'iconClass' => 'text-primary-600'],
+                    ['title' => 'Leads / Orders', 'route' => 'admin.employees.order_list', 'params' => ['type' => 'inhouse'], 'iconClass' => 'text-warning-600'],
                     ['title' => 'Monthly Tax', 'route' => 'admin.employees.monthly_tax_list', 'iconClass' => 'text-warning-600'],
+                    // Gratuity is in-house only and already has its own group above, with
+                    // both Create Payout and Paid Payout List — not duplicated here.
                 ]
             ],
 

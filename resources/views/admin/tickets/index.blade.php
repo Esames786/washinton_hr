@@ -153,7 +153,7 @@
                 searching: true,
                 rowId: 'id',
                 ajax: {
-                    url: "{{ route('admin.tickets.index') }}",
+                    url: "{{ route('admin.tickets.index', ['type' => request('type')]) }}",
                     data: function (d) { // #3: send filter values
                         d.f_status    = $('#f_status').val();
                         d.f_employee  = $('#f_employee').val();

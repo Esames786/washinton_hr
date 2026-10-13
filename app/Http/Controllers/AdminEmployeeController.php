@@ -1500,6 +1500,28 @@ class AdminEmployeeController extends Controller
 
 
     /** Shift length in seconds (overnight-safe); defaults to 8h when unknown. */
+    /**
+     * Narrow a listing to in-house staff or subcontractors.
+     *
+     * The client asked for the two to be managed separately across attendance, breaks,
+     * daily activities and orders. Rather than duplicate each screen, the same screen takes
+     * a `?type=` and the sidebar points two entries at it — mirroring what employees.index
+     * already did.
+     *
+     * Absent or unrecognised `type`, nothing is applied and the list behaves exactly as
+     * before, so every existing link and bookmark keeps working.
+     */
+    private function applyWorkerType($query, Request $request): void
+    {
+        $type = $request->query('type');
+
+        if (! in_array($type, ['inhouse', 'subcontractor'], true)) {
+            return;
+        }
+
+        $query->whereHas('employee', fn ($q) => $q->where('worker_type', $type));
+    }
+
     private function shiftLengthSeconds($shift): int
     {
         if (!$shift || empty($shift->shift_start) || empty($shift->shift_end)) return 8 * 3600;
@@ -1514,6 +1536,10 @@ class AdminEmployeeController extends Controller
         if($request->ajax()){
             $data = EmployeeAttendance::with('attendance_status','employee.shift')
                 ->select('hr_employee_attendances.id','hr_employee_attendances.employee_id', 'hr_employee_attendances.attendance_date','hr_employee_attendances.check_in','hr_employee_attendances.check_out','hr_employee_attendances.working_hours','hr_employee_attendances.attendance_status_id','hr_employee_attendances.productive_seconds','hr_employee_attendances.productive_percent');
+
+            // Employment split (client, 8 Oct): in-house and subcontractors are managed
+            // separately. Without `type` the list behaves exactly as it did before.
+            $this->applyWorkerType($data, $request);
 
             if($request->employee_ids) {
                 $data->whereIn('employee_id',$request->employee_ids);
@@ -1661,6 +1687,8 @@ class AdminEmployeeController extends Controller
             $data = EmployeeBreak::with('employee')
                 ->select('hr_employee_breaks.id', 'hr_employee_breaks.employee_id', 'hr_employee_breaks.break_start', 'hr_employee_breaks.break_end', 'hr_employee_breaks.break_duration');
 
+            $this->applyWorkerType($data, $request);
+
             if($request->employee_ids) {
                 $data->whereIn('hr_employee_breaks.employee_id',$request->employee_ids);
             }
@@ -1720,6 +1748,9 @@ class AdminEmployeeController extends Controller
                 'field_value',
                 'field_type'
             );
+
+            $this->applyWorkerType($data, $request);
+
             if($request->employee_ids) {
                 $data->whereIn('employee_id',$request->employee_ids);
             }
@@ -1864,6 +1895,10 @@ class AdminEmployeeController extends Controller
             // order table: agent linked via order_taker_id -> user.id
             $orders = DB::table('order')
                 ->join('hr_employees', 'hr_employees.agent_id', '=', 'order.order_taker_id')
+                // Employment split: this one joins hr_employees directly, so it filters on
+                // the joined column rather than through a relation.
+                ->when(in_array($request->query('type'), ['inhouse', 'subcontractor'], true),
+                    fn ($q) => $q->where('hr_employees.worker_type', $request->query('type')))
                 ->select(
                     'hr_employees.full_name',
                     'order.id',

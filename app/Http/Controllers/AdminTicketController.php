@@ -27,6 +27,12 @@ class AdminTicketController extends Controller
             $tickets = EmployeeTicket::with(['ticket_type', 'employee', 'approvedByAdmin'])
                 ->select('id', 'ticket_type_id', 'employee_id', 'status_id', 'subject', 'description', 'approved_by', 'created_at');
 
+            // Employment split (client, 8 Oct): in-house and subcontractor tickets are
+            // managed separately. Without `type` the list is unchanged.
+            if (in_array($request->query('type'), ['inhouse', 'subcontractor'], true)) {
+                $tickets->whereHas('employee', fn ($q) => $q->where('worker_type', $request->query('type')));
+            }
+
             // #3: server-side filters — status, subcontractor, type, and date range.
             if ($request->filled('f_status')) {
                 $tickets->where('status_id', $request->f_status);
