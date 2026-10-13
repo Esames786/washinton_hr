@@ -43,14 +43,15 @@
                 <table class="table bordered-table sm-table mb-0 table-text-center" id="employeesTable">
                     <thead>
                     <tr>
-                        <th>Subcontractor ID</th>
-                        <th>Name</th>
-                        <th>Subcontractor Code</th>
-                        <th>CNIC</th>
-                        <th>Department</th>
-                        <th>Designation</th>
-                        <th>Basic Pay</th>
-                        <th>Net Pay</th>
+                        {{-- Item 10: this is the agent's OWN statement, so their id, name,
+                             CNIC, department and designation told them nothing. Replaced with the
+                             commission figures that actually matter to them. --}}
+                        <th>Month</th>
+                        <th>Revenue Generated</th>
+                        <th>Commission Rate</th>
+                        <th>Commission</th>
+                        <th>Method</th>
+                        <th>Reference</th>
                         <th>Status</th>
                         <th>Action</th>
                     </tr>
@@ -90,14 +91,12 @@
                     }
                 },
                 columns: [
-                    { data: 'id', name: 'id' },
-                    { data: 'full_name', name: 'full_name',orderable: false },
-                    { data: 'employee_code', name: 'employee_code' },
-                    { data: 'cnic', name: 'cnic',orderable: false, searchable: false },
-                    { data: 'department_name', name: 'department_name' ,orderable: false, searchable: false},
-                    { data: 'designation_name', name: 'designation_name',orderable: false, searchable: false },
-                    { data: 'basic_salary', name: 'basic_salary',orderable: false, searchable: false },
-                    { data: 'net_salary', name: 'net_salary',orderable: false, searchable: false },
+                    { data: 'payroll_month', name: 'hr_payrolls.payroll_month' },
+                    { data: 'revenue_generated', name: 'revenue_generated', orderable: false, searchable: false },
+                    { data: 'commission_rate', name: 'commission_rate', orderable: false, searchable: false },
+                    { data: 'total_commission', name: 'total_commission', orderable: false, searchable: false },
+                    { data: 'payment_method', name: 'payment_method', orderable: false, searchable: false },
+                    { data: 'payment_reference', name: 'payment_reference', orderable: false, searchable: false },
                     { data: 'status_id', name: 'status_id',orderable: false, searchable: false },
                     { data: 'action', name: 'action', orderable: false, searchable: false }
 

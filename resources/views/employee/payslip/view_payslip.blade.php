@@ -10,6 +10,90 @@
 @endpush
 
 @section('content')
+    @php
+        $__emp   = optional($payrollDetail->employee);
+        $__isSub = $__emp->isSubcontractor();
+        $__month = optional($payrollDetail->payroll)->payroll_month;
+        $__monthLabel = $__month ? \Carbon\Carbon::parse($__month . '-01')->format('F Y') : null;
+        // Subcontractors are worldwide and paid in USD; in-house payroll stays PKR.
+        $__cur = $__isSub ? '$' : 'PKR ';
+    @endphp
+
+    {{-- ── Item 10: commission statement for subcontractors ──────────────────────────
+         They are paid a percentage of the revenue they generate, so a basic/net salary
+         pair describes nothing. In-house payroll below is unchanged. --}}
+    @if($__isSub)
+    <div class="card">
+        <div class="card-body">
+            <h5 class="mb-1">Earning &amp; Payouts</h5>
+            @if($__monthLabel)
+                <p class="text-muted mb-3" style="font-size:14px;">{{ $__monthLabel }}</p>
+            @endif
+
+            <table class="table table-bordered align-middle">
+                <thead>
+                    <tr><th style="width:60%;">Item</th><th class="text-end">Amount</th></tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Revenue Generated</td>
+                        <td class="text-end">
+                            {{ $payrollDetail->revenue_generated !== null
+                                ? $__cur . number_format((float) $payrollDetail->revenue_generated, 2)
+                                : '—' }}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Commission Rate</td>
+                        <td class="text-end">
+                            {{ $payrollDetail->commission_rate !== null
+                                ? rtrim(rtrim(number_format((float) $payrollDetail->commission_rate, 2), '0'), '.') . '%'
+                                : '—' }}
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Gross Commission</td>
+                        <td class="text-end">{{ $__cur }}{{ number_format((float) $payrollDetail->total_commission, 2) }}</td>
+                    </tr>
+                    <tr>
+                        <td>Adjustments</td>
+                        <td class="text-end">
+                            @php $__adj = (float) $payrollDetail->total_deductions; @endphp
+                            {{ $__adj > 0 ? '-' : '' }}{{ $__cur }}{{ number_format(abs($__adj), 2) }}
+                        </td>
+                    </tr>
+                    <tr class="table-light">
+                        <td><strong>Net Commission Payable</strong></td>
+                        <td class="text-end"><strong>{{ $__cur }}{{ number_format((float) $payrollDetail->net_salary, 2) }}</strong></td>
+                    </tr>
+                    <tr>
+                        <td>Payment Method</td>
+                        <td class="text-end">{{ $payrollDetail->payment_method ?: '—' }}</td>
+                    </tr>
+                    <tr>
+                        <td>Payment Reference</td>
+                        <td class="text-end">{{ $payrollDetail->payment_reference ?: '—' }}</td>
+                    </tr>
+                    <tr>
+                        <td>Status</td>
+                        <td class="text-end">
+                            @switch($payrollDetail->status_id)
+                                @case(3) <span class="badge bg-success">Paid</span> @break
+                                @case(2) <span class="badge bg-info text-dark">Approved</span> @break
+                                @default <span class="badge bg-warning text-dark">Pending</span>
+                            @endswitch
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <a href="{{ route('employee.payslips.index') }}" class="btn btn-outline-secondary btn-sm">
+                ← Back to Earning &amp; Payouts
+            </a>
+        </div>
+    </div>
+    @else
+
     <div class="card">
         <div class="card-body">
             <table class="table table-bordered">
@@ -89,4 +173,5 @@
             <a href="{{ route('employee.payslips.download',$payrollDetail->id) }}" class="btn btn-primary float-end">Download PDF</a>
         </div>
     </div>
+    @endif
 @endsection

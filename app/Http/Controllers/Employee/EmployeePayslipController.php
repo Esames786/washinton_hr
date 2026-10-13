@@ -60,7 +60,16 @@ class EmployeePayslipController extends Controller
                     'hr_employees.designation_id',
                     'hr_payroll_details.basic_salary',
                     'hr_payroll_details.net_salary',
-                    'hr_payroll_details.status_id'
+                    'hr_payroll_details.status_id',
+                    // Item 10 — subcontractors are paid commission on revenue, so their
+                    // statement needs these rather than a basic/net salary pair.
+                    'hr_payrolls.payroll_month',
+                    'hr_payroll_details.revenue_generated',
+                    'hr_payroll_details.commission_rate',
+                    'hr_payroll_details.total_commission',
+                    'hr_payroll_details.total_deductions',
+                    'hr_payroll_details.payment_method',
+                    'hr_payroll_details.payment_reference'
                 );
                 // Show ALL of the employee's payslips by default; only narrow to a
                 // month when one is explicitly selected (their payslip may belong to
@@ -70,6 +79,19 @@ class EmployeePayslipController extends Controller
                 }
 
             return DataTables::of($payslip_employee)
+                // Item 10 — the commission figures, formatted for the statement.
+                ->editColumn('payroll_month', fn ($row) => $row->payroll_month
+                    ? \Carbon\Carbon::parse($row->payroll_month . '-01')->format('M Y')
+                    : '—')
+                ->editColumn('revenue_generated', fn ($row) => $row->revenue_generated !== null
+                    ? '$' . number_format((float) $row->revenue_generated, 0)
+                    : '—')
+                ->editColumn('commission_rate', fn ($row) => $row->commission_rate !== null
+                    ? rtrim(rtrim(number_format((float) $row->commission_rate, 2), '0'), '.') . '%'
+                    : '—')
+                ->editColumn('total_commission', fn ($row) => '$' . number_format((float) $row->total_commission, 0))
+                ->editColumn('payment_method', fn ($row) => $row->payment_method ?: '—')
+                ->editColumn('payment_reference', fn ($row) => $row->payment_reference ?: '—')
                 ->editColumn('status_id', function ($row) {
                     switch ($row->status_id) {
                         case 1:
