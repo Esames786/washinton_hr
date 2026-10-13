@@ -16,7 +16,7 @@
                 <tr>
                     <th>Ticket#</th>
                     <th>Type</th>
-                    <th>Subcontractor</th>
+                    {{-- Subcontractor column removed (client, 8 Oct): these are the viewer's own tickets. --}}
                     <th>Status</th>
                     <th>Created At</th>
                     <th class="text-center">Action</th>
@@ -215,7 +215,6 @@
                 columns: [
                     { data: 'id', name: 'id' },
                     { data: 'ticket_type', name: 'ticket_type' },
-                    { data: 'employee_name', name: 'employee_name' }, // 👈 add if required
                     { data: 'status', name: 'status' },
                     { data: 'created_at', name: 'created_at' },
                     { data: 'action', name: 'action', orderable: false, searchable: false,className: "text-center" }

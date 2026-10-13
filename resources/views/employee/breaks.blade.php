@@ -25,7 +25,7 @@
             <table class="table table-bordered table-striped" id="EmployeeBreakTable" style="width: 100%;">
                 <thead>
                 <tr>
-                    <th>Subcontractor Name</th>
+                    {{-- Name column removed (client, 8 Oct): every row is the viewer's own break. --}}
                     <th>Date</th>
                     <th>Break Start</th>
                     <th>Break End</th>
@@ -45,14 +45,14 @@
             let datatable = $('#EmployeeBreakTable').DataTable({
                 processing: true,
                 serverSide: true,
-                order: [[0, 'asc']],
+                // Was ordered by name, which no longer exists as a column — newest break first.
+                order: [[0, 'desc']],
                 searching: true,
                 rowId: 'id',
                 ajax: {
                     url: "{{ route('employee.breaks.index') }}",
                 },
                 columns: [
-                    { data: 'employee_name', name: 'employee_name', orderable: true },
                     { data: 'break_date', name: 'created_at', orderable: true },
                     { data: 'break_start', name: 'break_start', orderable: true },
                     { data: 'break_end', name: 'break_end', orderable: true },

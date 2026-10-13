@@ -243,35 +243,8 @@
 
     </div>
 
-    <div class="card h-100 mt-5 p-0 radius-12">
-        <div class="card-header border-bottom bg-base py-16 px-24 d-flex align-items-center justify-content-between">
-            <h5 class="mb-0">Today's Orders</h5>
-        </div>
-        <div class="card-body p-24 table-wrapper">
-            <div class="table-responsive">
-                <table class="table  bordered-table sm-table mb-0 table-text-center" id="orderTable">
-                    <thead>
-                    <tr>
-                        <th>Order ID</th>
-                        <th>Status</th>
-                        <th>Order Date</th>
-                        <th>Customer</th>
-                        <th>Customer Email</th>
-                        <th>Customer Phone</th>
-                        <th>Customer Address</th>
-                        <th>Book Price</th>
-                        <th>Deposit Amount</th>
-                        <th>Paid Amount</th>
-                        <th>Paid Method</th>
-                        <th>Received Date</th>
-                        <th>Payment Status</th>
-                        <th>Action</th>
-                    </tr>
-                    </thead>
-                </table>
-            </div>
-        </div>
-    </div>
+    {{-- "Today's Orders" removed from the dashboard (client, 8 Oct) — it duplicated the
+         dedicated Orders page in the sidebar and made this screen harder to read. --}}
 
     <div class="modal fade" id="orderHistoryModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-centered">
@@ -366,36 +339,8 @@
 
 
 
-            let datatable = $('#orderTable').DataTable({
-                processing: true,
-                serverSide: true,
-                order: [[0, 'desc']],
-                searching: true,
-                rowId: 'id',
-                ajax: {
-                    url: "{{ route('employee.orders.today_orders') }}", // route name
-
-                },
-                columns: [
-                    { data: 'id', name: 'id', orderable: true },
-                    { data: 'Listing_Status', name: 'Listing_Status', orderable: false },
-                    { data: 'created_at', name: 'created_at', orderable: false },
-                    { data: 'Customer_Name', name: 'Customer_Name', orderable: false },
-                    { data: 'Customer_Email', name: 'Customer_Email', orderable: false },
-                    { data: 'Customer_Phone', name: 'Customer_Phone', orderable: false },
-                    { data: 'Address', name: 'Address', orderable: false },
-                    { data: 'Book_Price', name: 'Book_Price', orderable: false },
-                    { data: 'Deposit_Amount', name: 'Deposit_Amount', orderable: false },
-                    { data: 'Paid_Amount', name: 'Paid_Amount', orderable: false },
-                    { data: 'Paid_Method', name: 'Paid_Method', orderable: false },
-                    { data: 'Received_Date', name: 'Received_Date', orderable: false },
-                    { data: 'payment_status', name: 'payment_status', orderable: false },
-                    { data: 'action', name: 'action', orderable: false },
-
-                ],
-                pageLength: 10,
-                lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]],
-            });
+            // The Today's Orders table was removed from this screen, so there is nothing
+            // to initialise here. Orders live on their own page in the sidebar.
 
             const checkInDisabled = @json($checkInDisabled);
             const checkOutDisabled = @json($checkOutDisabled);

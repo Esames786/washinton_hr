@@ -96,12 +96,14 @@
                             <div class="col-6"><strong>Joining Date:</strong> {{ $employee->joining_date ?? '-' }}</div>
                             <div class="col-6"><strong>Employment:</strong> {{ optional($employee->employment_type)->name ?? '-' }}</div>
                             <div class="col-6"><strong>Status:</strong> {{ optional($employee->employee_status)->name ?? '-' }}</div>
-                            <div class="col-6"><strong>{{ $employee->isCrazyrays() ? 'CNIC / Passport' : 'State ID' }}:</strong> {{ $employee->cnic ?? '-' }}</div>
+                            {{-- Agents are worldwide, so the label is no longer state-specific. --}}
+                            <div class="col-6"><strong>{{ $employee->isCrazyrays() ? 'CNIC / Passport' : 'ID Number' }}:</strong> {{ $employee->cnic ?? '-' }}</div>
                             <div class="col-6"><strong>DOB:</strong> {{ $employee->dob ?? '-' }}</div>
-                            <div class="col-6"><strong>Gender:</strong> {{ ucfirst($employee->gender ?? '-') }}</div>
-                            <div class="col-6"><strong>Pay:</strong> {{ number_format($employee->basic_salary ?? 0) }}</div>
-                            {{-- #21: Tax is for in-house employees only. --}}
+                            {{-- Gender removed from profile info (client, 8 Oct). --}}
+                            {{-- Pay and Tax are for in-house employees only — subcontractors are paid
+                                 commission, shown under Earning & Payouts, not a basic salary. --}}
                             @unless($employee->isSubcontractor())
+                            <div class="col-6"><strong>Pay:</strong> {{ number_format($employee->basic_salary ?? 0) }}</div>
                             <div class="col-6"><strong>Tax Slab:</strong> {{ $employee?->tax_slab?->title ?? '-' }}</div>
                             <div class="col-6"><strong>Rate {{ $rateSymbol }}:</strong> {{ $employee?->tax_slab?->rate ?? 0 }}</div>
                             @endunless

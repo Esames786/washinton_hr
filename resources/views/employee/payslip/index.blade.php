@@ -1,6 +1,6 @@
 @extends('layout.master')
 
-@section('pageName','Payslips list')
+@section('pageName','Earning & Payouts')
 @push('cssLinks')
     <style>
         .table-text-center, th {

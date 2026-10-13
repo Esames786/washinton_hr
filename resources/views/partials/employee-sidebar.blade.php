@@ -66,7 +66,7 @@
                     <li>
                         <a href="{{route('employee.payslips.index')}}">
                             <i class="bi bi-cash-stack menu-icon"></i>
-                            <span>Payslips</span>
+                            <span>Earning &amp; Payouts</span>
                         </a>
                     </li>
 
