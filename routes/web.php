@@ -313,6 +313,9 @@ use App\Http\Controllers\Employee\EmployeeTicketMessageController;
 
         Route::middleware(['employee.auth'])->group(function (){
             Route::get('/logout', [EmployeeAuthController::class, 'logout'])->name('logout');
+            // Holding page while the agent's screens are locked (interview stage, management
+            // approval). EmployeeAuthMiddleware redirects here and exempts this route.
+            Route::get('locked', \App\Http\Controllers\Employee\LockedScreenController::class)->name('locked');
             Route::get('dashboard', [EmployeeDashboardController::class, 'index'])->name('dashboard');
             Route::get('profile',[EmployeeDashboardController::class,'employee_profile'])->name('profile');
             Route::get('profile/document/{id}/file', [EmployeeDashboardController::class, 'documentFile'])->name('profile.document_file');
