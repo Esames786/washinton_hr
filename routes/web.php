@@ -109,6 +109,14 @@ use App\Http\Controllers\Employee\EmployeeTicketMessageController;
                 // (each domain is its own cPanel; only the DB is shared). This route serves the
                 // local file or redirects to the portal that actually has it.
                 Route::get('subcontractors/documents/{document}/file', [AdminEmployeeController::class, 'docFile'])->name('employees.documents.file');
+                // Campaign Leads — applications from the public site, before they become people.
+                // Shortlisting here creates the HR profile; the CRM account comes at onboarding.
+                Route::get('campaign-leads', [\App\Http\Controllers\AdminCampaignLeadController::class, 'index'])->name('campaign_leads.index');
+                Route::get('campaign-leads/{id}', [\App\Http\Controllers\AdminCampaignLeadController::class, 'show'])->name('campaign_leads.show');
+                Route::post('campaign-leads/{id}/review', [\App\Http\Controllers\AdminCampaignLeadController::class, 'review'])->name('campaign_leads.review');
+                Route::post('campaign-leads/{id}/shortlist', [\App\Http\Controllers\AdminCampaignLeadController::class, 'shortlist'])->name('campaign_leads.shortlist');
+                Route::post('campaign-leads/{id}/reject', [\App\Http\Controllers\AdminCampaignLeadController::class, 'reject'])->name('campaign_leads.reject');
+
                 Route::post('subcontractors/attach_agent', [AdminEmployeeController::class, 'attach_agent'])->name('employees.attach_agent');
                 // Escape hatch: create the CRM account for a pipeline hire who is stuck
                 // mid-onboarding but needs access now. Normally the observer does this at Onboarding.

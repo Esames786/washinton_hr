@@ -82,6 +82,9 @@ class AdminSidebarHelper
                 'title' => 'Subcontractor Management',
                 'icon'  => 'bi bi-person-badge',
                 'items' => [
+                    // Applications from the public site, before they become subcontractors.
+                    // Shortlisting one here creates the HR profile; the CRM account comes later.
+                    ['title' => 'Campaign Leads', 'route' => 'admin.campaign_leads.index', 'iconClass' => 'text-danger-main'],
                     // Employment-split: Work From Home campaign subcontractors.
                     ['title' => 'Subcontractors', 'route' => 'admin.employees.index', 'params' => ['type' => 'subcontractor'], 'iconClass' => 'text-info-main'],
                     ['title' => 'Attendance List', 'route' => 'admin.employees.attendance_list', 'iconClass' => 'text-primary-600'],
