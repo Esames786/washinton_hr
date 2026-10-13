@@ -167,6 +167,53 @@ class AdminPayslipController extends Controller
 //        return response()->json(['message' => 'Adjustments added successfully', 'net_salary' => $payrollDetail->net_salary]);
 //    }
 
+    /**
+     * Item 10 — record a subcontractor's commission for the period.
+     *
+     * Revenue is typed in by an admin. It cannot be derived from the order table: checked
+     * against live data, `paid_amount` is empty on all 268 orders and the other price
+     * columns are 38%-57% populated and disagree with each other, so any calculation would
+     * put confident, wrong numbers on someone's payslip.
+     *
+     * Gross commission and the net payable are derived here rather than typed, so the
+     * three figures on the statement can never contradict one another.
+     */
+    public function save_commission(Request $request, $id)
+    {
+        $data = $request->validate([
+            'revenue_generated' => 'required|numeric|min:0',
+            'commission_rate'   => 'required|numeric|min:0|max:100',
+            'payment_method'    => 'nullable|string|max:40',
+            'payment_reference' => 'nullable|string|max:60',
+        ], [
+            'commission_rate.max' => 'The commission rate is a percentage, so it cannot exceed 100.',
+        ]);
+
+        $detail = PayrollDetail::findOrFail($id);
+
+        $revenue = round((float) $data['revenue_generated'], 2);
+        $rate    = round((float) $data['commission_rate'], 2);
+        $gross   = round($revenue * $rate / 100, 2);
+
+        $detail->revenue_generated = $revenue;
+        $detail->commission_rate   = $rate;
+        $detail->total_commission  = $gross;
+        // Adjustments already live in total_deductions, so the net stays consistent with
+        // whatever has been added or deducted on the payslip.
+        $detail->net_salary        = round($gross - (float) $detail->total_deductions, 2);
+        $detail->payment_method    = $data['payment_method'] ?? null;
+        $detail->payment_reference = $data['payment_reference'] ?? null;
+        $detail->save();
+
+        return back()->with('success', sprintf(
+            'Commission saved — %s revenue at %s%% gives %s gross, %s net.',
+            number_format($revenue, 2),
+            rtrim(rtrim(number_format($rate, 2), '0'), '.'),
+            number_format($gross, 2),
+            number_format((float) $detail->net_salary, 2)
+        ));
+    }
+
     public function add_adjustment(Request $request)
     {
 

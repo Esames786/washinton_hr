@@ -240,6 +240,9 @@ use App\Http\Controllers\Employee\EmployeeTicketMessageController;
                         Route::get('subcontractor/{id}/download',[AdminPayslipController::class,'payslip_download'])->name('employee.download');
                         Route::get('{payroll_id}', [AdminPayslipController::class,'show'])->name('show'); // dynamic
                         Route::post('add_adjustment',[AdminPayslipController::class,'add_adjustment'])->name('add_adjustment');
+                        // Item 10: record a subcontractor's revenue and commission rate for
+                        // the period. Must sit above the dynamic {payroll_id} GET above it.
+                        Route::post('subcontractor/{id}/commission',[AdminPayslipController::class,'save_commission'])->name('employee.commission');
 
                     });
 

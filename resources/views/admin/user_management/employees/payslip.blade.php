@@ -21,6 +21,60 @@
 
         </div>
         <div class="card-body">
+
+            @include('partials.alerts')
+
+            {{-- Item 10: subcontractors are paid commission on revenue. Revenue is typed in
+                 here because it cannot be derived from the order table — `paid_amount` is
+                 empty on every order and the other price columns disagree with each other.
+                 Gross and net are calculated from it, so the statement can never
+                 contradict itself. --}}
+            @if(optional($payrollDetail->employee)->isSubcontractor())
+                <div class="border rounded p-3 mb-4" style="background:#f8f9fa;">
+                    <h6 class="fw-bold mb-3">💰 Commission for this period</h6>
+                    <form method="POST" action="{{ route('admin.payroll.payslip.employee.commission', $payrollDetail->id) }}"
+                          class="row g-2 align-items-end">
+                        @csrf
+                        <div class="col-md-3">
+                            <label class="form-label small fw-semibold">Revenue Generated <span class="text-danger">*</span></label>
+                            <input type="number" step="0.01" min="0" name="revenue_generated"
+                                   value="{{ old('revenue_generated', $payrollDetail->revenue_generated) }}"
+                                   class="form-control form-control-sm" required>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label small fw-semibold">Rate % <span class="text-danger">*</span></label>
+                            <input type="number" step="0.01" min="0" max="100" name="commission_rate"
+                                   value="{{ old('commission_rate', $payrollDetail->commission_rate) }}"
+                                   class="form-control form-control-sm" required>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small fw-semibold">Payment Method</label>
+                            <input list="payMethods" name="payment_method"
+                                   value="{{ old('payment_method', $payrollDetail->payment_method) }}"
+                                   class="form-control form-control-sm" placeholder="Bank Transfer, Wise, PayPal…">
+                            <datalist id="payMethods">
+                                <option value="Bank Transfer"><option value="Wise"><option value="PayPal">
+                            </datalist>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label small fw-semibold">Reference</label>
+                            <input name="payment_reference"
+                                   value="{{ old('payment_reference', $payrollDetail->payment_reference) }}"
+                                   class="form-control form-control-sm" placeholder="HT-0926-001">
+                        </div>
+                        <div class="col-md-2">
+                            <button class="btn btn-sm btn-primary w-100">Save</button>
+                        </div>
+                        <div class="col-12">
+                            <small class="text-muted">
+                                Gross commission and the net payable are calculated from revenue &times; rate,
+                                less any adjustments below.
+                            </small>
+                        </div>
+                    </form>
+                </div>
+            @endif
+
             <table class="table table-bordered">
                 <tr><th>Basic Pay</th><td class="text-end">{{ number_format($payrollDetail->basic_salary, 2) }}</td></tr>
                 <tr><th>Total Commission</th><td class="text-end">{{ number_format($payrollDetail->total_commission, 2) }}</td></tr>
