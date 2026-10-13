@@ -143,7 +143,33 @@
                             <div class="col-6"><strong>Joining Date:</strong> {{ $employee->joining_date ?? '-' }}</div>
                             <div class="col-6"><strong>Employment:</strong> {{ optional($employee->employment_type)->name ?? '-' }}</div>
                             <div class="col-6"><strong>Status:</strong> {{ optional($employee->employee_status)->name ?? '-' }}</div>
-                            <div class="col-6"><strong>{{ $employee->isCrazyrays() ? 'CNIC / Passport' : 'State ID' }}:</strong> {{ $employee->cnic ?? '-' }}</div>
+                            {{-- Agents are worldwide, so the label is no longer state-specific. --}}
+                            <div class="col-6"><strong>{{ $employee->isCrazyrays() ? 'CNIC / Passport' : 'ID Number' }}:</strong> {{ $employee->cnic ?? '-' }}</div>
+
+                            {{-- CRM account. Pipeline hires get theirs automatically at Onboarding;
+                                 this is the manual override for anyone who needs access sooner. --}}
+                            <div class="col-12 mt-2 pt-2 border-top">
+                                <strong>CRM Account:</strong>
+                                @if($employee->agent_id)
+                                    <span class="badge bg-success">Created</span>
+                                    <span class="text-muted">agent #{{ $employee->agent_id }}</span>
+                                @else
+                                    <span class="badge bg-warning text-dark">Not created yet</span>
+                                    <button type="button"
+                                            class="btn btn-sm btn-outline-primary ms-2"
+                                            id="createCrmAccountBtn"
+                                            data-employee="{{ $employee->id }}">
+                                        Create CRM account now
+                                    </button>
+                                    <div class="text-muted mt-1" style="font-size:11px;">
+                                        @if($employee->cr_application_id ?? null)
+                                            Created automatically once this subcontractor reaches Onboarding.
+                                        @else
+                                            No CRM account is linked to this subcontractor.
+                                        @endif
+                                    </div>
+                                @endif
+                            </div>
                             <div class="col-6"><strong>DOB:</strong> {{ $employee->dob ?? '-' }}</div>
                             <div class="col-6"><strong>Gender:</strong> {{ ucfirst($employee->gender ?? '-') }}</div>
                             <div class="col-6"><strong>Pay:</strong> {{ number_format($employee->basic_salary ?? 0) }}</div>
@@ -676,6 +702,37 @@
 
 @push('scripts')
 <script>
+// "Create CRM account now" — the manual override for a pipeline hire who needs access
+// before onboarding completes.
+document.getElementById('createCrmAccountBtn')?.addEventListener('click', function () {
+    var btn = this;
+    if (!confirm('Create the CRM account for this subcontractor now?')) return;
+
+    btn.disabled = true;
+    btn.textContent = 'Creating…';
+
+    fetch("{{ route('admin.employees.create_crm_account') }}", {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': '{{ csrf_token() }}',
+            'Accept': 'application/json',
+        },
+        body: JSON.stringify({ employee_id: btn.dataset.employee }),
+    })
+    .then(function (r) { return r.json().then(function (d) { return { ok: r.ok, d: d }; }); })
+    .then(function (res) {
+        alert(res.d.message || (res.ok ? 'Done.' : 'Could not create the CRM account.'));
+        if (res.ok) { location.reload(); }
+        else { btn.disabled = false; btn.textContent = 'Create CRM account now'; }
+    })
+    .catch(function () {
+        alert('Could not reach the server. Nothing was changed.');
+        btn.disabled = false;
+        btn.textContent = 'Create CRM account now';
+    });
+});
+
 document.querySelectorAll('.change-status-btn').forEach(function(btn) {
     btn.addEventListener('click', function(e) {
         e.preventDefault();

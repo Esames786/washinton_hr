@@ -1773,6 +1773,57 @@ class AdminEmployeeController extends Controller
     }
 
 
+    /**
+     * Create the CRM account for an employee now, without waiting for onboarding to finish.
+     *
+     * Recruitment-pipeline hires normally get their CRM account automatically when they reach
+     * Onboarding (see EmployeeObserver). This is the escape hatch for someone who is stuck
+     * mid-pipeline but needs access today — the admin grants it in one click.
+     *
+     * Safe to press twice: the agent-side bridge does createOrUpdate, and an employee who
+     * already has an agent_id is rejected here before anything is sent.
+     */
+    public function createCrmAccount(Request $request)
+    {
+        $request->validate([
+            'employee_id' => 'required|integer|exists:hr_employees,id',
+        ]);
+
+        try {
+            $employee = Employee::findOrFail($request->employee_id);
+
+            if (! empty($employee->agent_id)) {
+                return response()->json([
+                    'status'  => 'error',
+                    'message' => 'This subcontractor already has a CRM account (agent #' . $employee->agent_id . ').',
+                ], 422);
+            }
+
+            // Reuse the proven path: the observer's sync is what creates the account on the
+            // agent portal. Touching the record fires it, so we trigger it explicitly instead.
+            (new \App\Observers\EmployeeObserver)->forceCrmSync($employee);
+
+            $employee->refresh();
+
+            return response()->json([
+                'status'   => 'success',
+                'message'  => $employee->agent_id
+                    ? 'CRM account created and linked (agent #' . $employee->agent_id . ').'
+                    : 'Request sent to the CRM portal. Refresh in a moment to see the linked account.',
+                'agent_id' => $employee->agent_id,
+            ]);
+        } catch (\Throwable $th) {
+            Log::channel('admin_log')->error([
+                'message' => 'createCrmAccount: ' . $th->getMessage(),
+            ]);
+
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'Could not create the CRM account. Check the logs.',
+            ], 500);
+        }
+    }
+
     public function attach_agent(Request $request)
     {
         $request->validate([

@@ -110,6 +110,9 @@ use App\Http\Controllers\Employee\EmployeeTicketMessageController;
                 // local file or redirects to the portal that actually has it.
                 Route::get('subcontractors/documents/{document}/file', [AdminEmployeeController::class, 'docFile'])->name('employees.documents.file');
                 Route::post('subcontractors/attach_agent', [AdminEmployeeController::class, 'attach_agent'])->name('employees.attach_agent');
+                // Escape hatch: create the CRM account for a pipeline hire who is stuck
+                // mid-onboarding but needs access now. Normally the observer does this at Onboarding.
+                Route::post('subcontractors/create-crm-account', [AdminEmployeeController::class, 'createCrmAccount'])->name('employees.create_crm_account');
                 Route::resource('subcontractors', AdminEmployeeController::class)->except(['show'])->names('employees');
                 Route::get('subcontractors/show/{id}', [AdminEmployeeController::class, 'show'])->name('employees.show');
                 // #12: printable full subcontractor summary (info + documents + contract + NDA)
