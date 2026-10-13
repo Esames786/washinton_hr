@@ -1501,6 +1501,28 @@ class AdminEmployeeController extends Controller
 
     /** Shift length in seconds (overnight-safe); defaults to 8h when unknown. */
     /**
+     * Item 4 — control whether this agent is asked the own/rent question.
+     *
+     * Automatic asks only when their brand has documents depending on the answer; the two
+     * overrides exist because an admin may know something the document config does not.
+     */
+    public function setHouseOwnershipRule(Request $request, $id)
+    {
+        $request->validate(['mode' => 'required|in:auto,required,skip']);
+
+        $employee = Employee::findOrFail($id);
+
+        $employee->house_ownership_required = match ($request->input('mode')) {
+            'required' => 1,
+            'skip'     => 0,
+            default    => null,
+        };
+        $employee->save();
+
+        return back()->with('success', 'Own/rent question updated for this subcontractor.');
+    }
+
+    /**
      * Narrow a listing to in-house staff or subcontractors.
      *
      * The client asked for the two to be managed separately across attendance, breaks,

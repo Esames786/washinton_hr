@@ -280,7 +280,10 @@
                         <div class="mb-4 p-3 border rounded" style="background:#f8f9fa;">
                             <h6 class="fw-bold mb-3">📤 Required Documents</h6>
 
-                            {{-- P3 (#3/#7): house ownership drives the conditional documents shown below --}}
+                            {{-- P3 (#3/#7): house ownership drives the conditional documents shown below.
+                                 Item 4: only asked when it actually gates something for this agent's
+                                 brand, or when an admin has switched it on for them. --}}
+                            @if($employee->needsHouseOwnership())
                             <div class="alert alert-light border mb-3">
                                 @php $ownershipLocked = !empty($employee->house_ownership); @endphp
                                 <form method="POST" action="{{ route('employee.profile.house_ownership') }}" class="row g-2 align-items-end">
@@ -312,6 +315,7 @@
                                     </div>
                                 </form>
                             </div>
+                            @endif
 
                             <form method="POST"
                                   action="{{ route('employee.profile.upload_document') }}"

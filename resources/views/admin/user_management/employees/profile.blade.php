@@ -146,6 +146,40 @@
                             {{-- Agents are worldwide, so the label is no longer state-specific. --}}
                             <div class="col-6"><strong>{{ $employee->isCrazyrays() ? 'CNIC / Passport' : 'ID Number' }}:</strong> {{ $employee->cnic ?? '-' }}</div>
 
+                            {{-- Item 4: own/rent is optional at the admin's discretion. Left on
+                                 "Automatic" it is asked only when this agent's brand actually has
+                                 documents that depend on the answer. --}}
+                            <div class="col-12 mt-2 pt-2 border-top">
+                                <strong>Own / rent question:</strong>
+                                @php
+                                    $hoSetting = $employee->house_ownership_required;
+                                    $hoAuto    = $hoSetting === null;
+                                @endphp
+                                <span class="badge {{ $employee->needsHouseOwnership() ? 'bg-info text-dark' : 'bg-secondary' }}">
+                                    {{ $employee->needsHouseOwnership() ? 'Asked' : 'Not asked' }}
+                                </span>
+                                <span class="text-muted">
+                                    ({{ $hoAuto ? 'automatic' : ($hoSetting ? 'forced on' : 'forced off') }})
+                                </span>
+
+                                <form method="POST" action="{{ route('admin.employees.house_ownership_rule', $employee->id) }}"
+                                      class="d-inline-flex align-items-center gap-2 ms-2">
+                                    @csrf
+                                    <select name="mode" class="form-select form-select-sm" style="width:auto;">
+                                        <option value="auto"     @selected($hoAuto)>Automatic</option>
+                                        <option value="required" @selected($hoSetting === 1 || $hoSetting === true)>Always ask</option>
+                                        <option value="skip"     @selected($hoSetting === 0 || $hoSetting === false)>Never ask</option>
+                                    </select>
+                                    <button class="btn btn-sm btn-outline-secondary">Save</button>
+                                </form>
+
+                                @if($employee->house_ownership)
+                                    <div class="text-muted mt-1" style="font-size:11px;">
+                                        Answered: <strong>{{ ucfirst($employee->house_ownership) }}</strong>
+                                    </div>
+                                @endif
+                            </div>
+
                             {{-- CRM account. Pipeline hires get theirs automatically at Onboarding;
                                  this is the manual override for anyone who needs access sooner. --}}
                             <div class="col-12 mt-2 pt-2 border-top">

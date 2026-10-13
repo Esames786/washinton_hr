@@ -69,6 +69,31 @@ class Employee extends Authenticatable
     }
 
     /**
+     * Should this agent be asked whether they own or rent?
+     *
+     * Item 4 — the client wanted this optional at the admin's discretion. An admin can
+     * force it on or off per agent; left unset it decides itself, by asking only when the
+     * agent's brand actually has documents that depend on the answer.
+     *
+     * That default matters: every own/rent document (Bill, Rental Agreement, Landlord
+     * CNIC) is CrazyRays-only, so a worldwide Hello agent answering it unlocks nothing —
+     * and the answer locks permanently once given.
+     */
+    public function needsHouseOwnership(): bool
+    {
+        if ($this->house_ownership_required !== null) {
+            return (bool) $this->house_ownership_required;
+        }
+
+        $brandKey = \App\Support\Brand::for($this)['key'] ?? 'hellotransport';
+
+        return \App\Models\DocumentSetting::whereNotNull('condition')
+            ->where('status', 1)
+            ->where(fn ($q) => $q->whereNull('brand')->orWhere('brand', $brandKey))
+            ->exists();
+    }
+
+    /**
      * #17: CrazyRays-originated agents (cr-application converted users) are branded
      * "CrazyRays Solutions"; everyone else is "Hello Transport". The flag lives on the
      * linked agent-portal user (shared DB), same check the sidebar uses.
