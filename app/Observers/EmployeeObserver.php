@@ -102,6 +102,13 @@ class EmployeeObserver
      */
     public function updated(Employee $employee)
     {
+        // Tell a pipeline hire where they now stand — email triggers 4, 5 and 6.
+        // Pipeline hires only: an ordinary status edit on one of the existing agents
+        // should not send them an onboarding email out of nowhere.
+        if ($this->isPipelineHire($employee) && $employee->isDirty('employee_status_id')) {
+            \App\Support\AgentStageNotifier::notify($employee);
+        }
+
         // A pipeline hire reaching Onboarding/Active is the moment their CRM account is
         // created. Guarded on isDirty so it fires on the transition, not on every later save.
         if ($this->isPipelineHire($employee)
