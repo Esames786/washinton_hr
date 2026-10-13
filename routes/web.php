@@ -123,6 +123,13 @@ use App\Http\Controllers\Employee\EmployeeTicketMessageController;
                 Route::post('subcontractors/create-crm-account', [AdminEmployeeController::class, 'createCrmAccount'])->name('employees.create_crm_account');
                 // Item 4: own/rent is optional, decided per subcontractor by the admin.
                 Route::post('subcontractors/{id}/house-ownership-rule', [AdminEmployeeController::class, 'setHouseOwnershipRule'])->name('employees.house_ownership_rule');
+
+                // The onboarding questionnaire. The questions were never supplied, so an
+                // admin writes them here rather than having them hardcoded.
+                Route::get('questionnaire', [\App\Http\Controllers\AdminQuestionnaireController::class, 'index'])->name('questionnaire.index');
+                Route::post('questionnaire', [\App\Http\Controllers\AdminQuestionnaireController::class, 'store'])->name('questionnaire.store');
+                Route::put('questionnaire/{id}', [\App\Http\Controllers\AdminQuestionnaireController::class, 'update'])->name('questionnaire.update');
+                Route::delete('questionnaire/{id}', [\App\Http\Controllers\AdminQuestionnaireController::class, 'destroy'])->name('questionnaire.destroy');
                 Route::resource('subcontractors', AdminEmployeeController::class)->except(['show'])->names('employees');
                 Route::get('subcontractors/show/{id}', [AdminEmployeeController::class, 'show'])->name('employees.show');
                 // #12: printable full subcontractor summary (info + documents + contract + NDA)
@@ -318,6 +325,8 @@ use App\Http\Controllers\Employee\EmployeeTicketMessageController;
             // Holding page while the agent's screens are locked (interview stage, management
             // approval). EmployeeAuthMiddleware redirects here and exempts this route.
             Route::get('locked', \App\Http\Controllers\Employee\LockedScreenController::class)->name('locked');
+            Route::get('questionnaire', [\App\Http\Controllers\Employee\QuestionnaireController::class, 'show'])->name('questionnaire');
+            Route::post('questionnaire', [\App\Http\Controllers\Employee\QuestionnaireController::class, 'store'])->name('questionnaire.store');
             Route::get('dashboard', [EmployeeDashboardController::class, 'index'])->name('dashboard');
             Route::get('profile',[EmployeeDashboardController::class,'employee_profile'])->name('profile');
             Route::get('profile/document/{id}/file', [EmployeeDashboardController::class, 'documentFile'])->name('profile.document_file');

@@ -63,6 +63,17 @@
                         </a>
                     </li>
 
+                    {{-- Onboarding questionnaire — only while it is still to be done, so it
+                         does not clutter the sidebar for agents who have finished onboarding. --}}
+                    @if(auth('employee')->check() && !auth('employee')->user()->questionnaire_submitted_at)
+                        <li>
+                            <a href="{{route('employee.questionnaire')}}">
+                                <i class="bi bi-clipboard-check menu-icon"></i>
+                                <span>Questionnaire</span>
+                            </a>
+                        </li>
+                    @endif
+
                     <li>
                         <a href="{{route('employee.payslips.index')}}">
                             <i class="bi bi-cash-stack menu-icon"></i>

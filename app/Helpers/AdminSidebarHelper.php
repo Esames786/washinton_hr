@@ -30,6 +30,7 @@ class AdminSidebarHelper
                     ['title' => 'Gratuity Setting', 'route' => 'admin.gratuity_settings.index', 'iconClass' => 'text-primary-600'],
                     ['title' => 'Commission Setting', 'route' => 'admin.commission_settings.index', 'iconClass' => 'text-warning-main'],
                     ['title' => 'Document Setting', 'route' => 'admin.document_settings.index', 'iconClass' => 'text-info-main'],
+                    ['title' => 'Onboarding Questionnaire', 'route' => 'admin.questionnaire.index', 'iconClass' => 'text-danger-main'],
                     ['title' => 'Daily Activities', 'route' => 'admin.daily_activity_fields.index', 'iconClass' => 'text-danger-main'],
                     ['title' => 'Currency Exchange Rate', 'route' => 'admin.currency_settings.index', 'iconClass' => 'text-info-main'],
                     ['title' => 'Equipment Types', 'route' => 'admin.equipment_types.index', 'iconClass' => 'text-success-main'],
