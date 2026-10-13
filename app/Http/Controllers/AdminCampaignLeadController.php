@@ -2,12 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Employee\SetPasswordController;
+use App\Mail\ApplicantRejectedEmail;
+use App\Mail\ApplicantShortlistedEmail;
 use App\Models\CampaignLead;
 use App\Models\Employee;
 use App\Models\EmployeeStatus;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 /**
  * Campaign Leads — job applications before they become people.
@@ -90,9 +93,17 @@ class AdminCampaignLeadController extends Controller
         $lead->rejection_note = $request->input('rejection_note');
         $lead->save();
 
-        // TODO (email trigger 3): notify the applicant with the reason.
+        // Email trigger 3 — the applicant is told, with the reason if one was given.
+        // A mail failure must never undo the rejection.
+        $emailed = $this->safeMail($lead->email, new ApplicantRejectedEmail(
+            $lead->full_name,
+            $lead->rejection_note,
+            $this->brandName()
+        ), 'rejection', $lead->id);
 
-        return back()->with('success', 'Lead rejected.');
+        return back()->with('success', $emailed
+            ? 'Lead rejected and the applicant has been notified.'
+            : 'Lead rejected, but the notification email could not be sent — check the mail log.');
     }
 
     /**
@@ -187,11 +198,56 @@ class AdminCampaignLeadController extends Controller
             return back()->with('error', 'Could not create the HR profile: ' . $e->getMessage());
         }
 
-        // TODO (email trigger 2): send the HR portal link and a set-password link.
+        // Email trigger 2 — the HR portal link plus a one-time link to set their own
+        // password. No password is generated or emailed.
+        $token   = SetPasswordController::issueToken($employee);
+        $emailed = $this->safeMail($lead->email, new ApplicantShortlistedEmail(
+            $lead->full_name,
+            route('employee.login'),
+            route('employee.set_password', $token),
+            SetPasswordController::TOKEN_DAYS,
+            $this->brandName()
+        ), 'shortlist', $lead->id);
 
         return redirect()
             ->route('admin.employees.show', $employee->id)
-            ->with('success', 'Shortlisted. HR profile created — no CRM account yet; that is created once onboarding completes.');
+            ->with('success', $emailed
+                ? 'Shortlisted. HR profile created and the applicant has been emailed a link to set their password. '
+                  . 'No CRM account yet — that is created once onboarding completes.'
+                : 'Shortlisted and HR profile created, but the email could not be sent. '
+                  . 'Use "Resend set-password link" on their profile, or check the mail log.');
+    }
+
+    /** Brand for the email templates — CrazyRays HR sends as CrazyRays. */
+    private function brandName(): string
+    {
+        return config('brands.force') === 'crazyrays'
+            ? 'CrazyRays Solutions'
+            : 'Hello Transport';
+    }
+
+    /**
+     * Send an email without ever letting a mail failure undo the decision that triggered it.
+     *
+     * Rejecting or shortlisting a lead is a database change the admin has already made; if
+     * SMTP is down, the right outcome is "it happened but we could not tell them", not an
+     * exception that leaves the admin unsure which it was.
+     */
+    private function safeMail(string $to, $mailable, string $kind, int $leadId): bool
+    {
+        try {
+            Mail::to($to)->send($mailable);
+
+            return true;
+        } catch (\Throwable $e) {
+            Log::error('CampaignLead: ' . $kind . ' email failed', [
+                'lead_id' => $leadId,
+                'to'      => $to,
+                'error'   => $e->getMessage(),
+            ]);
+
+            return false;
+        }
     }
 
     /** Same scheme AdminEmployeeController uses, so codes stay consistent. */

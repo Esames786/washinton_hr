@@ -302,6 +302,13 @@ use App\Http\Controllers\Employee\EmployeeTicketMessageController;
         Route::middleware(['guest:employee'])->group(function () {
             Route::get('login', [EmployeeAuthController::class, 'login'])->name('login');
             Route::post('login-submit', [EmployeeAuthController::class, 'employee_login'])->name('employee_login');
+
+            // Shortlisted applicants set their own password from the link in their email,
+            // so no password is ever generated or sent.
+            Route::get('set-password/{token}', [\App\Http\Controllers\Employee\SetPasswordController::class, 'show'])
+                ->name('set_password');
+            Route::post('set-password', [\App\Http\Controllers\Employee\SetPasswordController::class, 'store'])
+                ->name('set_password.store');
         });
 
         Route::middleware(['employee.auth'])->group(function (){
