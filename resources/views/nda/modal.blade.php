@@ -18,7 +18,7 @@
 
     // #6: Hello subcontractors use a US State ID, not a CNIC — labels + doc type follow the brand.
     $__isHello = (($__brand['key'] ?? '') !== 'crazyrays');
-    $__idLabel = $__isHello ? 'State ID' : 'CNIC';
+    $__idLabel = $__isHello ? 'ID' : 'CNIC';   // worldwide agents: not a US "State" ID (client, 16 Oct 2026)
 
     // ID images already on file? CNIC = settings #10/#11; State ID = #21 (2 files).
     if ($__isHello) {
@@ -196,7 +196,8 @@
                                   opacity:1 !important; visibility:visible !important;
                                   display:inline-block !important; position:relative !important;">
                     <label for="ndaAgreeCheck" style="font-size:13px; color:#333; cursor:pointer; line-height:1.6;">
-                        I have read and understood all 26 clauses of the NDA &amp; Confidentiality Agreement and agree to comply with all its terms.
+                        {{-- Client, 16 Oct 2026: "I have read all the clauses…" (no fixed clause count). --}}
+                        I have read all the clauses of this NDA &amp; Confidentiality Agreement and agree to comply with all its terms.
                         I understand the consequences of violating its provisions.
                     </label>
                 </div>

@@ -392,6 +392,39 @@
                 </div>
             </div>
 
+            {{-- Questionnaire answers — the agent submits them in their portal; until now HR had
+                 no screen to read them (client, 16 Oct 2026). --}}
+            @php
+                $__qaAnswers = \App\Models\QuestionnaireAnswer::with('question')
+                    ->where('employee_id', $employee->id)
+                    ->get()
+                    ->sortBy(fn ($a) => [optional($a->question)->sort_order ?? 9999, $a->question_id]);
+            @endphp
+            @if($employee->questionnaire_submitted_at || $__qaAnswers->isNotEmpty())
+            <div class="col-md-12" id="questionnaire-answers">
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-header bg-light fw-bold d-flex align-items-center justify-content-between">
+                        <span>🗒️ Questionnaire Answers</span>
+                        @if($employee->questionnaire_submitted_at)
+                            <span class="badge bg-success">Submitted {{ $employee->questionnaire_submitted_at->format('d M Y, h:i A') }}</span>
+                        @endif
+                    </div>
+                    <div class="card-body p-3">
+                        @forelse($__qaAnswers as $i => $qa)
+                            <div class="py-2 {{ $loop->last ? '' : 'border-bottom' }}">
+                                <div class="fw-semibold small text-secondary-light mb-1">
+                                    {{ $loop->iteration }}. {{ optional($qa->question)->question ?? 'Question removed' }}
+                                </div>
+                                <div style="white-space:pre-wrap;">{{ $qa->answer !== null && $qa->answer !== '' ? $qa->answer : '—' }}</div>
+                            </div>
+                        @empty
+                            <p class="text-muted small mb-0">Marked as submitted, but no answers were saved.</p>
+                        @endforelse
+                    </div>
+                </div>
+            </div>
+            @endif
+
             {{-- NDA Agreement --}}
             <div class="col-md-12">
                 <div class="card shadow-sm border-0 h-100">
@@ -418,7 +451,7 @@
                                     <div class="row small">
                                         <div class="col-md-6"><strong>Agent Full Name:</strong> {{ $employee->full_name ?? '-' }}</div>
                                         <div class="col-md-6"><strong>Father's Name:</strong> {{ $employee->nda_father_name ?? '-' }}</div>
-                                        <div class="col-md-6"><strong>CNIC:</strong> {{ $employee->cnic ?? '-' }}</div>
+                                        <div class="col-md-6"><strong>ID Number:</strong> {{ $employee->cnic ?? '-' }}</div>
                                         <div class="col-md-6"><strong>Address:</strong> {{ $employee->nda_address ?? '-' }}</div>
                                         <div class="col-md-6"><strong>Date &amp; Time:</strong> {{ \Carbon\Carbon::parse($employee->nda_signed_at)->format('d M Y, h:i A') }}</div>
                                         <div class="col-md-6"><strong>IP at Signing:</strong> {{ $employee->nda_signed_ip ?? '-' }}</div>
