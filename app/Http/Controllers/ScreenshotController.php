@@ -11,6 +11,15 @@ class ScreenshotController extends Controller
 {
     public function store(Request $request)
     {
+        // Agents sign in on the 'employee' guard, not the default 'web' one, so
+        // $request->user() was always null here and every upload crashed after the file
+        // was already written ("read property id on null"). Resolve the right guard, and
+        // refuse before writing anything when nobody is signed in.
+        $user = auth('employee')->user() ?? auth('admin')->user() ?? $request->user();
+        if (! $user) {
+            return response()->json(['message' => 'Not signed in.'], 401);
+        }
+
         $data = $request->validate([
             'image'    => 'required|string',         // data URL or base64
             'width'    => 'nullable|integer',
@@ -40,7 +49,7 @@ class ScreenshotController extends Controller
         $url = Storage::disk('public')->url($path);
 
         $row = UserScreenshot::create([
-            'user_id'    => $request->user()->id,
+            'user_id'    => $user->id,
             'path'       => $path,
             'url'        => $url,
             'width'      => $data['width'] ?? null,
