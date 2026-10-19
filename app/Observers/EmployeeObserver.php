@@ -131,8 +131,13 @@ class EmployeeObserver
             }
         }
 
-        // Only sync if key fields changed
-        if ($employee->isDirty(['full_name', 'email', 'phone', 'role_id'])) {
+        // Only sync if key fields changed. A pipeline hire's password lives in HR, so a
+        // password change here is copied to their CRM account too.
+        $passwordChanged = $this->isPipelineHire($employee)
+            && $employee->agent_id
+            && $employee->isDirty('password');
+
+        if ($employee->isDirty(['full_name', 'email', 'phone', 'role_id']) || $passwordChanged) {
             try {
                 $this->syncEmployeeToAgent($employee);
             } catch (\Throwable $e) {
@@ -183,6 +188,16 @@ class EmployeeObserver
             // B6: pass city so the agent side can auto-assign the matching city panel
             'city'        => $employee->city ?? '',
         ];
+
+        // A pipeline hire chose their password on the HR set-password page, and the "CRM
+        // account ready" email tells them to sign in with the same one. Send the bcrypt hash
+        // (never the plain password) so the CRM account opens with it. Before this, the CRM
+        // gave the account a random password nobody knew, and sign-in failed.
+        // Admin-created and legacy employees are left alone: their CRM password is their own.
+        $hash = $employee->getAttributes()['password'] ?? null;
+        if ($this->isPipelineHire($employee) && is_string($hash) && str_starts_with($hash, '$2y$')) {
+            $payload['password_hash'] = $hash;
+        }
 
         try {
             $response = Http::withHeaders([

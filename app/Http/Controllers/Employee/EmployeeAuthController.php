@@ -58,13 +58,20 @@ class EmployeeAuthController extends Controller
             4  => 'Your resignation has been processed. Access is no longer available.',
             5  => 'Your account is in training status. Please contact HR to activate.',
             6  => 'Your account is on trial. Please contact HR to activate.',
-            8  => 'Your contract is pending. Please contact HR to complete the process.',
-            9  => 'Your account is awaiting management approval. Please check back later.',
             10 => 'Your account is in deployed status. Please contact HR.',
         ];
 
-        // Status 7 (Document Verification) — allow login so employee can upload documents
-        if ($employee->employee_status_id != 1 && $employee->employee_status_id != 7) {
+        // Same rule as EmployeeAuthMiddleware, by status NAME. This screen used to allow only
+        // Active and Documents Verification, so an agent emailed to sign the NDA or answer the
+        // questionnaire was told their account was inactive. Held statuses (In Progress,
+        // Management Approval) may sign in too; the middleware shows them the on-hold page.
+        $statusName = \App\Models\EmployeeStatus::nameFor($employee->employee_status_id);
+        $canSignIn  = in_array($statusName, array_merge(
+            \App\Http\Middleware\EmployeeAuthMiddleware::ALLOWED,
+            \App\Http\Middleware\EmployeeAuthMiddleware::LOCKED
+        ), true);
+
+        if (! $canSignIn) {
             $message = $statusMessages[$employee->employee_status_id]
                 ?? 'Your account is not active. Please contact HR.';
 

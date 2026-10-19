@@ -52,7 +52,9 @@
                         <div class="col-12 mt-1">
                             <strong>CV:</strong>
                             @if($lead->resume_path)
-                                <a href="{{ asset('storage/' . $lead->resume_path) }}" target="_blank" rel="noopener">Download</a>
+                                {{-- The CV is saved by the website's application form, on the website's
+                                     disk (hellotransport.com), not on this HR server. --}}
+                                <a href="{{ rtrim(env('HELLOTRANSPORT_BRIDGE_URL', 'https://hellotransport.com'), '/') . '/storage/' . ltrim($lead->resume_path, '/') }}" target="_blank" rel="noopener">Download</a>
                             @else — @endif
                         </div>
                     </div>

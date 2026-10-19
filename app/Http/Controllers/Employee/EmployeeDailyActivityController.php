@@ -25,8 +25,7 @@ class EmployeeDailyActivityController extends Controller
                 'field_type'
             )
                 ->where('employee_id',$employee_id )
-                ->latest()
-                ->get();
+                ->latest();   // a query, not ->get(): the search filter below needs where()
 
 
             return DataTables::of($data)
@@ -51,8 +50,12 @@ class EmployeeDailyActivityController extends Controller
                 ->filter(function ($query) {
                     if (request()->has('search') && request('search')['value'] != '') {
                         $search = request('search')['value'];
-                        $query->where('field_name', 'like', "%{$search}%")
-                            ->orWhere('field_value', 'like', "%{$search}%");
+                        // Grouped, so the OR cannot reach past this agent's own rows.
+                        $query->where(function ($q) use ($search) {
+                            $q->where('field_name', 'like', "%{$search}%")
+                              ->orWhere('field_value', 'like', "%{$search}%")
+                              ->orWhere('activity_date', 'like', "%{$search}%");
+                        });
                     }
                 })
                 ->rawColumns(['field_value', 'action'])

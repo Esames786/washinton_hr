@@ -145,12 +145,24 @@
                     <div class="card-body p-3">
                         {{-- #1: make the 6-day requirement explicit --}}
                         <div class="alert alert-info py-2 px-3 mb-3 small">
-                            <strong>Note:</strong> This role requires working <strong>6 days a week</strong> (Monday–Saturday).
+                            @php
+                                // The note follows the days HR actually set for this agent (it used
+                                // to say "6 days a week" for everyone).
+                                $dayNames  = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+                                $weekOrder = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];   // stored as names
+                                $workDays  = collect($employee->working_days ?? [])->where('is_working', true)
+                                    ->sortBy(fn ($d) => array_search(substr((string) $d->day_of_week, 0, 3), $weekOrder));
+                                $workCount = $workDays->count();
+                                $workNames = $workDays->map(fn ($d) => $dayNames[$d->day_of_week] ?? $d->day_of_week)->implode(', ');
+                            @endphp
+                            @if($workCount)
+                                <strong>Note:</strong> This role requires working
+                                <strong>{{ $workCount }} {{ $workCount === 1 ? 'day' : 'days' }} a week</strong> ({{ $workNames }}).
+                            @else
+                                <strong>Note:</strong> Your working days have not been set yet. Please contact HR.
+                            @endif
                         </div>
                         <div class="d-flex align-items-center flex-wrap gap-4">
-                            @php
-                                $dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-                            @endphp
                             @foreach($employee->working_days ?? [] as $day)
                                 <div class="form-switch d-flex align-items-center gap-2">
                                     <input class="form-check-input" type="checkbox"

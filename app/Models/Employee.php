@@ -15,6 +15,12 @@ class Employee extends Authenticatable
     protected $guard = 'employee';   // Laravel guard config ke liye
     public $guard_name = 'employee'; // Spatie ke liye (IMPORTANT)
 
+    // Read back as a date: the agent's questionnaire page calls ->format() on it, which
+    // crashed with "format() on string" once an answer had been submitted.
+    protected $casts = [
+        'questionnaire_submitted_at' => 'datetime',
+    ];
+
     public function role()
     {
         return $this->belongsTo(Role::class);

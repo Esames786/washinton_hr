@@ -94,7 +94,7 @@
                             <input class="form-check-input border border-neutral-300" type="checkbox" value="" id="remeber">
                             <label class="form-check-label" for="remeber">Remember me </label>
                         </div>
-                        <a href="javascript:void(0)" class="text-primary-600 fw-medium">Forgot Password?</a>
+                        {{-- No self-service reset: passwords are set and changed by HR admins only. --}}
                     </div>
                 </div>
 

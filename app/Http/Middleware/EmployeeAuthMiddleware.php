@@ -20,7 +20,7 @@ class EmployeeAuthMiddleware
      * NDA, answer the questionnaire, upload documents, accept the contract. Blocking them
      * would make the step they were emailed about impossible.
      */
-    private const ALLOWED = [
+    public const ALLOWED = [
         EmployeeStatus::ACTIVE,
         EmployeeStatus::DOCS_VERIFICATION,
         EmployeeStatus::NDA_PENDING,
@@ -38,7 +38,7 @@ class EmployeeAuthMiddleware
      * change the status". They see a page explaining where they are, rather than being
      * told their account is inactive — which is what happened before.
      */
-    private const LOCKED = [
+    public const LOCKED = [
         EmployeeStatus::IN_PROGRESS,
         EmployeeStatus::MANAGEMENT_APPROVAL,
     ];
