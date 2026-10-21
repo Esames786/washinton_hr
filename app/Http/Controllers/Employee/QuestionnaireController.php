@@ -89,14 +89,27 @@ class QuestionnaireController extends Controller
         // Submitting moves them on, which locks the screens. Only advance from the
         // questionnaire stage — an admin who has already moved them further is not undone.
         $current = EmployeeStatus::nameFor($employee->employee_status_id);
+        $moved = false;
         if (in_array($current, [EmployeeStatus::QUESTIONNAIRE_PENDING, EmployeeStatus::NDA_PENDING], true)) {
             $next = EmployeeStatus::idFor(EmployeeStatus::IN_PROGRESS);
             if ($next) {
                 $employee->employee_status_id = $next;
+                $moved = true;
             }
         }
 
         $employee->save();
+
+        // Recorded like an admin change, so the profile's status history shows the automatic move
+        // (an admin looking at an older page otherwise can't tell why the status changed).
+        if ($moved) {
+            $history = new \App\Models\EmployeeStatusHistory();
+            $history->employee_id = $employee->id;
+            $history->employee_status_id = $employee->employee_status_id;
+            $history->is_email_disabled = 0;
+            $history->is_phone_disabled = 0;
+            $history->save();
+        }
 
         Log::info('Questionnaire submitted', [
             'employee_id' => $employee->id,

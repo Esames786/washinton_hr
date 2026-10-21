@@ -167,7 +167,13 @@ trait AttendanceServiceTrait
         }
 
         if ($timestamp < $shiftStart || $timestamp > $shiftEnd) {
-            throw new TraitException("Check-in time is outside your shift hours");
+            // Say which hours and which clock were used: a shift read in the wrong time zone used
+            // to show only "outside your shift hours", with nothing to tell the agent why.
+            $zone = auth('employee')->check() ? ' ' . auth('employee')->user()->tz() : '';
+            throw new TraitException(sprintf(
+                'Check-in time is outside your shift hours (shift %s–%s, now %s%s).',
+                substr($shift->shift_start, 0, 5), substr($shift->shift_end, 0, 5), substr($check_in_time, 0, 5), $zone
+            ));
         }
 
         $timeRules = $rules->filter(

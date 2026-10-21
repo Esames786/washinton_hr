@@ -302,6 +302,8 @@
                                     <div class="wizard-form-error"></div>
                                 </div>
                             </div>
+
+                            @include('admin.user_management.employees.partials.timezone_field', ['current' => null])
                             {{-- B6: Gratuity is optional per subcontractor. Unchecking hides + un-requires
                                  the Gratuity fields and submits gratuity_enabled=0 so the server skips them. --}}
                             <div class="col-12 salary-related">

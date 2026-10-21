@@ -812,17 +812,19 @@ document.querySelectorAll('.change-status-btn').forEach(function(btn) {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
+                'Accept': 'application/json',
                 'X-CSRF-TOKEN': '{{ csrf_token() }}'
             },
             body: JSON.stringify({ employee_id: employeeId, status: statusId })
         })
         .then(function(res) { return res.json(); })
         .then(function(data) {
-            if (data.success) {
-                location.reload();
-            } else {
+            // The status may have moved on its own since this page loaded (e.g. the agent
+            // submitted the questionnaire), so always reload afterwards to show the real one.
+            if (!data.success || data.unchanged) {
                 alert(data.message || 'Failed to update status.');
             }
+            location.reload();
         })
         .catch(function() { alert('Request failed. Please try again.'); });
     });

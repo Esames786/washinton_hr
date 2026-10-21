@@ -446,6 +446,7 @@ class AdminEmployeeController extends Controller
             'employee_status_id'    => 'nullable|integer|exists:hr_employee_statuses,id',
             'role_id'               => 'required|integer',
             'shift_id'              => 'required|integer',
+            'timezone'              => 'nullable|timezone', // shift hours are read in this zone
             'worker_type'           => 'required|in:inhouse,subcontractor',
             'house_ownership'       => 'nullable|in:own,rent', // #5: drives conditional documents
             // #7/#8: Work From Home (shift 6) does NOT require Gratuity or Leaves detail.
@@ -541,6 +542,7 @@ class AdminEmployeeController extends Controller
             $employee->employee_status_id     = $request->employee_status_id ?? config('bridge.defaults.employee_status_id', 7);
             $employee->role_id                = $request->role_id;
             $employee->shift_id               = $request->shift_id;
+            $employee->timezone               = $request->input('timezone') ?: config('app.timezone', 'Asia/Karachi');
             $employee->gratuity_id            = $request->gratuity_id;
             $employee->valid_gratuity_date    = $request->valid_gratuity_date;
             $employee->commission_id          = $request->commission_id;
@@ -857,6 +859,7 @@ class AdminEmployeeController extends Controller
             'employee_status_id'    => 'required|integer',
             'role_id'               => 'required|integer',
             'shift_id'              => 'required|integer',
+            'timezone'              => 'nullable|timezone', // shift hours are read in this zone
             'worker_type'           => 'required|in:inhouse,subcontractor',
             'house_ownership'       => 'nullable|in:own,rent', // #5: drives conditional documents
             // #7/#8/#21: WFH (shift 6) and subcontractors do NOT require Gratuity or Leaves.
@@ -948,6 +951,10 @@ class AdminEmployeeController extends Controller
             $employee->employee_status_id = $request->employee_status_id;
             $employee->role_id          = $request->role_id;
             $employee->shift_id         = $request->shift_id;
+            // Only when the form sent one, so a save from an older open page keeps the stored zone.
+            if ($request->filled('timezone')) {
+                $employee->timezone     = $request->input('timezone');
+            }
             $employee->gratuity_id      = $request->gratuity_id;
             $employee->valid_gratuity_date    = $request->valid_gratuity_date;
             $employee->commission_id    = $request->commission_id;
@@ -1267,15 +1274,20 @@ class AdminEmployeeController extends Controller
             'disable_phone' => 'sometimes|boolean',
         ]);
 
-        $employee = Employee::where('id', $request->employee_id)
-            ->where(function ($q) use ($request) {
-                $q->where('employee_status_id', '!=', $request->status)
-                  ->orWhereNull('employee_status_id');
-            })
-            ->first();
+        $employee = Employee::find($request->employee_id);
 
         if (!$employee) {
-            return response()->json(['success' => false, 'message' => 'Subcontractor not found or status unchanged!'], 404);
+            return response()->json(['success' => false, 'message' => 'Subcontractor not found.'], 404);
+        }
+
+        // Already there: usually because the page was stale. Submitting the questionnaire moves
+        // the agent to In Progress by itself, so an admin who loaded the profile earlier and then
+        // picked In Progress used to get "not found or status unchanged". Report it as done
+        // (nothing saved, no history row, no email) and let the page reload to the real status.
+        if ((int) $employee->employee_status_id === (int) $request->status) {
+            $name = \App\Models\EmployeeStatus::nameFor((int) $request->status) ?? 'that status';
+
+            return response()->json(['success' => true, 'unchanged' => true, 'message' => "Already {$name}."]);
         }
 
         // Block activation if any uploaded documents are unverified

@@ -312,6 +312,8 @@
                                 </div>
                             </div>
 
+                            @include('admin.user_management.employees.partials.timezone_field', ['current' => $employee->timezone ?? null])
+
                             <div class="col-6 salary-related">
                                 <label class="form-label">Gratuity*</label>
                                 <div class="position-relative single-form-select2">

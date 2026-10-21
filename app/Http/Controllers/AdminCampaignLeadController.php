@@ -159,6 +159,12 @@ class AdminCampaignLeadController extends Controller
             $employee->gender              = $lead->gender;
             $employee->marital_status      = $lead->marital_status;
             $employee->father_name         = $lead->father_name;
+            // The time zone the applicant chose ("your attendance, breaks and all portal times use
+            // this"). It was never copied, so every Hello hire fell back to Asia/Karachi and was
+            // refused check-in during their real US shift hours.
+            $employee->timezone            = in_array($lead->time_zone, \DateTimeZone::listIdentifiers(), true)
+                ? $lead->time_zone
+                : config('app.timezone', 'Asia/Karachi');
 
             // Defaults mirroring HrBridgeController::createEmployee for an Order Taker.
             $employee->role_id             = 2;
