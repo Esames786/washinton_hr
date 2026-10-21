@@ -27,6 +27,40 @@ class AdminCampaignLeadController extends Controller
     /** Where a shortlisted lead starts its onboarding. */
     private const START_STATUS = EmployeeStatus::NDA_PENDING;
 
+    /**
+     * New-lead alerts for the header bell, polled every 20s from every admin page
+     * (partials/campaign_lead_poller). Applications are written straight into the shared
+     * cr_applications table by the CRM, so there is nothing to push from; polling by id is cheap
+     * (primary key) and needs no extra service. `pending` is the real pending count, not "unseen".
+     */
+    public function poll(Request $request)
+    {
+        $admin = auth('admin')->user();
+        if (! $admin || ((int) $admin->role_id !== 1 && ! $admin->can('admin.campaign_leads.index'))) {
+            return response()->json(['allowed' => false]);
+        }
+
+        // after = -1 on a browser's first visit: report where things stand, announce nothing.
+        $after = (int) $request->query('after', -1);
+        $new = $after >= 0
+            ? CampaignLead::forPortal()->where('id', '>', $after)->orderBy('id')->limit(10)
+                ->get(['id', 'full_name', 'city', 'country'])
+                ->map(fn ($l) => [
+                    'id'    => $l->id,
+                    'name'  => $l->full_name ?: 'Applicant #' . $l->id,
+                    'where' => collect([$l->city, $l->country])->filter()->implode(', '),
+                    'url'   => route('admin.campaign_leads.show', $l->id),
+                ])
+            : [];
+
+        return response()->json([
+            'allowed' => true,
+            'pending' => CampaignLead::forPortal()->where('status', CampaignLead::PENDING)->count(),
+            'max_id'  => (int) CampaignLead::forPortal()->max('id'),
+            'new'     => $new,
+        ]);
+    }
+
     public function index(Request $request)
     {
         $status = $request->query('status');

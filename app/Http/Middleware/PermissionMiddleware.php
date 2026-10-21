@@ -23,6 +23,8 @@ class PermissionMiddleware
             'admin.logout',
             'admin.dashboard',
             'admin.not_found',
+            // Polled from every admin page; it checks campaign-lead access itself.
+            'admin.campaign_leads.poll',
         ];
 
         if ($routeName && !$user->can($routeName) && $user->role_id!=1 && !in_array($routeName, $excludedRoutes)) {

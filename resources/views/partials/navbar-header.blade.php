@@ -319,6 +319,19 @@
 {{--                    </div>--}}
 {{--                </div><!-- Notification dropdown end -->--}}
 
+                {{-- New campaign leads: pending count, kept live by partials/campaign_lead_poller --}}
+                @auth('admin')
+                    @php $__leadAdmin = auth('admin')->user(); @endphp
+                    @if ((int) $__leadAdmin->role_id === 1 || $__leadAdmin->can('admin.campaign_leads.index'))
+                        <a href="{{ route('admin.campaign_leads.index', ['status' => 'pending']) }}" title="New campaign leads"
+                           class="position-relative w-40-px h-40-px bg-neutral-200 rounded-circle d-flex justify-content-center align-items-center">
+                            <iconify-icon icon="iconoir:bell" class="text-primary-light text-xl"></iconify-icon>
+                            <span id="leadBellCount" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                                  style="display:none;font-size:10px;">0</span>
+                        </a>
+                    @endif
+                @endauth
+
                 <div class="dropdown">
                     <button class="d-flex justify-content-center align-items-center rounded-circle" type="button"
                             data-bs-toggle="dropdown">

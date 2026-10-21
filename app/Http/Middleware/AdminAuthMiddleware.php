@@ -54,12 +54,15 @@ class AdminAuthMiddleware
             return redirect()->route('admin.login');
         }
 
-        Log::info('[AdminMiddleware] Authenticated', [
-            'admin_id'   => $user->id,
-            'email'      => $user->email,
-            'status'     => $user->status,
-            'session_id' => session()->getId(),
-        ]);
+        // Not for the 20-second lead poll, which would add ~180 lines an hour per open tab.
+        if (! $request->routeIs('admin.campaign_leads.poll')) {
+            Log::info('[AdminMiddleware] Authenticated', [
+                'admin_id'   => $user->id,
+                'email'      => $user->email,
+                'status'     => $user->status,
+                'session_id' => session()->getId(),
+            ]);
+        }
 
         if (Auth::guard('employee')->check()) {
             Auth::guard('employee')->logout();

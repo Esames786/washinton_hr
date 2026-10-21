@@ -112,6 +112,8 @@ use App\Http\Controllers\Employee\EmployeeTicketMessageController;
                 // Campaign Leads — applications from the public site, before they become people.
                 // Shortlisting here creates the HR profile; the CRM account comes at onboarding.
                 Route::get('campaign-leads', [\App\Http\Controllers\AdminCampaignLeadController::class, 'index'])->name('campaign_leads.index');
+                // New-lead alerts (header bell + toast), polled every 20s. Must stay above {id}.
+                Route::get('campaign-leads/poll', [\App\Http\Controllers\AdminCampaignLeadController::class, 'poll'])->name('campaign_leads.poll');
                 Route::get('campaign-leads/{id}', [\App\Http\Controllers\AdminCampaignLeadController::class, 'show'])->name('campaign_leads.show');
                 Route::post('campaign-leads/{id}/review', [\App\Http\Controllers\AdminCampaignLeadController::class, 'review'])->name('campaign_leads.review');
                 Route::post('campaign-leads/{id}/shortlist', [\App\Http\Controllers\AdminCampaignLeadController::class, 'shortlist'])->name('campaign_leads.shortlist');

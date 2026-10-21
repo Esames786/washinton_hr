@@ -71,6 +71,11 @@
     @include('partials.activity_tracker')
 @endauth
 
+{{-- Admin pages only (employee pages share this layout): new campaign lead bell + toast --}}
+@auth('admin')
+    @include('partials.campaign_lead_poller')
+@endauth
+
 @stack('scripts')
 
 {{-- ── Live Chat Widget ──────────────────────────────────────────────── --}}

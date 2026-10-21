@@ -40,6 +40,7 @@ class PermissionController extends Controller
             'admin.logout',
             'admin.not_found',
             'admin.dashboard',
+            'admin.campaign_leads.poll', // background poll, follows campaign_leads.index access
 
             // Admin roles routes
             'admin.roles.index',
