@@ -229,6 +229,8 @@
                             $__allDocsVerified = $__allReqSubmitted
                                 && $__currentForVerify->isNotEmpty()
                                 && $__currentForVerify->every(fn ($d) => (int) $d->status === 1);
+                            // Documents Pending or Documents Verification Pending (was status 7 only).
+                            $__uploadStage = $employee->canUploadDocuments();
                         @endphp
                         <span class="d-flex align-items-center gap-2">
                             @if($reqTotalHdr > 0)
@@ -240,8 +242,8 @@
                                 <span class="badge bg-success">✓ Documents verified</span>
                             @elseif($__allReqSubmitted)
                                 <span class="badge bg-info">📄 Documents submitted — awaiting HR verification</span>
-                            @elseif($employee->employee_status_id == 7)
-                                <span class="badge bg-warning text-dark">⚠️ Pending Verification — Please upload required documents</span>
+                            @elseif($__uploadStage)
+                                <span class="badge bg-warning text-dark">⚠️ Please upload the required documents</span>
                             @endif
                         </span>
                     </div>
@@ -278,17 +280,18 @@
                             </div>
                         @endif
 
-                        {{-- Upload Form — only during Document Verification (status 7) AND only until
-                             every required document is submitted. Round-5: once submitted (or verified/
-                             activated) the documents are LOCKED — any addition or replacement goes
-                             through HR (admins upload via the edit screen; versioning keeps history). --}}
-                        @if($__allReqSubmitted && $employee->employee_status_id == 7)
+                        {{-- Upload Form — only at an upload stage (Documents Pending or Documents
+                             Verification Pending) AND only until every required document is submitted.
+                             Round-5: once submitted (or verified/activated) the documents are LOCKED —
+                             any addition or replacement goes through HR (admins upload via the edit
+                             screen; versioning keeps history). --}}
+                        @if($__allReqSubmitted && $__uploadStage)
                             <div class="alert alert-light border small mb-4">
                                 🔒 Your documents have been submitted and are locked. To add or replace a
                                 document, please contact HR.
                             </div>
                         @endif
-                        @if($employee->employee_status_id == 7 && !$__allReqSubmitted && $documentSettings && $documentSettings->count())
+                        @if($__uploadStage && !$__allReqSubmitted && $documentSettings && $documentSettings->count())
                         <div class="mb-4 p-3 border rounded" style="background:#f8f9fa;">
                             <h6 class="fw-bold mb-3">📤 Required Documents</h6>
 
@@ -430,7 +433,7 @@
                     <div class="card-header bg-light fw-bold">🧰 Working Equipment</div>
                     <div class="card-body p-3">
                         <p class="small text-muted">List the equipment you will use for work (e.g. Laptop, Headset, Internet). Also upload <strong>Workplace Pictures</strong> in the documents section above.</p>
-                        @if($employee->employee_status_id == 7)
+                        @if($employee->canUploadDocuments())
                         <form method="POST" action="{{ route('employee.profile.add_equipment') }}" class="row g-2 align-items-end mb-3">
                             @csrf
                             <div class="col-md-4"><label class="form-label small fw-semibold">Equipment <span class="text-danger">*</span></label>
@@ -449,7 +452,7 @@
                                     <td>{{ $eq->name }}</td>
                                     <td class="text-muted">{{ $eq->details ?: '—' }}</td>
                                     <td class="text-end">
-                                        @if($employee->employee_status_id == 7)
+                                        @if($employee->canUploadDocuments())
                                         <form method="POST" action="{{ route('employee.profile.delete_equipment', $eq->id) }}" class="d-inline" onsubmit="return confirm('Remove this equipment?');">
                                             @csrf @method('DELETE')
                                             <button class="btn btn-sm btn-outline-danger py-0 px-2">Remove</button>

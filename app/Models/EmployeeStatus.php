@@ -43,6 +43,19 @@ class EmployeeStatus extends Model
         self::ACTIVE,
     ];
 
+    /**
+     * Stages at which the agent uploads their own documents: Documents Pending (nothing uploaded
+     * yet, the pipeline stage built for it) and Documents Verification Pending (HR checking; older
+     * and admin-created agents also start here). The profile page and the upload endpoint used to
+     * allow only the latter, so an agent at Documents Pending saw no upload form.
+     */
+    public const UPLOAD_STAGES = [self::DOCUMENTS_PENDING, self::DOCS_VERIFICATION];
+
+    public static function allowsDocumentUpload(?int $id): bool
+    {
+        return in_array(static::nameFor($id), self::UPLOAD_STAGES, true);
+    }
+
     /** Resolve a status id from its name, cached for the request. */
     public static function idFor(string $name): ?int
     {

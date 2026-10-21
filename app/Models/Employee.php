@@ -141,6 +141,12 @@ class Employee extends Authenticatable
         return $tz;
     }
 
+    /** Whether the agent's own status lets them upload documents (and edit equipment). */
+    public function canUploadDocuments(): bool
+    {
+        return EmployeeStatus::allowsDocumentUpload($this->employee_status_id);
+    }
+
     /** P3 (#9): subcontractor's self-reported working equipment. */
     public function workEquipment()
     {

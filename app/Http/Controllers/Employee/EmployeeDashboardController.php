@@ -248,10 +248,10 @@ class EmployeeDashboardController extends Controller
         $employee   = auth('employee')->user();
         $docSetting = \App\Models\DocumentSetting::findOrFail($request->document_setting_id);
 
-        // Round-5: documents LOCK once submitted. Uploading is only possible while the account
-        // is still in Documents Verification (status 7) AND at least one required document type
-        // is still missing. After that, any addition/replacement is HR-only (admin edit screen).
-        if ((int) $employee->employee_status_id !== 7) {
+        // Round-5: documents LOCK once submitted. Uploading is only possible at an upload stage
+        // (Documents Pending or Documents Verification Pending) AND while at least one required
+        // document type is still missing. After that, any addition/replacement is HR-only.
+        if (! $employee->canUploadDocuments()) {
             return back()->with('error', 'Your documents are locked. Please contact HR to add or replace a document.');
         }
         $ownership   = $employee->house_ownership;

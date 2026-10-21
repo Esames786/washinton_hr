@@ -407,8 +407,14 @@ class HrBridgeController extends Controller
             return response()->json(['message' => 'Employee not linked.'], 404);
         }
 
-        // Allow status 1 (Active) and status 7 (Document Verification — can access to upload docs)
-        if (!in_array((int) $employee->employee_status_id, [1, 7])) {
+        // Same rule as the HR sign-in screen (EmployeeAuthController), by status NAME: every
+        // pipeline status may come in, and held ones get the on-hold page from the middleware.
+        // This used to allow only ids 1 and 7, so an agent at Documents Pending got a 403 here.
+        $statusName = \App\Models\EmployeeStatus::nameFor($employee->employee_status_id);
+        if (! in_array($statusName, array_merge(
+            \App\Http\Middleware\EmployeeAuthMiddleware::ALLOWED,
+            \App\Http\Middleware\EmployeeAuthMiddleware::LOCKED
+        ), true)) {
             return response()->json(['message' => 'Employee account is not active.'], 403);
         }
 
