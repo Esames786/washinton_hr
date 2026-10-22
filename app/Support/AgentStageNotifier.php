@@ -119,6 +119,14 @@ class AgentStageNotifier
             return false;
         }
 
+        // "Your contract is ready" only when there is a contract waiting to be accepted. With
+        // none saved yet, "Save Contract" sends its own e-mail later, and the agent used to get
+        // both (client, 23 Oct 2026).
+        if ($status === EmployeeStatus::CONTRACT_PENDING
+            && (empty($employee->contract) || ! empty($employee->contract_accepted_at))) {
+            return false;
+        }
+
         $brand = config('brands.force') === 'crazyrays' ? 'CrazyRays Solutions' : 'Hello Transport';
 
         try {

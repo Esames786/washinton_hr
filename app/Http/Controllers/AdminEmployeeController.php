@@ -1411,12 +1411,20 @@ class AdminEmployeeController extends Controller
             ]);
         }
 
-        // #3: also email the agent that a new contract has been assigned.
-        $this->notifyAgentByEmail(
-            $employee,
-            'Action Required: New Contract Assigned',
-            "A new contract has been assigned to you and requires your review and acceptance. Please log in to your portal to review and accept it."
-        );
+        // #3: also email the agent that a new contract has been assigned. Not yet, though, for a
+        // pipeline hire still before Pending Contract: moving them there sends "Your contract is
+        // ready", and e-mailing now as well meant two e-mails for one contract (client, 23 Oct 2026).
+        $position = \App\Models\EmployeeStatus::pipelinePosition(\App\Models\EmployeeStatus::nameFor($employee->employee_status_id));
+        $readyEmailComesLater = ! empty($employee->cr_application_id)
+            && $position >= 0
+            && $position < \App\Models\EmployeeStatus::pipelinePosition(\App\Models\EmployeeStatus::CONTRACT_PENDING);
+        if (! $readyEmailComesLater) {
+            $this->notifyAgentByEmail(
+                $employee,
+                'Action Required: New Contract Assigned',
+                "A new contract has been assigned to you and requires your review and acceptance. Please log in to your portal to review and accept it."
+            );
+        }
 
         return response()->json(['success' => true, 'message' => 'Contract saved successfully']);
     }

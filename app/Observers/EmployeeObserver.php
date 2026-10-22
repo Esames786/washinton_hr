@@ -71,6 +71,14 @@ class EmployeeObserver
         // here — see readyForCrmAccount() in updated(). Admin-created employees are
         // unaffected and still get theirs immediately.
         if ($this->isPipelineHire($employee)) {
+            // Shortlisting assigns the NDA automatically. Tell the agent, as HR's manual
+            // "Require NDA" does; until now only a manual assignment e-mailed them (client,
+            // 23 Oct 2026). The shortlist e-mail itself is about setting their password.
+            if ((int) $employee->nda_required === 1
+                && EmployeeStatus::nameFor($employee->employee_status_id) === EmployeeStatus::NDA_PENDING) {
+                \App\Support\AgentStageNotifier::notify($employee);
+            }
+
             Log::info('EmployeeObserver: pipeline hire, CRM account deferred until onboarding', [
                 'employee_id'       => $employee->id,
                 'cr_application_id' => $employee->cr_application_id,
@@ -106,6 +114,14 @@ class EmployeeObserver
         // Pipeline hires only: an ordinary status edit on one of the existing agents
         // should not send them an onboarding email out of nowhere.
         if ($this->isPipelineHire($employee) && $employee->isDirty('employee_status_id')) {
+            // Moving a hire to NDA Pending also asks for the NDA; otherwise the e-mail tells them
+            // to sign something their portal never shows.
+            if (EmployeeStatus::nameFor($employee->employee_status_id) === EmployeeStatus::NDA_PENDING
+                && ! $employee->nda_required && ! $employee->nda_signed_at) {
+                \Illuminate\Support\Facades\DB::table('hr_employees')->where('id', $employee->id)->update(['nda_required' => 1]);
+                $employee->nda_required = 1;
+            }
+
             \App\Support\AgentStageNotifier::notify($employee);
         }
 
@@ -129,6 +145,14 @@ class EmployeeObserver
                     'error'       => $e->getMessage(),
                 ]);
             }
+        }
+
+        // A pipeline hire with no CRM account yet gets one only at Onboarding (above). Editing
+        // their name, e-mail, phone or role before then must not create it early: the sync
+        // below creates the account when none exists, which is how accounts appeared while
+        // the hire was still at Management Approval / Pending Contract (client, 23 Oct 2026).
+        if ($this->isPipelineHire($employee) && empty($employee->agent_id) && ! $this->readyForCrmAccount($employee)) {
+            return;
         }
 
         // Only sync if key fields changed. A pipeline hire's password lives in HR, so a
