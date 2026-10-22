@@ -494,6 +494,40 @@
             </div>
 
 
+            {{-- W-9 (Hello agents, only when HR has sent it) — part of onboarding since 23 Oct 2026. --}}
+            @php
+                $__w9OnFile = $employee->w9Applies() ? $employee->w9Form() : null;
+                $__w9Due    = ! $__w9OnFile && $employee->w9Applies() && $employee->w9Requested();
+            @endphp
+            @if($__w9Due || $__w9OnFile)
+            <div class="col-md-12" id="w9">
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-header bg-light fw-bold d-flex justify-content-between align-items-center">
+                        <span>🧾 W-9 Form</span>
+                        @if($__w9OnFile)
+                            <span class="badge bg-success text-white">✔ Submitted {{ $__w9OnFile->signed_at ? \Carbon\Carbon::parse($__w9OnFile->signed_at)->format('d M Y') : '' }}</span>
+                        @else
+                            <span class="badge bg-warning text-dark">Action required</span>
+                        @endif
+                    </div>
+                    <div class="card-body">
+                        @if($__w9OnFile)
+                            <p class="mb-0 small text-secondary">Your W-9 is on file
+                                (TIN {{ $__w9OnFile->tin_last4 ? (($__w9OnFile->tin_type === 'ein' ? '**-*******' : '***-**-') . $__w9OnFile->tin_last4) : '—' }}).
+                                Contact HR if anything on it needs to change.</p>
+                        @else
+                            <p class="small text-secondary mb-3">HR has asked you to complete IRS Form W-9, used for US tax reporting.
+                                It takes a few minutes; your tax number is encrypted before it is stored.</p>
+                            <button type="button" class="btn btn-primary btn-sm" onclick="window.openW9Form && window.openW9Form();">Fill W-9 Form</button>
+                        @endif
+                    </div>
+                </div>
+            </div>
+            @if($__w9Due)
+                @include('employee.partials.w9_modal')
+            @endif
+            @endif
+
             {{-- Contract --}}
             @if($employee->contract)
             <div class="col-md-12">

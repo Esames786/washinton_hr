@@ -506,15 +506,12 @@
             </div>
 
             {{-- Round-2 #5: W-9 (Hello subcontractors only) — HR admin can send / cancel the
-                 request, same as the florida button; the agent completes it in their portal. --}}
+                 request. Since 23 Oct 2026 it is part of the HR onboarding: it can be sent before
+                 the CRM account exists and the agent completes it in their HR portal profile. --}}
             @php
-                $__w9IsHello = $employee->agent_id && !$employee->isCrazyrays();
-                $__w9Form = $__w9IsHello
-                    ? \Illuminate\Support\Facades\DB::table('w9_forms')->where('user_id', $employee->agent_id)->orderByDesc('id')->first()
-                    : null;
-                $__w9Required = ($__w9IsHello && \Illuminate\Support\Facades\Schema::hasColumn('user', 'w9_required'))
-                    ? (int) \Illuminate\Support\Facades\DB::table('user')->where('id', $employee->agent_id)->value('w9_required')
-                    : 0;
+                $__w9IsHello  = $employee->w9Applies();
+                $__w9Form     = $__w9IsHello ? $employee->w9Form() : null;
+                $__w9Required = $__w9IsHello && $employee->w9Requested();
             @endphp
             @if($__w9IsHello)
             <div class="col-md-12">

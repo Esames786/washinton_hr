@@ -118,6 +118,54 @@ class Employee extends Authenticatable
         return $this->isCrazyrays() ? 'CrazyRays Solutions' : 'Hello Transport';
     }
 
+    /*
+     * IRS Form W-9 — a step of the HR onboarding since 23 Oct 2026, sent by HR only when needed.
+     * The form itself is stored by the agent portal (it encrypts the TIN) in the shared w9_forms
+     * table; a W-9 filed here before the CRM account exists is keyed by hr_employee_id.
+     */
+
+    /** US tax form: Hello agents only. Before the CRM account exists, the deployment decides. */
+    public function w9Applies(): bool
+    {
+        return ! $this->isCrazyrays() && config('brands.force') !== 'crazyrays';
+    }
+
+    /** Has HR (or the CRM's own button) asked this agent for a W-9? */
+    public function w9Requested(): bool
+    {
+        if ((int) ($this->w9_required ?? 0) === 1) {
+            return true;
+        }
+
+        return $this->agent_id
+            && \Illuminate\Support\Facades\Schema::hasColumn('user', 'w9_required')
+            && (int) \Illuminate\Support\Facades\DB::table('user')->where('id', $this->agent_id)->value('w9_required') === 1;
+    }
+
+    /** The W-9 on file for this agent, filed here or in the CRM; null when none. */
+    public function w9Form(): ?object
+    {
+        if (! \Illuminate\Support\Facades\Schema::hasTable('w9_forms')) {
+            return null;
+        }
+
+        return \Illuminate\Support\Facades\DB::table('w9_forms')
+            ->where(function ($q) {
+                $q->where('hr_employee_id', $this->id);
+                if ($this->agent_id) {
+                    $q->orWhere('user_id', $this->agent_id);
+                }
+            })
+            ->orderByDesc('id')
+            ->first();
+    }
+
+    /** Asked for and not yet on file. */
+    public function w9Due(): bool
+    {
+        return $this->w9Applies() && $this->w9Requested() && ! $this->w9Form();
+    }
+
     /**
      * The timezone this person works in.
      *

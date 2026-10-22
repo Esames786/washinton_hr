@@ -1468,31 +1468,36 @@ class AdminEmployeeController extends Controller
 
     /**
      * Round-2 #5: HR admin can also send / cancel the W-9 request (mirrors the florida button).
-     * The flag lives on the shared `user` table; the agent then completes and signs the W-9 in
-     * their own portal. Hello subcontractors only — the W-9 is a US tax form.
+     * Hello subcontractors only — the W-9 is a US tax form.
+     *
+     * Since 23 Oct 2026 it is a step of the HR onboarding: HR can send it before the agent has a
+     * CRM account (the flag is on hr_employees), the agent fills it in their HR portal, and it no
+     * longer locks the CRM. It is only sent to the agents HR chooses.
      */
     public function setW9(Request $request, Employee $employee)
     {
         $request->validate(['require' => 'required|in:0,1']);
 
-        if (!$employee->agent_id) {
-            return back()->with('error', 'No linked agent account — the W-9 is completed in the agent portal.');
-        }
-        if ($employee->isCrazyrays()) {
+        if (! $employee->w9Applies()) {
             return back()->with('error', 'W-9 applies to Hello Transport subcontractors only.');
         }
-        if (!\Illuminate\Support\Facades\Schema::hasColumn('user', 'w9_required')) {
+        if (! \Illuminate\Support\Facades\Schema::hasColumn('hr_employees', 'w9_required')) {
             return back()->with('error', 'W-9 support is not enabled on the database yet.');
         }
 
-        DB::table('user')->where('id', $employee->agent_id)
-            ->update(['w9_required' => (int) $request->require]);
+        $require = (int) $request->require;
+        DB::table('hr_employees')->where('id', $employee->id)->update(['w9_required' => $require]);
 
-        if ((int) $request->require === 1) {
+        // Keep the CRM's own flag in step, so its reminder and button agree with HR.
+        if ($employee->agent_id && \Illuminate\Support\Facades\Schema::hasColumn('user', 'w9_required')) {
+            DB::table('user')->where('id', $employee->agent_id)->update(['w9_required' => $require]);
+        }
+
+        if ($require === 1) {
             $this->notifyAgentByEmail(
                 $employee,
                 'Action Required: Complete your W-9 Form',
-                'An IRS Form W-9 has been assigned to you and requires your completion and signature. Please log in to your portal to fill and sign it.'
+                'An IRS Form W-9 has been assigned to you. Please log in to your HR portal and complete it from your Profile page; it only takes a few minutes.'
             );
         }
 

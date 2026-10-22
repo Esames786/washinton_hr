@@ -69,6 +69,19 @@
     @endif
     @include('partials.checkin_gate')
     @include('partials.activity_tracker')
+    {{-- W-9 sent by HR and not filed yet: a reminder on every page (the form is on the profile). --}}
+    @php $__w9Reminder = ! request()->routeIs('employee.profile') && auth('employee')->user()->w9Due(); @endphp
+    @if($__w9Reminder)
+        <div id="w9Reminder" style="position:fixed;left:16px;right:16px;bottom:16px;z-index:1040;max-width:520px;margin:0 auto;background:#fff;
+             border:1px solid #f0c36d;border-left:5px solid #f0ad4e;border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.18);
+             padding:12px 14px;display:flex;align-items:center;gap:12px;">
+            <span style="font-size:22px;">🧾</span>
+            <div style="flex:1;font-size:13px;line-height:1.5;"><strong>HR has asked you to complete your W-9.</strong> It takes a few minutes.</div>
+            <a href="{{ route('employee.profile') }}#w9" class="btn btn-primary btn-sm">Fill W-9</a>
+            <button type="button" onclick="document.getElementById('w9Reminder').remove();" aria-label="Later"
+                    style="background:none;border:none;color:#9ca3af;font-size:20px;line-height:1;">&times;</button>
+        </div>
+    @endif
 @endauth
 
 {{-- Admin pages only (employee pages share this layout): new campaign lead bell + toast --}}
