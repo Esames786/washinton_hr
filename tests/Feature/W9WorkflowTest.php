@@ -99,10 +99,13 @@ class W9WorkflowTest extends TestCase
     {
         $e = $this->agent(['w9_required' => 1]);
 
-        $this->actingAs($e, 'employee')->get(route('employee.profile'))->assertOk()
+        $html = $this->actingAs($e, 'employee')->get(route('employee.profile'))->assertOk()
             ->assertSee('id="w9"', false)
             ->assertSee('id="w9Overlay"', false)
-            ->assertSee(route('employee.w9.submit'), false);
+            ->assertSee(route('employee.w9.submit'), false)
+            ->getContent();
+        // The theme resets inputs to appearance:none; the certification box must opt back in.
+        $this->assertMatchesRegularExpression('/id="w9Certified"[^>]*appearance:auto/', $html);
 
         // Elsewhere in the portal: a reminder that links to it.
         $this->actingAs($e, 'employee')->get(route('employee.dashboard'))->assertOk()->assertSee('id="w9Reminder"', false);

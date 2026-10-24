@@ -14,6 +14,24 @@ use Yajra\DataTables\DataTables;
 
 class EmployeeBreakController extends Controller
 {
+    /**
+     * This agent's breaks for THEIR today.
+     *
+     * created_at is stored in the app's zone (Asia/Karachi). Matching it against the agent's own
+     * date failed for US agents, whose afternoon is already tomorrow in Karachi: a break they
+     * started never showed as active, End found nothing, and every retry opened another (client,
+     * 24 Oct 2026). Compare against the agent's local day expressed in the app's zone instead.
+     */
+    private static function todaysBreaks($employee)
+    {
+        $tz    = $employee->tz();
+        $appTz = config('app.timezone');
+
+        return EmployeeBreak::where('employee_id', $employee->id)->whereBetween('created_at', [
+            now($tz)->startOfDay()->setTimezone($appTz),
+            now($tz)->endOfDay()->setTimezone($appTz),
+        ]);
+    }
 
     public function index(Request $request)
     {
@@ -72,12 +90,8 @@ class EmployeeBreakController extends Controller
         // Breaks are recorded in the employee's OWN timezone (CrazyRays staff default to
         // Asia/Karachi, so their behaviour is unchanged).
         $tz    = $employee->tz();
-        $today = now($tz)->toDateString();
 
-        $lastBreak = EmployeeBreak::where('employee_id', $employee->id)
-            ->whereDate('created_at', $today)
-            ->orderByDesc('id')
-            ->first();
+        $lastBreak = self::todaysBreaks($employee)->orderByDesc('id')->first();
 
         if ($lastBreak && is_null($lastBreak->break_end)) {
             return response()->json(['error' => 'You are already on a break.'], 400);
@@ -97,13 +111,8 @@ class EmployeeBreakController extends Controller
     {
         $employee = auth('employee')->user();
         $tz    = $employee->tz();
-        $today = now($tz)->toDateString();
 
-        $lastBreak = EmployeeBreak::where('employee_id', $employee->id)
-            ->whereDate('created_at', $today)
-            ->whereNull('break_end')
-            ->orderByDesc('id')
-            ->first();
+        $lastBreak = self::todaysBreaks($employee)->whereNull('break_end')->orderByDesc('id')->first();
 
         if (!$lastBreak) {
             return response()->json(['error' => 'No active break found.'], 400);
@@ -153,12 +162,8 @@ class EmployeeBreakController extends Controller
     public static function getBreakStatus()
     {
         $employee = auth('employee')->user();
-        $today = now($employee->tz())->toDateString();
 
-        $lastBreak = EmployeeBreak::where('employee_id', $employee->id)
-            ->whereDate('created_at', $today)
-            ->orderByDesc('id')
-            ->first();
+        $lastBreak = self::todaysBreaks($employee)->orderByDesc('id')->first();
 
         if ($lastBreak && is_null($lastBreak->break_end)) {
             return ['status' => 'on_break', 'break_id' => $lastBreak->id];

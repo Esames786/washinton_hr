@@ -454,7 +454,8 @@
                                     let message = Object.values(errors).join("\n");
                                     Swal.fire('Validation Error', message, 'error');
                                 } else {
-                                    Swal.fire('Error', 'Something went wrong', 'error');
+                                    // Show the server's reason ("You are already on a break.") when there is one.
+                                    Swal.fire('Error', (err.responseJSON && err.responseJSON.error) || 'Something went wrong', 'error');
                                 }
                             }
                         });
@@ -492,8 +493,8 @@
                             Swal.fire('Error', 'Something went wrong', 'error');
                         }
                     },
-                    error: function () {
-                        Swal.fire('Error', 'Something went wrong', 'error');
+                    error: function (err) {
+                        Swal.fire('Error', (err.responseJSON && err.responseJSON.error) || 'Something went wrong', 'error');
                     }
                 });
             }

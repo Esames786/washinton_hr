@@ -156,7 +156,10 @@
                 </div>
 
                 <label style="display:flex;align-items:flex-start;gap:8px;margin-bottom:16px;cursor:pointer;">
-                    <input type="checkbox" name="certified" id="w9Certified" value="1" style="margin-top:3px;width:16px;height:16px;">
+                    {{-- appearance:auto — the HR theme resets every input to appearance:none, which drew
+                         this checkbox as nothing at all (client, 24 Oct 2026: "no check box"). --}}
+                    <input type="checkbox" name="certified" id="w9Certified" value="1"
+                           style="margin-top:3px;width:16px;height:16px;flex-shrink:0;appearance:auto;-webkit-appearance:checkbox;cursor:pointer;">
                     <span style="font-size:13px;color:#333;">I certify, under penalties of perjury, that the information above is true and correct. <span style="color:red;">*</span></span>
                 </label>
                 <div class="w9-e" id="w9err_certified" style="margin-top:-10px;margin-bottom:12px;"></div>
@@ -172,6 +175,7 @@
 <style>
     .w9-l { display:block; font-size:12px; font-weight:600; color:#444; margin-bottom:4px; }
     .w9-i { width:100%; border:1px solid #ccc; border-radius:5px; padding:8px 10px; font-size:13px; background:#fff; }
+    select.w9-i { appearance:auto; -webkit-appearance:menulist; }   /* the theme strips select arrows too */
     .w9-i.is-bad { border-color:#e11d48; background:rgba(225,29,72,.04); }
     .w9-e { color:#e11d48; font-size:11.5px; margin-top:3px; display:none; }
 </style>
