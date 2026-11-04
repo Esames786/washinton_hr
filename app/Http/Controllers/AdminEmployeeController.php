@@ -43,6 +43,11 @@ use function Ramsey\Uuid\v1;
 
 class AdminEmployeeController extends Controller
 {
+    use \App\Traits\AttendanceServiceTrait;
+
+    /** hr_employee_attendances.user_type for a day an admin marked by hand (the daily cron uses 1). */
+    public const ATTENDANCE_MARKED_BY_ADMIN = 2;
+
     /**
      * Display a listing of the resource.
      *
@@ -1513,7 +1518,7 @@ class AdminEmployeeController extends Controller
     {
         if($request->ajax()){
             $data = EmployeeAttendance::with('attendance_status','employee.shift')
-                ->select('hr_employee_attendances.id','hr_employee_attendances.employee_id', 'hr_employee_attendances.attendance_date','hr_employee_attendances.check_in','hr_employee_attendances.check_out','hr_employee_attendances.working_hours','hr_employee_attendances.attendance_status_id','hr_employee_attendances.productive_seconds','hr_employee_attendances.productive_percent');
+                ->select('hr_employee_attendances.id','hr_employee_attendances.employee_id', 'hr_employee_attendances.attendance_date','hr_employee_attendances.check_in','hr_employee_attendances.check_out','hr_employee_attendances.working_hours','hr_employee_attendances.attendance_status_id','hr_employee_attendances.productive_seconds','hr_employee_attendances.productive_percent','hr_employee_attendances.user_type','hr_employee_attendances.remarks');
 
             if($request->employee_ids) {
                 $data->whereIn('employee_id',$request->employee_ids);
@@ -1621,7 +1626,11 @@ class AdminEmployeeController extends Controller
                     if ($row->attendance_status) {
                         $status = $row->attendance_status->name;
                         $bgClass = $this->statusColors[$status] ?? 'bg-neutral-focus text-neutral-main';
-                        return '<span class="'.$bgClass.' px-24 py-4 rounded-pill fw-medium text-sm">'.$status.'</span>';
+                        $html = '<span class="'.$bgClass.' px-24 py-4 rounded-pill fw-medium text-sm">'.$status.'</span>';
+                        if ((int) $row->user_type === self::ATTENDANCE_MARKED_BY_ADMIN) {
+                            $html .= ' <span class="badge bg-info" title="'.e($row->remarks).'">Manual</span>';
+                        }
+                        return $html;
                     }
                     return '';
                 })
@@ -1653,6 +1662,55 @@ class AdminEmployeeController extends Controller
         return view('admin.user_management.employees.attendance_list',
             compact('employees')
         );
+    }
+
+    /**
+     * Admin marks (or corrects) a subcontractor's attendance for a chosen day (florida, 4 Nov 2026).
+     * Goes through saveAttendance() like a real check-in/out, so status, late deduction, working
+     * hours and overtime follow the same shift rules; the row is then tagged as marked by an admin.
+     */
+    public function markManualAttendance(Request $request)
+    {
+        $data = $request->validate([
+            'employee_id'     => 'required|integer|exists:hr_employees,id',
+            'attendance_date' => 'required|date|before_or_equal:today',
+            'check_in'        => 'required|date_format:H:i',
+            'check_out'       => 'nullable|date_format:H:i',
+            'remarks'         => 'nullable|string|max:200',
+        ]);
+
+        try {
+            $result = $this->saveAttendance(
+                $data['employee_id'],
+                Carbon::parse($data['attendance_date'])->toDateString(),
+                $data['check_in'] . ':00',
+                ! empty($data['check_out']) ? $data['check_out'] . ':00' : null,
+                null,
+                true
+            );
+        } catch (\App\Exceptions\TraitException $e) {
+            return response()->json(['status' => false, 'message' => $e->getMessage()], 422);
+        } catch (\Throwable $th) {
+            Log::channel('admin_log')->error(['message' => $th->getMessage(), 'file' => $th->getFile(), 'line' => $th->getLine()]);
+            return response()->json(['status' => false, 'message' => 'Something went wrong'], 500);
+        }
+
+        if (empty($result['status'])) {
+            return response()->json(['status' => false, 'message' => $result['message'] ?? 'Attendance could not be saved.'], 422);
+        }
+
+        $attendance = $result['data']['attendance'];
+        $admin = auth('admin')->user();
+        $attendance->user_type = self::ATTENDANCE_MARKED_BY_ADMIN;
+        $attendance->remarks = 'Marked manually by ' . ($admin->name ?? $admin->email ?? 'admin')
+            . (! empty($data['remarks']) ? ': ' . $data['remarks'] : '');
+        $attendance->save();
+
+        return response()->json([
+            'status'  => true,
+            'message' => 'Attendance saved: ' . (optional($attendance->attendance_status)->name ?? 'marked')
+                . ' (' . $attendance->check_in . ($attendance->check_out ? ' - ' . $attendance->check_out : '') . ').',
+        ]);
     }
 
     public function break_list(Request $request)

@@ -46,6 +46,12 @@
                     <i class="bi bi-search"></i> Search
                 </button>
             </div>
+
+            <div class="ms-auto d-grid">
+                <button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#manualAttendanceModal">
+                    <i class="bi bi-calendar-check"></i> Mark Attendance
+                </button>
+            </div>
         </div>
         <div class="card-body">
             <table class="table table-bordered table-striped" id="EmployeeAttendanceTable" style="width: 100%;">
@@ -64,7 +70,56 @@
         </div>
     </div>
 
-
+    {{-- Admin marks or corrects a day by hand (florida, 4 Nov 2026). Saved through the same shift
+         rules as a real check-in/out; the row shows a "Manual" tag. --}}
+    <div class="modal fade" id="manualAttendanceModal" tabindex="-1">
+        <div class="modal-dialog">
+            <form id="manualAttendanceForm" class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Mark Attendance</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-muted text-sm mb-12">
+                        Status, late deduction and working hours are worked out from the subcontractor's shift,
+                        exactly as if they had checked in themselves. Marking a day that already has attendance replaces it.
+                    </p>
+                    <div class="mb-12">
+                        <label class="form-label fw-semibold">Subcontractor <span class="text-danger">*</span></label>
+                        <select name="employee_id" id="manual_employee_id" class="form-select" required>
+                            <option value="">-- Select Subcontractor --</option>
+                            @foreach($employees as $employee)
+                                <option value="{{ $employee->id }}">{{ $employee->full_name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="mb-12">
+                        <label class="form-label fw-semibold">Date <span class="text-danger">*</span></label>
+                        <input type="date" name="attendance_date" class="form-control" required
+                               max="{{ \Carbon\Carbon::now()->format('Y-m-d') }}" value="{{ \Carbon\Carbon::now()->format('Y-m-d') }}">
+                    </div>
+                    <div class="row">
+                        <div class="col-6 mb-12">
+                            <label class="form-label fw-semibold">Check-In <span class="text-danger">*</span></label>
+                            <input type="time" name="check_in" class="form-control" required>
+                        </div>
+                        <div class="col-6 mb-12">
+                            <label class="form-label fw-semibold">Check-Out</label>
+                            <input type="time" name="check_out" class="form-control">
+                        </div>
+                    </div>
+                    <div class="mb-0">
+                        <label class="form-label fw-semibold">Note</label>
+                        <input type="text" name="remarks" class="form-control" maxlength="200" placeholder="e.g. forgot to check in">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-success" id="manualAttendanceSave">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
 
 @endsection
 
@@ -131,6 +186,36 @@
                 }
 
                 datatable.ajax.reload();
+            });
+
+            $('#manual_employee_id').select2({
+                dropdownParent: $('#manualAttendanceModal'),
+                placeholder: "-- Select Subcontractor --",
+                width: '100%'
+            });
+
+            $('#manualAttendanceForm').on('submit', function (e) {
+                e.preventDefault();
+                let $btn = $('#manualAttendanceSave').prop('disabled', true).text('Saving...');
+                $.ajax({
+                    url: "{{ route('admin.employees.attendance_manual') }}",
+                    method: 'POST',
+                    data: $(this).serialize(),
+                    headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
+                }).done(function (res) {
+                    bootstrap.Modal.getOrCreateInstance(document.getElementById('manualAttendanceModal')).hide();
+                    $('#manualAttendanceForm')[0].reset();
+                    $('#manual_employee_id').val(null).trigger('change');
+                    Swal.fire({ icon: 'success', title: 'Saved', text: res.message });
+                    datatable.ajax.reload(null, false);
+                }).fail(function (xhr) {
+                    let res = xhr.responseJSON || {};
+                    let msg = res.message || 'Could not save attendance.';
+                    if (res.errors) { msg = Object.values(res.errors).flat().join('\n'); }
+                    Swal.fire({ icon: 'error', title: 'Not saved', text: msg });
+                }).always(function () {
+                    $btn.prop('disabled', false).text('Save');
+                });
             });
         });
     </script>

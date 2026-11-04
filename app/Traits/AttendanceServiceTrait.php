@@ -14,7 +14,7 @@ trait AttendanceServiceTrait
     /**
      * Save or update attendance (check-in / check-out)
      */
-    public function saveAttendance($employee_id, $attendance_date, $check_in_time = null, $check_out_time = null, $ticket_id = null)
+    public function saveAttendance($employee_id, $attendance_date, $check_in_time = null, $check_out_time = null, $ticket_id = null, $exact_date = false)
     {
         $employee = Employee::find($employee_id);
         if (!$employee) {
@@ -43,7 +43,9 @@ trait AttendanceServiceTrait
         $shiftStartTs = strtotime($attendance_date . ' ' . $shift->shift_start);
         $shiftEndTs   = strtotime($attendance_date . ' ' . $shift->shift_end);
 
-        if ($shiftEndTs <= $shiftStartTs) {
+        // $exact_date: an admin marking a chosen day by hand (AdminEmployeeController::markManualAttendance)
+        // means that day - a check-out must not drift onto an open session from the day before.
+        if ($shiftEndTs <= $shiftStartTs && ! $exact_date) {
             $yesterday = date('Y-m-d', strtotime($attendance_date . ' -1 day'));
             $attendanceYesterday = EmployeeAttendance::where('employee_id', $employee_id)
                 ->where('attendance_date', $yesterday)

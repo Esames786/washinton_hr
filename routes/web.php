@@ -84,6 +84,7 @@ use App\Http\Controllers\Employee\EmployeeTicketMessageController;
                 // #8 (2026-07-03): user-facing URI segment renamed employees -> subcontractors.
                 // Route NAMES are intentionally kept as employees.* so every route('admin.employees.*') keeps resolving.
                 Route::get('subcontractors/attendance_list',[AdminEmployeeController::class,'attendance_list'])->name('employees.attendance_list');
+                Route::post('subcontractors/attendance_list/manual',[AdminEmployeeController::class,'markManualAttendance'])->name('employees.attendance_manual');
                 Route::get('subcontractors/break_list',[AdminEmployeeController::class,'break_list'])->name('employees.break_list');
                 Route::get('subcontractors/daily_activity_list',[AdminEmployeeController::class,'daily_activity_list'])->name('employees.daily_activity_list');
                 Route::get('subcontractors/order_list',[AdminEmployeeController::class,'order_list'])->name('employees.order_list');
