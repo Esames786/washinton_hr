@@ -8,6 +8,7 @@ use App\Mail\ApplicantShortlistedEmail;
 use App\Models\CampaignLead;
 use App\Models\Employee;
 use App\Models\EmployeeStatus;
+use App\Support\AgentStageNotifier;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
@@ -248,6 +249,15 @@ class AdminCampaignLeadController extends Controller
             SetPasswordController::TOKEN_DAYS,
             $this->brandName()
         ), 'shortlist', $lead->id);
+
+        // Email trigger 3 — the NDA request, sent AFTER the shortlist / set-password e-mail so
+        // the applicant gets them in order: 1 application received, 2 shortlisted (set your
+        // password), 3 sign your NDA (client, 15 Nov 2026). It used to be sent first, from
+        // EmployeeObserver::created(), before they had a password to sign in with.
+        if ((int) $employee->nda_required === 1
+            && EmployeeStatus::nameFor($employee->employee_status_id) === EmployeeStatus::NDA_PENDING) {
+            AgentStageNotifier::notify($employee);
+        }
 
         return redirect()
             ->route('admin.employees.show', $employee->id)

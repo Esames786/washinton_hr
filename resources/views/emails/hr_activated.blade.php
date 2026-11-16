@@ -12,7 +12,7 @@
 
       <!-- Header -->
       <tr>
-        <td style="background:linear-gradient(135deg,#062e39 0%,#0d5c70 100%);padding:32px 40px;text-align:center;">
+        <td bgcolor="#062e39" style="background-color:#062e39;background:linear-gradient(135deg,#062e39 0%,#0d5c70 100%);padding:32px 40px;text-align:center;">
           <h1 style="margin:0;color:#fff;font-size:26px;font-weight:800;letter-spacing:1px;text-transform:uppercase;">
             🚛 {{ $brand }} HR
           </h1>

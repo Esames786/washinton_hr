@@ -71,13 +71,10 @@ class EmployeeObserver
         // here — see readyForCrmAccount() in updated(). Admin-created employees are
         // unaffected and still get theirs immediately.
         if ($this->isPipelineHire($employee)) {
-            // Shortlisting assigns the NDA automatically. Tell the agent, as HR's manual
-            // "Require NDA" does; until now only a manual assignment e-mailed them (client,
-            // 23 Oct 2026). The shortlist e-mail itself is about setting their password.
-            if ((int) $employee->nda_required === 1
-                && EmployeeStatus::nameFor($employee->employee_status_id) === EmployeeStatus::NDA_PENDING) {
-                \App\Support\AgentStageNotifier::notify($employee);
-            }
+            // The "Your NDA is ready to sign" e-mail is NOT sent from here any more. Sent at
+            // creation it reached the applicant before the shortlist / set-password e-mail,
+            // asking them to sign in before they had a password (client, 15 Nov 2026).
+            // AdminCampaignLeadController::shortlist() now sends it after that e-mail.
 
             Log::info('EmployeeObserver: pipeline hire, CRM account deferred until onboarding', [
                 'employee_id'       => $employee->id,
@@ -161,7 +158,8 @@ class EmployeeObserver
             && $employee->agent_id
             && $employee->isDirty('password');
 
-        if ($employee->isDirty(['full_name', 'email', 'phone', 'role_id']) || $passwordChanged) {
+        // timezone too: changing it in HR must move the agent's CRM clock as well.
+        if ($employee->isDirty(['full_name', 'email', 'phone', 'role_id', 'timezone']) || $passwordChanged) {
             try {
                 $this->syncEmployeeToAgent($employee);
             } catch (\Throwable $e) {
@@ -211,6 +209,9 @@ class EmployeeObserver
             'role_name'   => $roleName,
             // B6: pass city so the agent side can auto-assign the matching city panel
             'city'        => $employee->city ?? '',
+            // The agent's own timezone, so the CRM shows their local time. It was never sent,
+            // so every CRM account kept the Asia/Karachi default (client, 15 Nov 2026).
+            'timezone'    => $employee->timezone ?: null,
         ];
 
         // A pipeline hire chose their password on the HR set-password page, and the "CRM

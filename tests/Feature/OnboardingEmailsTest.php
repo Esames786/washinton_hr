@@ -2,7 +2,9 @@
 
 namespace Tests\Feature;
 
+use App\Http\Controllers\AdminCampaignLeadController;
 use App\Http\Controllers\AdminEmployeeController;
+use App\Models\CampaignLead;
 use App\Models\Employee;
 use App\Models\EmployeeStatus;
 use Illuminate\Http\Client\Request as HttpRequest;
@@ -65,12 +67,59 @@ class OnboardingEmailsTest extends TestCase
         return Http::recorded(fn (HttpRequest $r) => str_contains($r->url(), '/bridge/employee/sync'))->isNotEmpty();
     }
 
-    public function test_the_automatic_nda_at_shortlist_is_emailed(): void
+    public function test_creating_a_pipeline_hire_sends_no_nda_email_by_itself(): void
     {
+        // The NDA e-mail belongs to shortlisting, after the set-password e-mail (15 Nov 2026).
         $this->hire(EmployeeStatus::NDA_PENDING, ['nda_required' => 1]);
 
-        $this->assertContains('Your NDA is ready to sign', $this->subjects());
+        $this->assertNotContains('Your NDA is ready to sign', $this->subjects());
         $this->assertFalse($this->sentToCrm());
+    }
+
+    public function test_shortlisting_sends_set_password_email_before_the_nda(): void
+    {
+        $email = 'shortlist-' . uniqid() . '@example.test';
+        $leadId = DB::table('cr_applications')->insertGetId([
+            'brand' => CampaignLead::BRAND_HELLO, 'full_name' => 'Shortlist Order', 'email' => $email,
+            'phone' => '+1 5550100000', 'country' => 'United States', 'city' => 'Austin',
+            'time_zone' => 'America/Chicago', 'status' => CampaignLead::PENDING,
+            'created_at' => now(), 'updated_at' => now(),
+        ]);
+
+        try {
+            app(AdminCampaignLeadController::class)->shortlist($leadId);
+            $this->made[] = (int) DB::table('hr_employees')->where('email', $email)->value('id');
+
+            $subjects = array_values(array_filter($this->subjects(), fn ($s) =>
+                str_contains($s, 'shortlisted') || str_contains($s, 'NDA')));
+            $this->assertSame(
+                ['You have been shortlisted — next steps with Hello Transport', 'Your NDA is ready to sign'],
+                $subjects
+            );
+        } finally {
+            DB::table('cr_applications')->where('id', $leadId)->delete();
+        }
+    }
+
+    public function test_the_crm_account_gets_the_agents_timezone(): void
+    {
+        $e = $this->hire(EmployeeStatus::CONTRACT_PENDING, ['timezone' => 'America/Chicago']);
+        $this->moveTo($e, EmployeeStatus::ONBOARDING);
+
+        $sync = Http::recorded(fn (HttpRequest $r) => str_contains($r->url(), '/bridge/employee/sync'))->first();
+        $this->assertNotNull($sync);
+        $this->assertSame('America/Chicago', $sync[0]['timezone']);
+    }
+
+    public function test_changing_the_timezone_in_hr_updates_the_crm(): void
+    {
+        $e = $this->hire(EmployeeStatus::ACTIVE, ['agent_id' => 990001, 'timezone' => 'Asia/Karachi']);
+        $e->timezone = 'America/New_York';
+        $e->save();
+
+        $sync = Http::recorded(fn (HttpRequest $r) => str_contains($r->url(), '/bridge/employee/sync'))->last();
+        $this->assertNotNull($sync);
+        $this->assertSame('America/New_York', $sync[0]['timezone']);
     }
 
     public function test_moving_a_hire_to_nda_pending_asks_for_the_nda(): void
