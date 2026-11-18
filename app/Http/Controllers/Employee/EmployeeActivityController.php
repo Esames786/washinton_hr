@@ -26,7 +26,13 @@ class EmployeeActivityController extends Controller
         }
 
         $userId  = (int) $employee->agent_id;
-        $today   = date('Y-m-d');
+        // Book the time on the SHIFT's date, not the calendar date: before 06:00 (employee's own
+        // timezone) is still the shift that started the evening before - the same rule as check-in
+        // (EmployeeAttendanceController::markAttendance) and the daily finaliser. On the calendar
+        // date, a night shift's after-midnight work counted towards the NEXT day, and a day with no
+        // check-in was auto-marked Quarter instead of Absent.
+        $now     = now($employee->tz());
+        $today   = $now->hour < 6 ? $now->copy()->subDay()->toDateString() : $now->toDateString();
         $seconds = min((int) $request->input('seconds', 0), self::MAX_SECONDS_PER_PING);
 
         $row = DB::table('agent_active_times')

@@ -25,6 +25,8 @@ class EmployeeAttendanceController extends Controller
         'Half Day'   => 'bg-info-focus text-info-main',
         'Early Exit' => 'bg-warning-focus text-warning-main',
         'Absent'     => 'bg-danger-focus text-danger-main',
+        'Unpaid Leave' => 'bg-danger-focus text-danger-main',
+        'NCNS'       => 'bg-danger-focus text-danger-main',
 
         'Holiday'    => 'bg-info-focus text-info-main',         // Light Blue (neutral)
         'Weekend'    => 'bg-primary-focus text-primary-main',   // Blue

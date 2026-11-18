@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Models\AttendanceStatus;
 use App\Models\CommissionSetting;
 use App\Models\CommissionSlab;
 use App\Models\CurrencyRate;
@@ -48,6 +49,10 @@ class GeneratePayrollJob implements ShouldQueue
         $date = Carbon::now()->toDateString();
 
         $employees = Employee::where('employee_status_id', 1)->get();
+
+        // Days an admin marked as Unpaid Leave / NCNS (added 19 Nov 2026; ids differ per database).
+        $unpaidLeaveStatusId = AttendanceStatus::idFor(AttendanceStatus::UNPAID_LEAVE);
+        $ncnsStatusId        = AttendanceStatus::idFor(AttendanceStatus::NCNS);
 
         DB::beginTransaction();
 
@@ -138,6 +143,9 @@ class GeneratePayrollJob implements ShouldQueue
                 $quarter_count = $quarter->count();
                 $quarter_deduction = $quarter->sum('deducted_salary');
 
+                [$unpaid_leave_count, $unpaid_leave_deduction] = $this->statusTotals($emp->id, $from_date, $to_date, $unpaidLeaveStatusId);
+                [$ncns_count, $ncns_deduction]                 = $this->statusTotals($emp->id, $from_date, $to_date, $ncnsStatusId);
+
 
                 // -------------------------
                 // Commission Calculation
@@ -155,6 +163,8 @@ class GeneratePayrollJob implements ShouldQueue
                     + $early_exit_deduction
                     + $half_day_deduction
                     + $quarter_deduction
+                    + $unpaid_leave_deduction
+                    + $ncns_deduction
                     + $employeeGratuity;
 
 
@@ -261,6 +271,14 @@ class GeneratePayrollJob implements ShouldQueue
                     $this->insertItem($detail->id, self::ITEM_DEDUCTION, "Quarter Days: $quarter_count", -$quarter_deduction);
                 }
 
+                if ($unpaid_leave_deduction > 0) {
+                    $this->insertItem($detail->id, self::ITEM_DEDUCTION, "Unpaid Leave Days: $unpaid_leave_count", -$unpaid_leave_deduction);
+                }
+
+                if ($ncns_deduction > 0) {
+                    $this->insertItem($detail->id, self::ITEM_DEDUCTION, "NCNS Days: $ncns_count", -$ncns_deduction);
+                }
+
                 if ($taxAmount > 0) {
                     $this->insertItem($detail->id, self::ITEM_DEDUCTION, "Income Tax", -$taxAmount);
                 }
@@ -302,6 +320,19 @@ class GeneratePayrollJob implements ShouldQueue
 
             throw $e;
         }
+    }
+
+    /** [day count, deducted total] for one attendance status in the period; [0, 0] when the status doesn't exist. */
+    private function statusTotals(int $employeeId, string $from, string $to, ?int $statusId): array
+    {
+        if (!$statusId) {
+            return [0, 0];
+        }
+        $days = EmployeeAttendance::where('employee_id', $employeeId)
+            ->whereBetween('attendance_date', [$from, $to])
+            ->where('attendance_status_id', $statusId);
+
+        return [$days->count(), (float) $days->sum('deducted_salary')];
     }
 
     // -------------------------

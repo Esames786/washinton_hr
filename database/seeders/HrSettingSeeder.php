@@ -95,6 +95,9 @@ class HrSettingSeeder extends Seeder
             ['id' => 9,  'name' => 'Quarter',        'status' => 1, 'created_at' => now(), 'updated_at' => now()],
             ['id' => 10, 'name' => 'Early Halfday',  'status' => 1, 'created_at' => now(), 'updated_at' => now()],
             ['id' => 11, 'name' => 'Early Quarter',  'status' => 1, 'created_at' => now(), 'updated_at' => now()],
+            // Whole days an admin marks by hand (Mark Attendance). Code finds them by name.
+            ['id' => 12, 'name' => 'Unpaid Leave',   'status' => 1, 'created_at' => now(), 'updated_at' => now()],
+            ['id' => 13, 'name' => 'NCNS',           'status' => 1, 'created_at' => now(), 'updated_at' => now()],
         ]);
 
         DB::table('hr_ticket_types')->whereIn('id', [1, 2, 3])->delete();

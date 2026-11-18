@@ -113,8 +113,9 @@ class MarkDailyAttendance extends Command
                     ->whereDate('attendance_date', $shiftBaseDate)
                     ->first();
 
-                // Respect a real manual check-in — never override the employee's own punch
-                if ($existing && $existing->check_in) {
+                // Respect a real manual check-in — never override the employee's own punch — and
+                // a day an admin marked by hand (e.g. Absent / Unpaid Leave / NCNS has no check-in).
+                if ($existing && ($existing->check_in || (int) $existing->user_type === EmployeeAttendance::MARKED_BY_ADMIN)) {
                     continue;
                 }
 

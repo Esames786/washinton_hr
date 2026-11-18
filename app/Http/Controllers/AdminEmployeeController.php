@@ -46,7 +46,7 @@ class AdminEmployeeController extends Controller
     use \App\Traits\AttendanceServiceTrait;
 
     /** hr_employee_attendances.user_type for a day an admin marked by hand (the daily cron uses 1). */
-    public const ATTENDANCE_MARKED_BY_ADMIN = 2;
+    public const ATTENDANCE_MARKED_BY_ADMIN = EmployeeAttendance::MARKED_BY_ADMIN;
 
     /**
      * Display a listing of the resource.
@@ -60,6 +60,8 @@ class AdminEmployeeController extends Controller
         'Half Day'   => 'bg-info-focus text-info-main',
         'Early Exit' => 'bg-warning-focus text-warning-main',
         'Absent'     => 'bg-danger-focus text-danger-main',
+        'Unpaid Leave' => 'bg-danger-focus text-danger-main',
+        'NCNS'       => 'bg-danger-focus text-danger-main',
 
         'Holiday'    => 'bg-info-focus text-info-main',         // Light Blue (neutral)
         'Weekend'    => 'bg-primary-focus text-primary-main',   // Blue
@@ -1581,8 +1583,9 @@ class AdminEmployeeController extends Controller
                     $pct  = $row->productive_percent;
 
                     // Fallback: on manually checked-in days productive_seconds is null,
-                    // so read the live tracked active time from agent_active_times.
-                    if ($secs <= 0 && $hasActiveTimeTable && $row->employee && $row->employee->agent_id) {
+                    // so read the live tracked active time from agent_active_times. Only for a
+                    // day with a check-in: an Absent / Unpaid Leave / NCNS day shows no work.
+                    if ($secs <= 0 && $row->check_in && $hasActiveTimeTable && $row->employee && $row->employee->agent_id) {
                         $secs = (int) (\Illuminate\Support\Facades\DB::table('agent_active_times')
                             ->where('user_id', $row->employee->agent_id)
                             ->whereDate('work_date', $row->attendance_date)
@@ -1659,8 +1662,11 @@ class AdminEmployeeController extends Controller
                 ->make(true);
         }
         $employees = Employee::select('id','full_name')->get();
+        // Whole-day statuses this database has (Unpaid Leave / NCNS only once they've been added).
+        $manualDayStatuses = array_filter(\App\Models\AttendanceStatus::MANUAL_DAY_STATUSES,
+            fn ($name) => \App\Models\AttendanceStatus::idFor($name) !== null);
         return view('admin.user_management.employees.attendance_list',
-            compact('employees')
+            compact('employees', 'manualDayStatuses')
         );
     }
 
@@ -1671,13 +1677,21 @@ class AdminEmployeeController extends Controller
      */
     public function markManualAttendance(Request $request)
     {
+        // mark_as: 'checkin' (default) = a check-in/out time through the shift rules; otherwise a
+        // whole-day status with no check-in (Absent / Unpaid Leave / NCNS, florida 19 Nov 2026).
+        $request->merge(['mark_as' => $request->input('mark_as') ?: 'checkin']);
         $data = $request->validate([
             'employee_id'     => 'required|integer|exists:hr_employees,id',
             'attendance_date' => 'required|date|before_or_equal:today',
-            'check_in'        => 'required|date_format:H:i',
-            'check_out'       => 'nullable|date_format:H:i',
+            'mark_as'         => 'required|in:checkin,' . implode(',', array_keys(\App\Models\AttendanceStatus::MANUAL_DAY_STATUSES)),
+            'check_in'        => 'exclude_unless:mark_as,checkin|required|date_format:H:i',
+            'check_out'       => 'exclude_unless:mark_as,checkin|nullable|date_format:H:i',
             'remarks'         => 'nullable|string|max:200',
         ]);
+
+        if ($data['mark_as'] !== 'checkin') {
+            return $this->markWholeDay($data);
+        }
 
         try {
             $result = $this->saveAttendance(
@@ -1700,10 +1714,8 @@ class AdminEmployeeController extends Controller
         }
 
         $attendance = $result['data']['attendance'];
-        $admin = auth('admin')->user();
         $attendance->user_type = self::ATTENDANCE_MARKED_BY_ADMIN;
-        $attendance->remarks = 'Marked manually by ' . ($admin->name ?? $admin->email ?? 'admin')
-            . (! empty($data['remarks']) ? ': ' . $data['remarks'] : '');
+        $attendance->remarks = $this->manualAttendanceRemark($data['remarks'] ?? null);
         $attendance->save();
 
         return response()->json([
@@ -1711,6 +1723,60 @@ class AdminEmployeeController extends Controller
             'message' => 'Attendance saved: ' . (optional($attendance->attendance_status)->name ?? 'marked')
                 . ' (' . $attendance->check_in . ($attendance->check_out ? ' - ' . $attendance->check_out : '') . ').',
         ]);
+    }
+
+    /**
+     * Mark a whole day as Absent, Unpaid Leave or NCNS (no check-in). Replaces whatever the day had.
+     * The pay deduction works like the daily finaliser's Absent: the full day's basic pay, or the
+     * percentage on the shift's rule for that status when one exists (so NCNS can be made heavier
+     * from Settings > Shift Rules without a code change).
+     */
+    private function markWholeDay(array $data)
+    {
+        $statusName = \App\Models\AttendanceStatus::MANUAL_DAY_STATUSES[$data['mark_as']];
+        $statusId   = \App\Models\AttendanceStatus::idFor($statusName);
+        if (! $statusId) {
+            return response()->json(['status' => false,
+                'message' => "The \"$statusName\" attendance status has not been set up yet."], 422);
+        }
+
+        $employee = Employee::findOrFail($data['employee_id']);
+        $rule = \App\Models\ShiftAttendanceRule::where('shift_type_id', $employee->shift_id)
+            ->where('attendance_status_id', $statusId)->first();
+        $weight     = ($rule && (float) $rule->entry_weight > 0) ? (float) $rule->entry_weight : 100.0;
+        $dailyBasic = ($employee->basic_salary ?? 0) / 30;
+
+        $attendance = EmployeeAttendance::firstOrNew([
+            'employee_id'     => $employee->id,
+            'attendance_date' => Carbon::parse($data['attendance_date'])->toDateString(),
+        ]);
+        $attendance->attendance_status_id = $statusId;
+        $attendance->entry_weight         = $weight;
+        $attendance->deducted_salary      = round($dailyBasic * ($weight / 100), 2);
+        $attendance->calculated_salary    = 0;
+        // A whole day off: nothing of a check-in, worked time or overtime stays on the row.
+        $attendance->check_in = $attendance->check_out = $attendance->working_hours = null;
+        $attendance->productive_seconds = $attendance->productive_percent = $attendance->overtime_seconds = null;
+        $attendance->overtime_amount = 0;
+        $attendance->is_early_exit   = 0;
+        $attendance->ticket_id       = null;
+        $attendance->user_type       = self::ATTENDANCE_MARKED_BY_ADMIN;
+        $attendance->remarks         = $this->manualAttendanceRemark($data['remarks'] ?? null);
+        $attendance->created_by      = $attendance->created_by ?: $employee->id;
+        $attendance->updated_by      = $employee->id;
+        $attendance->save();
+
+        return response()->json([
+            'status'  => true,
+            'message' => "Attendance saved: $statusName (" . number_format($attendance->deducted_salary, 2) . ' deducted).',
+        ]);
+    }
+
+    private function manualAttendanceRemark(?string $note): string
+    {
+        $admin = auth('admin')->user();
+
+        return 'Marked manually by ' . ($admin->name ?? $admin->email ?? 'admin') . (! empty($note) ? ': ' . $note : '');
     }
 
     public function break_list(Request $request)

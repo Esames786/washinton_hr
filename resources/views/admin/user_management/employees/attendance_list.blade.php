@@ -81,8 +81,9 @@
                 </div>
                 <div class="modal-body">
                     <p class="text-muted text-sm mb-12">
-                        Status, late deduction and working hours are worked out from the subcontractor's shift,
-                        exactly as if they had checked in themselves. Marking a day that already has attendance replaces it.
+                        With a check-in time, status, late deduction and working hours are worked out from the subcontractor's
+                        shift, exactly as if they had checked in themselves. Absent, Unpaid Leave and NCNS mark the whole day
+                        and deduct the day's pay. Marking a day that already has attendance replaces it.
                     </p>
                     <div class="mb-12">
                         <label class="form-label fw-semibold">Subcontractor <span class="text-danger">*</span></label>
@@ -98,10 +99,19 @@
                         <input type="date" name="attendance_date" class="form-control" required
                                max="{{ \Carbon\Carbon::now()->format('Y-m-d') }}" value="{{ \Carbon\Carbon::now()->format('Y-m-d') }}">
                     </div>
-                    <div class="row">
+                    <div class="mb-12">
+                        <label class="form-label fw-semibold">Mark As <span class="text-danger">*</span></label>
+                        <select name="mark_as" id="manual_mark_as" class="form-select">
+                            <option value="checkin" selected>Check-in time (Present / Late / ...)</option>
+                            @foreach($manualDayStatuses ?? [] as $value => $label)
+                                <option value="{{ $value }}">{{ $label === 'NCNS' ? 'NCNS (No Call No Show)' : $label }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="row" id="manual_times">
                         <div class="col-6 mb-12">
                             <label class="form-label fw-semibold">Check-In <span class="text-danger">*</span></label>
-                            <input type="time" name="check_in" class="form-control" required>
+                            <input type="time" name="check_in" id="manual_check_in" class="form-control" required>
                         </div>
                         <div class="col-6 mb-12">
                             <label class="form-label fw-semibold">Check-Out</label>
@@ -193,6 +203,15 @@
                 placeholder: "-- Select Subcontractor --",
                 width: '100%'
             });
+
+            // Absent / Unpaid Leave / NCNS are whole days: no check-in or check-out to enter.
+            function toggleManualTimes() {
+                let withTimes = $('#manual_mark_as').val() === 'checkin';
+                $('#manual_times').toggle(withTimes).find('input').prop('disabled', !withTimes);
+                $('#manual_check_in').prop('required', withTimes);
+            }
+            $('#manual_mark_as').on('change', toggleManualTimes);
+            $('#manualAttendanceModal').on('show.bs.modal', toggleManualTimes);
 
             $('#manualAttendanceForm').on('submit', function (e) {
                 e.preventDefault();

@@ -45,7 +45,9 @@ class AdminShiftTypeController extends Controller
                 ->rawColumns(['action','status'])
                 ->make(true);
         }
-        $attendance_status = AttendanceStatus::whereNotIn('id', [2, 5,6,7,8])->get();
+        // Timed check-in/out rules only: Unpaid Leave / NCNS are whole days an admin marks by hand.
+        $attendance_status = AttendanceStatus::whereNotIn('id', [2, 5,6,7,8])
+            ->whereNotIn('name', [AttendanceStatus::UNPAID_LEAVE, AttendanceStatus::NCNS])->get();
         return view('admin.employee_settings.shift_types',compact('attendance_status'));
     }
 
